@@ -82,7 +82,7 @@ function formatCurrency(value) {
         <ToggleButton v-model="dateFrozen" onIcon="pi pi-lock" offIcon="pi pi-lock-open" onLabel="Date" offLabel="Date" />
         <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
           <Column field="activity" header="Purchase Gallons" style="min-width: 200px"></Column>
-          <Column field="representative.name" header="Gallons Collected" style="min-width: 200px"></Column>
+          <Column field="representative.name" header="Gallons on Hold" style="min-width: 200px"></Column>
           <Column field="amountPaid" header="Amount Paid" :body="formatCurrency" style="min-width: 200px"></Column>
           <Column field="date" header="Date" style="min-width: 200px" alignFrozen="right" :frozen="dateFrozen"></Column>
         </DataTable>
@@ -113,6 +113,19 @@ function formatCurrency(value) {
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">50</h2>
               <p class="text-sm text-gray-600">Gallons on Hold</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
+          <div class="flex items-center space-x-3">
+            <div class="bg-pink-300 p-3 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="font-semibold">
+              <h2 class="text-2xl font-semibold">₱ 25.00</h2>
+              <p class="text-sm text-gray-600">Price Per. Gallon</p>
             </div>
           </div>
         </div>

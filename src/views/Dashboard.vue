@@ -316,7 +316,7 @@ const formatCurrency = (value) => {
   </div>
   <div class="flex items-center gap-4 mb-8">
     <label for="area" class="font-semibold w-24">Area</label>
-    <InputText id="area" v-model="selectedArea" class="flex-auto" autocomplete="off" />
+    <Select v-model="selectedCity1" placeholder="Select Area" class="w-full md:w-56" />
   </div>
   <div class="flex justify-end gap-2">
     <Button

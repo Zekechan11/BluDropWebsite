@@ -12,6 +12,7 @@ onMounted(() => {
       name: "Zeke",
       address: "Guadalupe Bogo City",
       status: "Dealer",
+      price: "₱ 20.00",
     },
     {
       id: createId(),
@@ -19,6 +20,7 @@ onMounted(() => {
       name: "Joe",
       address: "Nailon Bogo City",
       status: "Dealer",
+      price: "₱ 20.00",
     },
     {
       id: createId(),
@@ -26,6 +28,7 @@ onMounted(() => {
       name: "Sakura",
       address: "Lapaz Bogo City",
       status: "Regular",
+      price: "₱ 25.00",
     },
   ];
 });
@@ -145,7 +148,9 @@ const deleteSelectedProducts = () => {
 
 <template>
   <div class="space">
-    <h1 class="text-4xl font-semibold mb-6" style="color: #899499">Add Customer</h1>
+    <h1 class="text-4xl font-semibold mb-6" style="color: #899499">
+      Add Customer
+    </h1>
   </div>
   <div>
     <div class="card shadow-md">
@@ -187,10 +192,12 @@ const deleteSelectedProducts = () => {
             </span>
           </template>
         </Column>
+        <Column field="price" header="Price" sortable style="min-width: 16rem"></Column>
 
         <Column :exportable="false" header="Actions" style="min-width: 12rem">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" />
+            <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+              @click="editProduct(slotProps.data)" />
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
               @click="confirmDeleteProduct(slotProps.data)" />
           </template>
@@ -200,17 +207,45 @@ const deleteSelectedProducts = () => {
 
     <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Add Customer" :modal="true">
       <div class="flex flex-col gap-6">
+        <!-- Name Input -->
         <div>
           <label for="name" class="block font-semibold mb-3">Name</label>
           <InputText id="name" v-model.trim="product.name" required="true" autofocus
             :invalid="submitted && !product.name" fluid />
           <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
         </div>
+
+        <!-- Address Input -->
         <div>
-          <label for="name" class="block font-semibold mb-3">Address</label>
-          <InputText id="name" v-model.trim="product.address" required="true" autofocus
-            :invalid="submitted && !product.name" fluid />
-          <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+          <label for="address" class="block font-semibold mb-3">Address</label>
+          <InputText id="address" v-model.trim="product.address" required="true"
+            :invalid="submitted && !product.address" fluid />
+          <small v-if="submitted && !product.address" class="text-red-500">Address is required.</small>
+        </div>
+
+        <!-- Dropdowns Container -->
+        <div class="flex gap-4">
+          <!-- Status Dropdown -->
+          <div class="w-full md:w-56">
+            <label for="status" class="block font-semibold mb-3">Status</label>
+            <Select v-model="product.status" id="status" :options="[
+              { label: 'Dealer', value: 'dealer' },
+              { label: 'Regular', value: 'regular' }
+            ]" optionLabel="label" placeholder="Select a Status" class="w-full border rounded" required />
+            <small v-if="submitted && !product.status" class="text-red-500">Status is required.</small>
+          </div>
+
+          <!-- Category Dropdown -->
+          <div class="w-full md:w-56">
+            <label for="category" class="block font-semibold mb-3">Price</label>
+            <Select v-model="product.category" id="category" :options="[
+              { label: 'Electronics', value: 'electronics' },
+              { label: 'Books', value: 'books' },
+              { label: 'Clothing', value: 'clothing' },
+              { label: 'Furniture', value: 'furniture' }
+            ]" optionLabel="label" placeholder="Select Price" class="w-full border rounded" required />
+            <small v-if="submitted && !product.category" class="text-red-500">Category is required.</small>
+          </div>
         </div>
       </div>
 
