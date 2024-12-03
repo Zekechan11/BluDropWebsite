@@ -77,6 +77,16 @@ const totalCollected = computed(() => {
             
             <template #header>
                 <div class="flex justify-end items-center space-x-4">
+                    <!-- Left Dropdown -->
+                    <Select  
+                        v-model="agentFilter" 
+                        :options="agentOptions" 
+                        optionLabel="label" 
+                        optionValue="value" 
+                        placeholder="Select Agent" 
+                        class="w-48" />
+
+                    <!-- Right Dropdown -->
                     <Select  
                         v-model="dateFilter" 
                         :options="options" 
