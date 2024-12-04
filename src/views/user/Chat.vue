@@ -1,43 +1,101 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 const messages = ref([]);
 const newMessage = ref('');
-const selectedConversation = ref(null); // Tracks the selected conversation
+const selectedConversation = ref(null);
 
 const conversations = ref([
     { name: 'Admin', lastMessage: 'dol oh', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
     { name: 'Agent', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
 ]);
 
-// Limit the length of last messages to 40 characters
+// WebSocket reference
+let socket = null;
+
 const truncateMessage = (message, maxLength = 40) => {
     return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
 };
 
-function sendMessage() {
-    if (newMessage.value.trim() !== '') {
+function connectWebSocket() {
+    socket = new WebSocket('ws://localhost:9090/ws');
+
+    socket.onopen = () => {
+        console.log('WebSocket connected');
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
         messages.value.push({
-            content: newMessage.value,
-            sender: 'user', // Can be 'user' or 'bot' or others based on your use case
-            timestamp: new Date().toLocaleTimeString(),
+            content: data.content,
+            sender: data.sender,
+            timestamp: new Date(data.timestamp).toLocaleTimeString(),
         });
+    };
+
+    socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket closed, reconnecting...');
+        setTimeout(connectWebSocket, 1000);
+    };
+}
+
+function sendMessage() {
+    if (newMessage.value.trim() !== '' && socket) {
+        const msg = {
+            sender: 'user',
+            recipient: selectedConversation.value.name,
+            content: newMessage.value,
+        };
+
+        socket.send(JSON.stringify(msg));
+
         newMessage.value = '';
     }
 }
 
-// Function to select a conversation when clicked
+
 function selectConversation(conversation) {
     selectedConversation.value = conversation;
+    const conversationId = conversation.name;
+
+    fetch(`http://localhost:9090/get_message/${conversationId}`)
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to fetch messages');
+            }
+            return res.json();
+        })
+        .then((data) => {
+            messages.value = data.messages.map((msg) => ({
+                content: msg.content,
+                sender: msg.sender,
+                timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+            }));
+        })
+        .catch((err) => {
+            console.error('Error fetching messages:', err);
+        });
 }
 
-// Automatically select the first conversation when the component mounts
+
 onMounted(() => {
     if (conversations.value.length > 0) {
         selectedConversation.value = conversations.value[0];
     }
+    connectWebSocket();
+});
+
+onUnmounted(() => {
+    if (socket) {
+        socket.close();
+    }
 });
 </script>
+
 
 <template>
     <div class="flex flex-col md:flex-row gap-8">
