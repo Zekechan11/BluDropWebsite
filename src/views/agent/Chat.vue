@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -19,18 +19,47 @@ const conversations = ref([
     { name: 'Gago', lastMessage: 'I miss you', time: '3h', img: 'https://i.pravatar.cc/100?u=gago' },
 ]);
 
-// Limit the length of last messages to 40 characters
+// WebSocket reference
+let socket = null;
+
 const truncateMessage = (message, maxLength = 40) => {
     return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
 };
 
-function sendMessage() {
-    if (newMessage.value.trim() !== '') {
+function connectWebSocket() {
+    socket = new WebSocket('ws://localhost:9090/ws');
+
+    socket.onopen = () => {
+        console.log('WebSocket connected');
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
         messages.value.push({
-            content: newMessage.value,
-            sender: 'user', // Can be 'user' or 'bot' or others based on your use case
-            timestamp: new Date().toLocaleTimeString(),
+            content: data.content,
+            sender: data.sender,
+            timestamp: new Date(data.timestamp).toLocaleTimeString(),
         });
+    };
+
+    socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket closed, reconnecting...');
+        setTimeout(connectWebSocket, 1000);
+    };
+}
+
+function sendMessage() {
+    if (newMessage.value.trim() !== '' && socket) {
+        const msg = {
+            content: newMessage.value,
+            recipient: selectedConversation.value.name,
+            sender: 'agent', // Can be 'user' or 'bot' or others based on your use case
+        };
+        socket.send(JSON.stringify(msg));
         newMessage.value = '';
     }
 }
@@ -38,12 +67,37 @@ function sendMessage() {
 // Function to select a conversation when clicked
 function selectConversation(conversation) {
     selectedConversation.value = conversation;
-}
+    const conversationId = conversation.name;
+
+    fetch(`http://localhost:9090/get_message/${conversationId}`)
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to fetch messages');
+            }
+            return res.json();
+        })
+        .then((data) => {
+            messages.value = data.messages.map((msg) => ({
+                content: msg.content,
+                sender: msg.sender,
+                timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+            }));
+        })
+        .catch((err) => {
+            console.error('Error fetching messages:', err);
+        });
+    }
 
 // Automatically select the first conversation when the component mounts
 onMounted(() => {
     if (conversations.value.length > 0) {
         selectedConversation.value = conversations.value[0];
+    }
+    connectWebSocket();
+});
+onUnmounted(() => {
+    if (socket) {
+        socket.close();
     }
 });
 </script>
@@ -88,7 +142,7 @@ onMounted(() => {
             <div class="flex-grow p-4 overflow-y-auto space-y-4">
                 <!-- Messages Loop -->
                 <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-                    <div v-if="msg.sender === 'user'" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                    <div v-if="msg.sender === 'agent'" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
                         <p>{{ msg.content }}</p>
                         <span class="text-xs text-right block">{{ msg.timestamp }}</span>
                     </div>
@@ -101,8 +155,19 @@ onMounted(() => {
 
             <!-- Message Input -->
             <div class="p-4 border-t border-gray-200 flex items-center gap-4">
-                <InputText v-model="newMessage" placeholder="Type a message" class="flex-grow" />
-                <Button label="Send" @click="sendMessage" :disabled="newMessage === ''" class="bg-blue-500 text-white" />
+                <input
+                    v-model="newMessage"
+                    type="text"
+                    placeholder="Type a message"
+                    class="flex-grow p-2 rounded-lg border border-gray-300"
+                />
+                <button
+                    @click="sendMessage"
+                    :disabled="newMessage === ''"
+                    class="bg-blue-500 text-white p-2 rounded-lg"
+                >
+                    Send
+                </button>
             </div>
         </div>
     </div>
