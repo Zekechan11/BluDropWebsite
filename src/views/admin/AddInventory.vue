@@ -1,117 +1,137 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
+import axios from 'axios';
 
-onMounted(() => {
-    // Add some manual results for demonstration
-    products.value = [
-        {
-            id: createId(),
-            code: '1',
-            name: 'Gallons',
-        },
-        {
-            id: createId(),
-            code: '2',
-            name: 'Sealed',
-        },
-        {
-            id: createId(),
-            code: '3',
-            name: 'Cups',
-        }
-    ];
-});
+const apiUrl = 'http://localhost:5089/api/Inventory'; // Update with your actual API base URL
 
 const toast = useToast();
 const dt = ref();
-const products = ref();
+const products = ref([]);
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
 const product = ref({});
 const selectedProducts = ref();
-
 const submitted = ref(false);
 
+// Fetch products from the backend on component mount
+onMounted(async () => {
+    try {
+        const response = await axios.get(`${apiUrl}/GetInventory`);
+        products.value = response.data.map(item => ({
+            id: item.inventoryId,
+            Item: item.item,
+            noOfItems: item.noOfItems
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch inventory data.', life: 3000 });
+    }
+});
+
+// Open dialog to add a new product
 const openNew = () => {
     product.value = {};
     submitted.value = false;
     productDialog.value = true;
 };
+
+// Close dialog
 const hideDialog = () => {
     productDialog.value = false;
     submitted.value = false;
 };
-const saveProduct = () => {
+
+// Save product (Add or Update)
+const saveProduct = async () => {
     submitted.value = true;
 
-    if (product?.value.name?.trim()) {
-        if (product.value.id) {
-            product.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
-            toast.add({severity:'success', summary: 'Successful', detail: 'Product Updated', life: 3000});
-        }
-        else {
-            product.value.id = createId();
-            product.value.code = createId();
-            product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
-            products.value.push(product.value);
-            toast.add({severity:'success', summary: 'Successful', detail: 'Product Created', life: 3000});
-        }
+    if (product.value.item?.trim()) {
+        try {
+            if (product.value.id) {
+                // Update existing product
+                const response = await axios.put(`${apiUrl}/UpdateInventory/${product.value.id}`, {
+                    inventoryId: product.value.id,
+                    Item: product.value.item,
+                    noOfItems: product.value.noOfItems
+                });
+                products.value = products.value.map(p => (p.id === response.data.inventoryId ? {
+                    id: response.data.inventoryId,
+                    Item: response.data.item,
+                    noOfItems: response.data.noOfItems
+                } : p));
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+            } else {
+                // Add new product
+                const response = await axios.post(`${apiUrl}/SaveInventory`, {
+                    Item: product.value.item,
+                    noOfItems: product.value.noOfItems
+                });
+                products.value.push({
+                    id: response.data.inventoryId,
+                    Item: response.data.item,
+                    noOfItems: response.data.noOfItems
+                });
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+            }
 
-        productDialog.value = false;
-        product.value = {};
+            productDialog.value = false;
+            product.value = {};
+        } catch (error) {
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save product.', life: 3000 });
+        }
     }
 };
+
+// Edit an existing product
 const editProduct = (prod) => {
-    product.value = {...prod};
+    product.value = {
+        id: prod.id,
+        item: prod.Item, // Map `Item` to `item`
+        noOfItems: prod.noOfItems, // Use as is
+    };
     productDialog.value = true;
 };
+
+// Confirm delete dialog
 const confirmDeleteProduct = (prod) => {
     product.value = prod;
     deleteProductDialog.value = true;
 };
-const deleteProduct = () => {
-    products.value = products.value.filter(val => val.id !== product.value.id);
-    deleteProductDialog.value = false;
-    product.value = {};
-    toast.add({severity:'success', summary: 'Successful', detail: 'Product Deleted', life: 3000});
-};
-const findIndexById = (id) => {
-    let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
 
-    return index;
-};
-const createId = () => {
-    let id = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for ( var i = 0; i < 5; i++ ) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
+// Delete a product
+const deleteProduct = async () => {
+    try {
+        await axios.delete(`${apiUrl}/DeleteInventory/${product.value.id}`);
+        products.value = products.value.filter(p => p.id !== product.value.id);
+        deleteProductDialog.value = false;
+        product.value = {};
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete product.', life: 3000 });
     }
-    return id;
-}
+};
 
+// Confirm delete selected products
 const confirmDeleteSelected = () => {
     deleteProductsDialog.value = true;
 };
-const deleteSelectedProducts = () => {
-    products.value = products.value.filter(val => !selectedProducts.value.includes(val));
-    deleteProductsDialog.value = false;
-    selectedProducts.value = null;
-    toast.add({severity:'success', summary: 'Successful', detail: 'Products Deleted', life: 3000});
+
+// Delete selected products
+const deleteSelectedProducts = async () => {
+    try {
+        const promises = selectedProducts.value.map(prod => 
+            axios.delete(`${apiUrl}/DeleteInventory/${prod.id}`));
+        await Promise.all(promises);
+        products.value = products.value.filter(p => !selectedProducts.value.includes(p));
+        deleteProductsDialog.value = false;
+        selectedProducts.value = null;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected products.', life: 3000 });
+    }
 };
-
-
 </script>
-
 
 <template>
     <div class="space">
@@ -141,8 +161,8 @@ const deleteSelectedProducts = () => {
             >
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="name" header="Items" sortable style="min-width: 16rem"></Column>
-                <Column field="code" header="No of Items" sortable style="min-width: 16rem"></Column>
+                <Column field="Item" header="Items" sortable style="min-width: 16rem"></Column>
+                <Column field="noOfItems" header="No of Items" sortable style="min-width: 16rem"></Column>
   
                 <Column :exportable="false" header="Actions" style="min-width: 12rem;">
                     <template #body="slotProps">
@@ -156,16 +176,15 @@ const deleteSelectedProducts = () => {
         <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Inventory" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="name" class="block font-semibold mb-3">Items</label>
-                    <InputText id="name" v-model.trim="product.name" required="true" autofocus :invalid="submitted && !product.name" fluid />
-                    <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+                    <label for="Item" class="block font-semibold mb-3">Items</label>
+                    <InputText id="item" v-model.trim="product.item" required="true" autofocus :invalid="submitted && !product.item" fluid />
+                    <small v-if="submitted && !product.item" class="text-red-500">Item is required.</small>
                 </div>
                 <div>
-                    <label for="name" class="block font-semibold mb-3">No of Items</label>
-                    <InputText id="name" v-model.trim="product.code" required="true" autofocus :invalid="submitted && !product.name" fluid />
-                    <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+                    <label for="noOfItems" class="block font-semibold mb-3">No of Items</label>
+                    <InputText id="noOfItems" v-model.trim="product.noOfItems" required="true" autofocus :invalid="submitted && !product.noOfItems" fluid />
+                    <small v-if="submitted && !product.noOfItems" class="text-red-500">No of Item is required.</small>
                 </div>
-
             </div>
 
             <template #footer>
@@ -178,7 +197,7 @@ const deleteSelectedProducts = () => {
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
                 <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.name }}</b
+                    >Are you sure you want to delete <b>{{ product.item }}</b
                     >?</span
                 >
             </div>
@@ -200,4 +219,3 @@ const deleteSelectedProducts = () => {
         </Dialog>
 	</div>
 </template>
-

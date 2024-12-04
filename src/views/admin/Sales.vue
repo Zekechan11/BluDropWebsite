@@ -7,7 +7,7 @@ const dateFilter = ref('All'); // Dropdown value
 const loading = ref(true);
 
 const options = [
-    { label: 'All', value: 'All' },
+    { label: 'Daily', value: 'Dailey' },
     { label: 'Weekly', value: 'Weekly' },
     { label: 'Monthly', value: 'Monthly' },
     { label: 'Yearly', value: 'Yearly' }
@@ -77,12 +77,22 @@ const totalCollected = computed(() => {
             
             <template #header>
                 <div class="flex justify-end items-center space-x-4">
+                    <!-- Left Dropdown -->
+                    <Select  
+                        v-model="agentFilter" 
+                        :options="agentOptions" 
+                        optionLabel="label" 
+                        optionValue="value" 
+                        placeholder="Select Agent" 
+                        class="w-48" />
+
+                    <!-- Right Dropdown -->
                     <Select  
                         v-model="dateFilter" 
                         :options="options" 
                         optionLabel="label" 
                         optionValue="value" 
-                        placeholder="Select Filter" 
+                        placeholder="Select Day" 
                         class="w-48" />
                 </div>
             </template>
@@ -93,7 +103,6 @@ const totalCollected = computed(() => {
             <Column header="Agent Name" filterField="representative" style="min-width: 14rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
-                        <img :alt="data.representative.name" :src="`https://primefaces.org/cdn/primevue/images/avatar/${data.representative.image}`" style="width: 32px" />
                         <span>{{ data.representative.name }}</span>
                     </div>
                 </template>

@@ -6,17 +6,13 @@ const newMessage = ref('');
 const selectedConversation = ref(null); // Tracks the selected conversation
 
 const conversations = ref([
-    { name: 'Ricky Monsales', lastMessage: 'dol oh', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    { name: 'Admin', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    { name: 'Nicolas Dizon', lastMessage: 'Tulog na', time: '1h', img: 'https://i.pravatar.cc/100?u=edison' },
-    { name: 'Edison', lastMessage: 'You sent a photo', time: '1h', img: 'https://i.pravatar.cc/100?u=gojo' },
-    { name: 'Diamante Jemar', lastMessage: 'adto ta SM na', time: '1h', img: 'https://i.pravatar.cc/100?u=diamante' },
-    { name: 'Gojo', lastMessage: 'fuck', time: '2h', img: '/demo/images/gojo.png' },
-    { name: 'Sukuna', lastMessage: 'poya naman', time: '3h', img: 'https://i.pravatar.cc/100?u=sukuna' },
-    { name: 'Naruto', lastMessage: 'Hayss laaya', time: '3h', img: 'https://i.pravatar.cc/100?u=naruto' },
-    { name: 'Sasuke', lastMessage: 'Babe uy', time: '3h', img: 'https://i.pravatar.cc/100?u=sasuke' },
-    { name: 'Kakashi Sensie', lastMessage: 'I have a fever', time: '3h', img: 'https://i.pravatar.cc/100?u=kakashi' },
-    { name: 'Gago', lastMessage: 'I miss you', time: '3h', img: 'https://i.pravatar.cc/100?u=gago' },
+    { name: 'Ricky Monsales', lastMessage: 'sir pa deliver ko 10 gallons', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
+    { name: 'Admin', lastMessage: 'okay sir', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
+    { name: 'Ezekiel Angelo Pelayo', lastMessage: 'sir pa deliver ko 15 gallons', time: '1h', img: 'https://i.pravatar.cc/100?u=edison' },
+    { name: 'Edison Pagatpat', lastMessage: 'You sent a photo', time: '1h', img: 'https://i.pravatar.cc/100?u=gojo' },
+    { name: 'Jemar Diamante', lastMessage: '.', time: '1h', img: 'https://i.pravatar.cc/100?u=diamante' },
+    { name: 'Karl Lawrenz Pino', lastMessage: 'sir papuno ko 5 gallons', time: '2h', img: '/demo/images/gojo.png' },
+    { name: 'Anton Retuya ', lastMessage: 'sir pa puno ko 10 gallons', time: '3h', img: 'https://i.pravatar.cc/100?u=sukuna' },
 ]);
 
 // WebSocket reference

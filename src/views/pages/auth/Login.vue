@@ -84,11 +84,14 @@ const handelLogin = async () => {
             class="card1 w-full bg-surface-0 dark:bg-surface-900 py-10 px-8 sm:px-12 shadow-md"
             style="border-radius: 0 20px 20px 0"
           >
+          
             <div class="text-center mb-6">
+              <router-link to="/" class="layout-topbar-logo">
               <img
                 src="/demo/images/logo.png"
                 class="mb-6 w-16 shrink-0 mx-auto"
               />
+            </router-link>
               <div
                 class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4"
               >
@@ -103,12 +106,12 @@ const handelLogin = async () => {
               <label
                 for="email1"
                 class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"
-                >Email</label
+                >User Name</label
               >
               <InputText
                 id="email1"
                 type="text"
-                placeholder="Email address"
+                placeholder="User Name"
                 class="w-full md:w-[30rem] mb-6"
                 v-model="email"
               />

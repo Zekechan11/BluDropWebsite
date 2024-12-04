@@ -18,33 +18,24 @@ const daysOptions = Array.from({ length: 12 }, (_, i) => i + 2); // Days from 1 
 const manualCustomers = [
     {
         id: 1,
-        representative: { name: 'Alice Smith' },
+        representative: { name: 'Jemar Diamante' },
+        address: "Gairan, Bogo City, Cebu",
         status: 'Inactive',
         date: new Date('2024-10-09') // Inactive this week
     },
     {
         id: 2,
         representative: { name: 'Bob Johnson' },
+        address: "Lapaz, Bogo City, Cebu",
         status: 'Inactive',
         date: new Date('2024-10-11') // Inactive this week
     },
     {
         id: 3,
         representative: { name: 'Charlie Brown' },
+        address: "Lapaz, Bogo City, Cebu",
         status: 'Inactive',
         date: new Date('2024-10-13') // Not inactive this week
-    },
-    {
-        id: 4,
-        representative: { name: 'David Wilson' },
-        status: 'Inactive',
-        date: new Date('2024-10-05') // Not inactive this week
-    },
-    {
-        id: 5,
-        representative: { name: 'Emma Green'},
-        status: 'Inactive',
-        date: new Date('2024-10-08') // Inactive this week
     }
 ];
 
@@ -95,8 +86,6 @@ const filterCallback = () => {
 };
 </script>
 
-
-
 <template>
     <div class="space">
         <h1 class="text-4xl font-semibold mb-6" style="color: #899499;">
@@ -132,6 +121,15 @@ const filterCallback = () => {
                 </template>
             </Column>
 
+            <!-- Corrected Address Column -->
+            <Column header="Address" filterField="address" :showFilterMenu="false" style="min-width: 14rem">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-2">
+                        <span>{{ data.address }}</span>
+                    </div>
+                </template>
+            </Column>
+
             <Column field="status" header="Status" :showFilterMenu="false" style="min-width: 12rem">
                 <template #body="{ data }">
                     <Tag :value="data.status" :severity="getSeverity(data.status)" />
@@ -140,3 +138,4 @@ const filterCallback = () => {
         </DataTable>
     </div>
 </template>
+

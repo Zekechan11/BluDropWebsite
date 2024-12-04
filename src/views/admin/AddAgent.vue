@@ -240,7 +240,7 @@ const deleteselectedAgents = async () => {
         <Dialog v-model:visible="deleteAgentDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="agent">Are you sure you want to delete <b>{{ agent.name }}</b>?</span>
+                <span v-if="agent">Are you sure you want to delete <b>{{ agent.agent_name }}</b>?</span>
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteAgentDialog = false" />
