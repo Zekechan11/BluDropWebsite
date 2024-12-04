@@ -9,27 +9,51 @@ onMounted(() => {
     {
       id: createId(),
       code: "1",
-      name: "Zeke",
-      address: "Guadalupe Bogo City",
+      name: "Ezekiel Angelo Pelayo",
+      address: "Guadalupe, Bogo City, Cebu",
       status: "Dealer",
       price: "₱ 20.00",
     },
     {
       id: createId(),
       code: "2",
-      name: "Joe",
-      address: "Nailon Bogo City",
+      name: "Karl Lawrenz Pino",
+      address: "Nailon, Bogo City, Cebu",
       status: "Dealer",
       price: "₱ 20.00",
     },
     {
       id: createId(),
       code: "3",
-      name: "Sakura",
-      address: "Lapaz Bogo City",
+      name: "Anton Retuya",
+      address: "Lapaz, Bogo City, Cebu",
+      status: "Regular",
+      price: "₱ 25.00",
+    },{
+      id: createId(),
+      code: "3",
+      name: "Jemar Diamante",
+      address: "Gairan, Bogo City, Cebu",
       status: "Regular",
       price: "₱ 25.00",
     },
+    {
+      id: createId(),
+      code: "3",
+      name: "Bob Johnson",
+      address: "Lapaz, Bogo City, Cebu",
+      status: "Regular",
+      price: "₱ 25.00",
+    },
+    {
+      id: createId(),
+      code: "3",
+      name: "Charlie Brown",
+      address: "Lapaz, Bogo City, Cebu",
+      status: "Dealer",
+      price: "₱ 25.00",
+    },
+    
   ];
 });
 
@@ -180,7 +204,7 @@ const deleteSelectedProducts = () => {
         </template>
 
         <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-        <Column field="name" header="Name" sortable style="min-width: 12rem"></Column>
+        <Column field="name" header="Name" sortable style="min-width: 16rem"></Column>
         <Column field="address" header="Address" sortable style="min-width: 16rem"></Column>
         <Column field="status" header="Status" sortable style="min-width: 16rem">
           <template #body="slotProps">
@@ -239,10 +263,8 @@ const deleteSelectedProducts = () => {
           <div class="w-full md:w-56">
             <label for="category" class="block font-semibold mb-3">Price</label>
             <Select v-model="product.category" id="category" :options="[
-              { label: 'Electronics', value: 'electronics' },
-              { label: 'Books', value: 'books' },
-              { label: 'Clothing', value: 'clothing' },
-              { label: 'Furniture', value: 'furniture' }
+              { label: '₱ 20', value: 'Dealer' },
+              { label: '₱ 25', value: 'Regular' },
             ]" optionLabel="label" placeholder="Select Price" class="w-full border rounded" required />
             <small v-if="submitted && !product.category" class="text-red-500">Category is required.</small>
           </div>

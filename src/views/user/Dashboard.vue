@@ -4,7 +4,6 @@ import { ref, onMounted, computed } from 'vue';
 import QrcodeVue from 'qrcode.vue';  // Import the QR code generator component
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
-const dateFrozen = ref(false);
 
 const userData = ref(null);
 const customerName = ref("");
@@ -79,12 +78,11 @@ function formatCurrency(value) {
       </div>
       <!-- DataTable Card for Customers -->
       <div class="card shadow-md">
-        <ToggleButton v-model="dateFrozen" onIcon="pi pi-lock" offIcon="pi pi-lock-open" onLabel="Date" offLabel="Date" />
         <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
           <Column field="activity" header="Purchase Gallons" style="min-width: 200px"></Column>
           <Column field="representative.name" header="Gallons on Hold" style="min-width: 200px"></Column>
           <Column field="amountPaid" header="Amount Paid" :body="formatCurrency" style="min-width: 200px"></Column>
-          <Column field="date" header="Date" style="min-width: 200px" alignFrozen="right" :frozen="dateFrozen"></Column>
+          <Column field="date" header="Date" style="min-width: 200px" alignFrozen="right"></Column>
         </DataTable>
       </div>
     </div>

@@ -9,20 +9,20 @@ onBeforeMount(() => {
   customers2.value = [
     {
       representative: { name: 'John Doe' },
-      gallonsCollected: 100,
-      amountCollected: 5000,
+      gallonsCollected: 50,
+      amountCollected: '₱ 200',
       date: '2024-10-14'
     },
     {
       representative: { name: 'Jane Smith' },
-      gallonsCollected: 80,
-      amountCollected: 4000,
+      gallonsCollected: 20,
+      amountCollected: '₱ 100',
       date: '2024-10-13'
     },
     {
       representative: { name: 'Michael Johnson' },
-      gallonsCollected: 120,
-      amountCollected: 6000,
+      gallonsCollected: 30,
+      amountCollected: '₱ 80',
       date: '2024-10-12'
     }
   ];

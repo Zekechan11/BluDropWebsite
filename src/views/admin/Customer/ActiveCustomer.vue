@@ -9,39 +9,20 @@ onMounted(() => {
     products.value = [
         {
             code: '1',
-            name: 'Zeke',
-            address: 'Guadalupe Bogo City',
+            name: 'Ezekiel Angelo Pelayo',
+            address: 'Guadalupe, Bogo City, Cebu',
         },
         {
             code: '2',
-            name: 'Joe',
-            address: 'Nailon Bogo City',
+            name: 'Karl Lawrenz Pino',
+            address: 'Nailon, Bogo City, Cebu',
         },
         {
             code: '3',
-            name: 'Sakura',
-            address: 'Lapaz Bogo City',
+            name: 'Anton Retuya',
+            address: 'Lapaz, Bogo City, Cebu',
         },
-        {
-            code: '4',
-            name: 'Liam',
-            address: 'San Francisco, Cebu',
-        },
-        {
-            code: '5',
-            name: 'Mia',
-            address: 'Talamban, Cebu City',
-        },
-        {
-            code: '6',
-            name: 'Noah',
-            address: 'Mandaue City',
-        },
-        {
-            code: '7',
-            name: 'Olivia',
-            address: 'Baclayon, Bohol',
-        }
+
     ];
 });
 
