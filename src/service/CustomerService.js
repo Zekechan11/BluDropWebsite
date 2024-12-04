@@ -4,10 +4,10 @@ export const CustomerService = {
             {
                 id: 1000,
                 representative: {
-                    name: 'Ioni Bowcher',
+                    name: 'Ezekiel Angelo C. Pelayo',
                     image: 'ionibowcher.png'
                 },
-                area: 'Guadalupe',
+                area: 'Guadalupe, Bogo City, Cebu',
                 date: '2015-09-13',
                 status: 'This Week',
                 collected: '200.00',
@@ -16,10 +16,10 @@ export const CustomerService = {
             {
                 id: 1002,
                 representative: {
-                    name: 'Asiya Javayant',
+                    name: 'Karl Lawrenz Pino',
                     image: 'asiyajavayant.png'
                 },
-                area: 'Nailon',
+                area: '	Guadalupe, Bogo City, Cebu',
                 date: '2017-05-13',
                 status: 'This Month',
                 collected: '10000.00',
@@ -27,10 +27,10 @@ export const CustomerService = {
             {
                 id: 1003,
                 representative: {
-                    name: 'Xuxue Feng',
+                    name: 'Leonard Balabat',
                     image: 'xuxuefeng.png'
                 },
-                area: 'Odlot',
+                area: '	Nailon, Bogo City, Cebu',
                 date: '2020-09-15',
                 status: 'This Year',
                 collected: '1500.00',
