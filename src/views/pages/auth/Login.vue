@@ -106,12 +106,12 @@ const handelLogin = async () => {
               <label
                 for="email1"
                 class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"
-                >Email</label
+                >User Name</label
               >
               <InputText
                 id="email1"
                 type="text"
-                placeholder="Email address"
+                placeholder="User Name"
                 class="w-full md:w-[30rem] mb-6"
                 v-model="email"
               />

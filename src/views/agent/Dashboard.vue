@@ -44,12 +44,23 @@ const formatCurrency = (value) => {
           </div>
         </li>
 
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <li class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
           <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
             <span class="font-semibold text-lg md:text-2xl">Amount Collected:</span>
             <span class="ml-8 font-medium text-lg md:text-2xl">₱0</span>
           </div>
+          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
+            <span class="font-semibold text-lg md:text-2xl">Amount Payable:</span>
+            <span class="ml-8 font-medium text-lg md:text-2xl">₱0</span>
+          </div>
         </li>
+
+        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div class="p-5 rounded-lg text-white flex justify-between">
+            <span class="font-semibold text-lg md:text-2xl" style="color: red;">Gallons:</span>
+            <span class="ml-8 font-medium text-lg md:text-2xl" style="color: black;">Shortage = ₱ 500</span>
+          </div>
+        </li> 
       </ul>
     </div>
   </div>
