@@ -1,30 +1,34 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { ref, onMounted, computed } from 'vue';
-import QrcodeVue from 'qrcode.vue';  // Import the QR code generator component
+import QrcodeVue from 'qrcode.vue';  
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
-const userData = ref(null);
-const customerName = ref("");
+const userData = ref('');
+const customerName = localStorage.getItem("firstName");
+const customerLastName = localStorage.getItem("lastName");
+const customerArea = localStorage.getItem("area");
+const visible = ref(false);
+const icondisplay = ref();
 
-// Dynamically calculate the size of the QR code based on the screen size
+const fullName = computed(() => {
+  return `${customerName} ${customerLastName}`;
+});
+
 const qrCodeSize = computed(() => {
   const screenWidth = window.innerWidth;
   if (screenWidth < 768) {
-    return 100;  // Small size for mobile screens
+    return 100; 
   } else if (screenWidth < 1024) {
-    return 120;  // Medium size for tablets
+    return 120;
   } else {
-    return 150;  // Larger size for desktops
+    return 150; 
   }
 });
 
 onMounted(() => {
-  const storedData = localStorage.getItem('userData');
-  if (storedData) {
-    userData.value = JSON.parse(storedData);
-  }
+
 });
 
 // Mock data for customers2
@@ -58,9 +62,10 @@ function formatCurrency(value) {
   <div class="flex flex-col space-y-8 p-2 md:flex-row md:space-x-8 md:space-y-2">
     <div class="w-full space-y-8 md:w-2/3">
       <div class="flex items-center justify-between rounded-lg bg-blue-400 p-6 shadow-md">
-        <div v-if="userData">
-          <h1 class="text-2xl font-semibold"> {{ userData.firstName }} {{ userData.lastName }} !</h1>
-          <p class="mt-2 text-gray-800 font-semibold"> {{ userData.area }} </p>
+        <div>
+          <h1 class="text-2xl font-semibold"> {{ fullName }}! </h1>
+          <p class="mt-2 text-gray-800 font-semibold"> {{ customerArea }} </p>
+          <Button label="Order Now" @click="visible = true" />
         </div>
         <!-- QR Code Section -->
         <div v-if="userData" class="qr-code-container">
@@ -70,12 +75,23 @@ function formatCurrency(value) {
         <div v-else>
           <p class="text-sm text-red-500">No QR code available.</p>
         </div>
-        <img
-          src="/demo/images/gojo.png"
-          alt="Edison"
-          class="h-32 w-32 rounded-lg object-cover md:h-40 md:w-40"
-        />
       </div>
+
+      <Dialog v-model:visible="visible" modal header="Order Now" :style="{ width: '25rem' }">
+        <div class="flex items-center gap-4 mb-4">
+          <label for="username" class="font-semibold w-25">Order Gallons : </label>
+          <InputText id="username" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-4 mb-8">
+          <label for="email" class="font-semibold w-24">Date : </label>
+          <DatePicker v-model="icondisplay" showIcon fluid iconDisplay="input" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
+          <Button type="button" label="Order" @click="visible = false"></Button>
+        </div>
+      </Dialog>
+
       <!-- DataTable Card for Customers -->
       <div class="card shadow-md">
         <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
@@ -91,8 +107,10 @@ function formatCurrency(value) {
         <div class="flex items-center justify-between p-4 rounded-lg bg-teal-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-teal-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-3a7 7 0 11-7 7 7 7 0 017-7z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-3a7 7 0 11-7 7 7 7 0 017-7z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -104,21 +122,24 @@ function formatCurrency(value) {
         <div class="flex items-center justify-between p-4 rounded-lg bg-indigo-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-indigo-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
             </div>
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">50</h2>
-              <p class="text-sm text-gray-600">Gallons on Hold</p>
+              <p class="text-sm text-gray-600">COL</p>
             </div>
           </div>
         </div>
         <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -130,8 +151,10 @@ function formatCurrency(value) {
         <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -143,8 +166,10 @@ function formatCurrency(value) {
         <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -153,11 +178,14 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
-        <div style="position: relative;top: 30px;" class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
+        <div style="position: relative;top: 30px;"
+          class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -166,11 +194,14 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
-        <div style="position: relative;top: 30px;" class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
+        <div style="position: relative;top: 30px;"
+          class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -187,7 +218,9 @@ function formatCurrency(value) {
 <style scoped>
 .qr-code-container {
   margin-left: 100px;
-  text-align: left; /* Align QR code to the left */
-  max-width: 100%;  /* Ensure it fits within the container */
+  text-align: left;
+  /* Align QR code to the left */
+  max-width: 100%;
+  /* Ensure it fits within the container */
 }
 </style>

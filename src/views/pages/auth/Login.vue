@@ -40,6 +40,9 @@ const handelLogin = async () => {
       const responseData = await request.json();
       localStorage.setItem("token", responseData.token);
       localStorage.setItem("role", responseData.role);
+      localStorage.setItem("firstName", responseData.firstName);
+      localStorage.setItem("lastName", responseData.lastName);
+      localStorage.setItem("area", responseData.area);
       if (responseData.role === "Staff") {
         router.push("/agent/dashboard");
       } else if (responseData.role === "Customer") {

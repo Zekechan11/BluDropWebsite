@@ -1,68 +1,112 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
-import { onBeforeMount, ref } from 'vue';
+import DatePicker from "primevue/datepicker";
 
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
-const customers2 = ref(null);
+import { ref, onMounted } from "vue";
 
-onBeforeMount(() => {});
+const products = ref();
+const visible = ref(false);
 
 const formatCurrency = (value) => {
-  return value.toLocaleString("en-US", { style: "currency", currency: "PHP" });
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 };
 </script>
 
 <template>
   <div class="space">
-    <h1 class="font-semibold text-2xl md:text-4xl mb-6 text-gray-500">Container on Loan</h1>
+    <h1 class="text-center font-semibold text-gray-500 mb-6 text-4xl">
+      Guadalupe
+    </h1>
   </div>
-
-  <div class="card shadow-md h-auto md:h-550px p-4">
-    <!-- Tab content -->
-    <div class="flex flex-col items-center justify-center h-full">
-      <h1 class="font-semibold text-2xl md:text-4xl mb-6 text-gray-500 text-center">Guadalupe</h1>
-
-      <ul class="list-none p-0 m-0 mt-10 px-4 md:px-10 w-full">
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
-            <span class="font-semibold text-lg md:text-2xl">Container on loan:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl">50</span>
+  <div class="grid grid-cols-12 gap-8">
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+      <div class="card mb-0 shadow-md">
+        <div class="flex justify-between mb-4">
+          <div>
+            <span class="block text-muted-color font-medium mb-4">FGS </span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+              250
+            </div>
           </div>
-        </li>
-
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
-            <span class="font-semibold text-lg md:text-2xl">Gallons Delivered:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl">0</span>
+          <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
+            <i class="pi pi-users text-orange-500 !text-4xl"></i>
           </div>
-        </li>
-
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
-            <span class="font-semibold text-lg md:text-2xl">Gallons Collected:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl">0</span>
-          </div>
-        </li>
-
-        <li class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
-          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
-            <span class="font-semibold text-lg md:text-2xl">Amount Collected:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl">₱0</span>
-          </div>
-          <div class="bg-blue-500 p-5 rounded-lg text-white flex justify-between w-full">
-            <span class="font-semibold text-lg md:text-2xl">Amount Payable:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl">₱0</span>
-          </div>
-        </li>
-
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div class="p-5 rounded-lg text-white flex justify-between">
-            <span class="font-semibold text-lg md:text-2xl" style="color: red;">Gallons:</span>
-            <span class="ml-8 font-medium text-lg md:text-2xl" style="color: black;">Shortage = ₱ 500</span>
-          </div>
-        </li> 
-      </ul>
+        </div>
+      </div>
     </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+      <div class="card mb-0 shadow-md">
+        <div class="flex justify-between mb-4">
+          <div>
+            <span class="block text-muted-color font-medium mb-4">GALLONS DELIVERED</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+              0
+            </div>
+          </div>
+          <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
+            <i class="pi pi-users text-cyan-500 !text-4xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+      <div class="card mb-0 shadow-md">
+        <div class="flex justify-between mb-4">
+          <div>
+            <span class="block text-muted-color font-medium mb-4">GALLONS RETURNED</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+              20
+            </div>
+          </div>
+          <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
+            <i class="pi pi-paypal text-purple-500 !text-4xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+      <div class="card mb-0 shadow-md">
+        <div class="flex justify-between mb-4">
+          <div>
+            <span class="block text-muted-color font-medium mb-4">AMOUNT COLLECTED</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+              20,000
+            </div>
+          </div>
+          <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
+            <i class="pi pi-paypal text-purple-500 !text-4xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
+      <div class="card mb-0 shadow-md">
+        <div class="flex justify-between mb-4">
+          <div>
+            <span class="block text-muted-color font-medium mb-4">CUSTOMER'S ORDER</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+              2
+            </div>
+          </div>
+          <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
+            <i class="pi pi-users text-purple-500 !text-4xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Dialog v-model:visible="visible" modal header="Customer" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+      <DataTable :value="products" showGridlines tableStyle="min-width: 40rem">
+    <Column field="name" header="Name"></Column>
+    <Column field="quantity" header="Quantity"></Column>
+    <Column field="date" header="Date"></Column>
+</DataTable>
+    </Dialog>
+  
   </div>
 </template>
-

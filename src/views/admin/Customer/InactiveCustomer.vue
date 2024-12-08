@@ -21,6 +21,7 @@ const manualCustomers = [
         representative: { name: 'Jemar Diamante' },
         address: "Gairan, Bogo City, Cebu",
         status: 'Inactive',
+        col: '10',
         date: new Date('2024-10-09') // Inactive this week
     },
     {
@@ -28,6 +29,7 @@ const manualCustomers = [
         representative: { name: 'Bob Johnson' },
         address: "Lapaz, Bogo City, Cebu",
         status: 'Inactive',
+        col: '2',
         date: new Date('2024-10-11') // Inactive this week
     },
     {
@@ -35,6 +37,7 @@ const manualCustomers = [
         representative: { name: 'Charlie Brown' },
         address: "Lapaz, Bogo City, Cebu",
         status: 'Inactive',
+        col: '5',
         date: new Date('2024-10-13') // Not inactive this week
     }
 ];
@@ -127,6 +130,12 @@ const filterCallback = () => {
                     <div class="flex items-center gap-2">
                         <span>{{ data.address }}</span>
                     </div>
+                </template>
+            </Column>
+
+            <Column header="COL" filterField="address" :showFilterMenu="false" style="min-width: 14rem">
+                <template #body="{ data }">
+                    <Tag :value="data.col" :severity="getSeverity(data.col)" />
                 </template>
             </Column>
 

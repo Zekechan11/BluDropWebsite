@@ -5,6 +5,7 @@ import { CustomerService } from '@/service/CustomerService';
 const customers = ref([]);
 const dateFilter = ref('All'); // Dropdown value
 const loading = ref(true);
+const visible = ref(false);
 
 const options = [
     { label: 'Daily', value: 'Daily' },
@@ -131,7 +132,26 @@ const filteredCustomers = computed(() => {
                     {{ formatDate(data.date) }}
                 </template>
             </Column>
+
+            <Column header="Action" style="min-width: 12rem">
+                <template #body="{ data }">
+                    <i class="pi pi-eye cursor-pointer text-blue-500" @click="visible = true"></i>
+                </template>
+            </Column>
         </DataTable>
+
+        <!-- Modal -->
+        <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '25rem' }">
+            <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your information.</span>
+            <div class="flex items-center gap-4 mb-4">
+                <label for="username" class="font-semibold w-24">Username</label>
+                <InputText id="username" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex items-center gap-4 mb-8">
+                <label for="email" class="font-semibold w-24">Email</label>
+                <InputText id="email" class="flex-auto" autocomplete="off" />
+            </div>
+        </Dialog>
 
     </div>
 </template>

@@ -85,6 +85,19 @@ const formatCurrency = (value) => {
         </li>
       </ul>
     </div>
+
+    <div class="flex justify-start w-full max-w-xs" >
+      <Card style="background-color: #89CFF0;">
+    <template #title>Customer COL</template>
+    <template #content>
+        <p class="m-0 text-2xl flex justify-center">
+            10
+        </p>
+    </template>
+</Card>
+
+    </div>
+    
     <!-- Submit Payment Button at the bottom -->
     <div class="flex justify-end mt-4">
       <button @click="submitPayment" class="px-6 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700">
