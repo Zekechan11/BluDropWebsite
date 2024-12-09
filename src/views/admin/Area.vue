@@ -14,7 +14,7 @@ const areaDialog = ref(false);
 const deleteAreaDialog = ref(false);
 const deleteAreasDialog = ref(false);
 const area = ref({});
-const selectedProducts = ref();
+const selectedAreas = ref();
 const filters = ref({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
@@ -102,11 +102,11 @@ const confirmDeleteSelected = () => {
 
 const deleteSelectedAreas = async () => {
     try {
-        const deletePromises = selectedProducts.value.map(selected => axios.delete(`${BASE_URL}/area/${selected.id}`)); // Use the BASE_URL
+        const deletePromises = selectedAreas.value.map(selected => axios.delete(`${BASE_URL}/area/${selected.id}`)); // Use the BASE_URL
         await Promise.all(deletePromises);
-        areas.value = areas.value.filter(val => !selectedProducts.value.includes(val));
+        areas.value = areas.value.filter(val => !selectedAreas.value.includes(val));
         deleteAreasDialog.value = false;
-        selectedProducts.value = null;
+        selectedAreas.value = null;
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Selected Areas Deleted', life: 3000 });
     } catch (error) {
         console.error('Error deleting selected areas:', error);
@@ -136,13 +136,13 @@ onMounted(() => {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedAreas || !selectedAreas.length" />
                 </template>
             </Toolbar>
 
             <DataTable
                 ref="dt"
-                v-model:selection="selectedProducts"
+                v-model:selection="selectedAreas"
                 :value="areas"
                 dataKey="id"
                 :paginator="true"

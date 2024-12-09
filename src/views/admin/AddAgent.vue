@@ -114,24 +114,23 @@ const saveAgent = async () => {
 };
 
 // Function to edit an agent
-const editAgent = (prod) => {
-    agent.value = { ...prod };
-    agent.value = true;
+const editAgent = (selectedAgent) => {
+    agent.value = { ...selectedAgent };
+    agentDialog.value = true;
 };
 
 // Confirm deletion of a single agent
-const confirmDeleteAgent = (prod) => {
-    agent.value = prod;
+const confirmDeleteAgent = (selectedAgent) => {
+    agent.value = selectedAgent;
     deleteAgentDialog.value = true;
 };
 
-// Function to delete an agent
-const deleteProduct = async () => {
+const deleteAgent = async () => {
     try {
-        await axios.delete(`http://localhost:9090/agent/${agent.value.id}`);
-        agents.value = agents.value.filter((val) => val.id !== agent.value.id);
-        deleteAgentDialog.value = false;
-        agent.value = {};
+        await axios.delete(`http://localhost:9090/agent/${agent.value.id}`); // Send DELETE request
+        agents.value = agents.value.filter(val => val.id !== agent.value.id); // Remove from local list
+        deleteAgentDialog.value = false; // Close the dialog
+        agent.value = {}; // Reset the agent object
         toast.add({
             severity: "success",
             summary: "Successful",
@@ -140,8 +139,15 @@ const deleteProduct = async () => {
         });
     } catch (error) {
         console.error("Error deleting agent:", error.response?.data || error.message);
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to delete the agent. Please try again.",
+            life: 3000,
+        });
     }
 };
+
 
 // Confirm deletion of selected agents
 const confirmDeleteSelected = () => {
@@ -220,8 +226,8 @@ const deleteselectedAgents = async () => {
         <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Agent" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="name" class="block font-semibold mb-3">Agent Name</label>
-                    <InputText id="name" v-model.trim="agent.agent_name" required="true" autofocus :invalid="submitted && !agent.agent_name" fluid />
+                    <label for="agent_name" class="block font-semibold mb-3">Agent Name</label>
+                    <InputText id="agent_name" v-model.trim="agent.agent_name" required="true" autofocus :invalid="submitted && !agent.agent_name" fluid />
                     <small v-if="submitted && !agent.agent_name" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
@@ -244,7 +250,7 @@ const deleteselectedAgents = async () => {
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteAgentDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteAgent" />
             </template>
         </Dialog>
 

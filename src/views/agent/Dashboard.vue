@@ -100,7 +100,7 @@ const formatCurrency = (value) => {
       </div>
     </div>
 
-    <Dialog v-model:visible="visible" modal header="Customer" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+    <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
       <DataTable :value="products" showGridlines tableStyle="min-width: 40rem">
     <Column field="name" header="Name"></Column>
     <Column field="quantity" header="Quantity"></Column>
