@@ -73,6 +73,7 @@ const hideDialog = () => {
 const saveAgent = async () => {
     submitted.value = true;
 
+    // Validate required fields
     if (!agent.value.agent_name?.trim() || !area.value.area_name) {
         toast.add({
             severity: "warn",
@@ -83,41 +84,67 @@ const saveAgent = async () => {
         return;
     }
 
+    // Prepare the payload
     const payload = {
         agent_name: agent.value.agent_name,
-        area_id: area.value.area_name,
+        area_id: area.value.area_name, // Use area_id for consistency with your API
     };
 
     console.log("Payload being sent:", payload);
 
     try {
-        const response = await axios.post("http://localhost:9090/agent", payload);
-        agents.value.push(response.data);
+        if (agent.value.id) {
+            // Update existing agent
+            const response = await axios.put(
+                `http://localhost:9090/agent/${agent.value.id}`, 
+                payload
+            );
+            // Update the local list of agents
+            const index = agents.value.findIndex(a => a.id === agent.value.id);
+            if (index !== -1) {
+                agents.value[index] = response.data;
+            }
+            toast.add({
+                severity: "success",
+                summary: "Successful",
+                detail: "Agent Updated",
+                life: 3000,
+            });
+        } else {
+            // Create new agent
+            const response = await axios.post("http://localhost:9090/agent", payload);
+            agents.value.push(response.data);
+            toast.add({
+                severity: "success",
+                summary: "Successful",
+                detail: "Agent Created",
+                life: 3000,
+            });
+        }
+
+        // Reset the form and close the dialog
         agentDialog.value = false;
         agent.value = {};
-        toast.add({
-            severity: "success",
-            summary: "Successful",
-            detail: "Agent Created",
-            life: 3000,
-        });
-        
+        area.value.area_name = null; // Reset the area dropdown
+
     } catch (error) {
         console.error("Server Error:", error.response?.data || error.message);
         toast.add({
             severity: "error",
             summary: "Error",
-            detail: error.response?.data.message || "Failed to save agent.",
+            detail: error.response?.data?.message || "Failed to save agent.",
             life: 3000,
         });
     }
 };
 
-// Function to edit an agent
+
 const editAgent = (selectedAgent) => {
-    agent.value = { ...selectedAgent };
+    agent.value = { ...selectedAgent }; // Copy the selected agent's details
+    area.value.area_name = selectedAgent.area_id; // Set the area dropdown to the agent's current area
     agentDialog.value = true;
 };
+
 
 // Confirm deletion of a single agent
 const confirmDeleteAgent = (selectedAgent) => {

@@ -3,132 +3,96 @@ import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 
-const apiUrl = 'http://localhost:5089/api/Inventory'; // Update with your actual API base URL
+const apiUrl = 'http://localhost:9090'; // Update with your actual API base URL
 
 const toast = useToast();
 const dt = ref();
-const products = ref([]);
-const productDialog = ref(false);
-const deleteProductDialog = ref(false);
-const deleteProductsDialog = ref(false);
-const product = ref({});
-const selectedProducts = ref();
+const inventorys = ref([]);
+const inventoryDialog = ref(false);
+const deleteInventoryDialog = ref(false);
+const deleteInventorysDialog = ref(false);
+const inventory = ref({});
+const selectedInventorys = ref();
 const submitted = ref(false);
 
-// Fetch products from the backend on component mount
-onMounted(async () => {
+const fetchInventory = async () => {
     try {
-        const response = await axios.get(`${apiUrl}/GetInventory`);
-        products.value = response.data.map(item => ({
-            id: item.inventoryId,
-            Item: item.item,
-            noOfItems: item.noOfItems
-        }));
+        const response = await axios.get(`${apiUrl}/api/get_inventory`);
+        if (Array.isArray(response.data)) {
+            inventorys.value = response.data.map(item => ({
+                id: item.inventory_id,
+                item: item.item,
+                noOfItems: item.no_of_items,
+            }));
+        } else {
+            inventorys.value = [];
+        }
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch inventory data.', life: 3000 });
+        console.error('Error fetching inventory:', error);
     }
+};
+
+onMounted(() => {
+    fetchInventory();
 });
 
-// Open dialog to add a new product
+const saveInventory = async () => {
+    
+};
+
 const openNew = () => {
-    product.value = {};
+    inventory.value = {};
     submitted.value = false;
-    productDialog.value = true;
+    inventoryDialog.value = true;
 };
 
-// Close dialog
 const hideDialog = () => {
-    productDialog.value = false;
+    inventoryDialog.value = false;
     submitted.value = false;
 };
 
-// Save product (Add or Update)
-const saveProduct = async () => {
-    submitted.value = true;
-
-    if (product.value.item?.trim()) {
-        try {
-            if (product.value.id) {
-                // Update existing product
-                const response = await axios.put(`${apiUrl}/UpdateInventory/${product.value.id}`, {
-                    inventoryId: product.value.id,
-                    Item: product.value.item,
-                    noOfItems: product.value.noOfItems
-                });
-                products.value = products.value.map(p => (p.id === response.data.inventoryId ? {
-                    id: response.data.inventoryId,
-                    Item: response.data.item,
-                    noOfItems: response.data.noOfItems
-                } : p));
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                // Add new product
-                const response = await axios.post(`${apiUrl}/SaveInventory`, {
-                    Item: product.value.item,
-                    noOfItems: product.value.noOfItems
-                });
-                products.value.push({
-                    id: response.data.inventoryId,
-                    Item: response.data.item,
-                    noOfItems: response.data.noOfItems
-                });
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-            }
-
-            productDialog.value = false;
-            product.value = {};
-        } catch (error) {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save product.', life: 3000 });
-        }
-    }
-};
-
-// Edit an existing product
-const editProduct = (prod) => {
-    product.value = {
+const editInventory = (prod) => {
+    inventory.value = {
         id: prod.id,
         item: prod.Item, // Map `Item` to `item`
         noOfItems: prod.noOfItems, // Use as is
     };
-    productDialog.value = true;
+    inventoryDialog.value = true;
 };
 
 // Confirm delete dialog
-const confirmDeleteProduct = (prod) => {
-    product.value = prod;
-    deleteProductDialog.value = true;
+const confirmDeleteInventory = (prod) => {
+    inventory.value = prod;
+    deleteInventoryDialog.value = true;
 };
 
-// Delete a product
-const deleteProduct = async () => {
+const deleteInventory = async () => {
     try {
-        await axios.delete(`${apiUrl}/DeleteInventory/${product.value.id}`);
-        products.value = products.value.filter(p => p.id !== product.value.id);
-        deleteProductDialog.value = false;
-        product.value = {};
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+        await axios.delete(`${apiUrl}/DeleteInventory/${inventory.value.id}`);
+        inventorys.value = inventorys.value.filter(p => p.id !== inventory.value.id);
+        deleteInventoryDialog.value = false;
+        inventory.value = {};
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Deleted', life: 3000 });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete product.', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete inventory.', life: 3000 });
     }
 };
 
-// Confirm delete selected products
 const confirmDeleteSelected = () => {
-    deleteProductsDialog.value = true;
+    deleteInventorysDialog.value = true;
 };
 
-// Delete selected products
-const deleteSelectedProducts = async () => {
+const deleteSelectedInventorys = async () => {
     try {
-        const promises = selectedProducts.value.map(prod => 
+        const promises = selectedInventorys.value.map(prod => 
             axios.delete(`${apiUrl}/DeleteInventory/${prod.id}`));
         await Promise.all(promises);
-        products.value = products.value.filter(p => !selectedProducts.value.includes(p));
-        deleteProductsDialog.value = false;
-        selectedProducts.value = null;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
+        inventorys.value = inventorys.value.filter(p => !selectedInventorys.value.includes(p));
+        deleteInventorysDialog.value = false;
+        selectedInventorys.value = null;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventorys Deleted', life: 3000 });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected products.', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected inventorys.', life: 3000 });
     }
 };
 </script>
@@ -144,77 +108,77 @@ const deleteSelectedProducts = async () => {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedInventorys || !selectedInventorys.length" />
                 </template>
             </Toolbar>
 
             <DataTable
                 ref="dt"
-                v-model:selection="selectedProducts"
-                :value="products"
+                v-model:selection="selectedInventorys"
+                :value="inventorys"
                 dataKey="id"
                 :paginator="true"
                 :rows="10"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} inventorys"
             >
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="Item" header="Items" sortable style="min-width: 16rem"></Column>
+                <Column field="item" header="Items" sortable style="min-width: 16rem"></Column>
                 <Column field="noOfItems" header="No of Items" sortable style="min-width: 16rem"></Column>
   
                 <Column :exportable="false" header="Actions" style="min-width: 12rem;">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
+                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editInventory(slotProps.data)" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteInventory(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Inventory" :modal="true">
+        <Dialog v-model:visible="inventoryDialog" :style="{ width: '450px' }" header="Inventory" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="Item" class="block font-semibold mb-3">Items</label>
-                    <InputText id="item" v-model.trim="product.item" required="true" autofocus :invalid="submitted && !product.item" fluid />
-                    <small v-if="submitted && !product.item" class="text-red-500">Item is required.</small>
+                    <InputText id="item" v-model.trim="inventory.item" required="true" autofocus :invalid="submitted && !inventory.item" fluid />
+                    <small v-if="submitted && !inventory.item" class="text-red-500">Item is required.</small>
                 </div>
                 <div>
                     <label for="noOfItems" class="block font-semibold mb-3">No of Items</label>
-                    <InputText id="noOfItems" v-model.trim="product.noOfItems" required="true" autofocus :invalid="submitted && !product.noOfItems" fluid />
-                    <small v-if="submitted && !product.noOfItems" class="text-red-500">No of Item is required.</small>
+                    <InputText id="noOfItems" v-model.trim="inventory.noOfItems" required="true" autofocus :invalid="submitted && !inventory.noOfItems" fluid />
+                    <small v-if="submitted && !inventory.noOfItems" class="text-red-500">No of Item is required.</small>
                 </div>
             </div>
 
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+                <Button label="Save" icon="pi pi-check" @click="saveInventory" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteInventoryDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.item }}</b
+                <span v-if="inventory"
+                    >Are you sure you want to delete <b>{{ inventory.item }}</b
                     >?</span
                 >
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
+                <Button label="No" icon="pi pi-times" text @click="deleteInventoryDialog = false" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteInventory" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteInventorysDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
+                <span v-if="inventory">Are you sure you want to delete the selected inventorys?</span>
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+                <Button label="No" icon="pi pi-times" text @click="deleteInventorysDialog = false" />
+                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedInventorys" />
             </template>
         </Dialog>
 	</div>
