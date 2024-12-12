@@ -1,11 +1,27 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
-import DatePicker from "primevue/datepicker";
+import axios from "axios"; // Make sure to import axios
 
 import { ref, onMounted } from "vue";
 
+const ORDER_URL = 'http://localhost:9090';
+
 const products = ref();
 const visible = ref(false);
+
+// Fetch order data when the component mounts
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get(`${ORDER_URL}/api/get_order`); // Replace with your actual API endpoint
+    products.value = response.data; // Assuming the response contains the array of orders
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+  }
+};
+
+onMounted(() => {
+  fetchOrders(); // Fetch orders when the component mounts
+});
+
 
 const formatCurrency = (value) => {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -100,13 +116,14 @@ const formatCurrency = (value) => {
       </div>
     </div>
 
-    <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+    <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
       <DataTable :value="products" showGridlines tableStyle="min-width: 40rem">
-    <Column field="name" header="Name"></Column>
-    <Column field="quantity" header="Quantity"></Column>
-    <Column field="date" header="Date"></Column>
-</DataTable>
+        <Column field="name" header="Name"></Column>
+        <Column field="Num_gallons_order" header="Quantity"></Column>
+        <Column field="Date" header="Date"></Column>
+      </DataTable>
     </Dialog>
-  
+
   </div>
 </template>

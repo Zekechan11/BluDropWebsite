@@ -1,7 +1,10 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { ref, onMounted, computed } from 'vue';
-import QrcodeVue from 'qrcode.vue';  
+import QrcodeVue from 'qrcode.vue';
+import axios from 'axios'; // Import axios
+
+const ORDER_URL = 'http://localhost:9090';
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
@@ -10,20 +13,38 @@ const customerName = localStorage.getItem("firstName");
 const customerLastName = localStorage.getItem("lastName");
 const customerArea = localStorage.getItem("area");
 const visible = ref(false);
-const icondisplay = ref();
+const ingredient = ref('Tuesday');
+const gallons = ref();
+
 
 const fullName = computed(() => {
   return `${customerName} ${customerLastName}`;
 });
 
+
+const placeOrder = async () => {
+  try {
+    const response = await axios.post(`${ORDER_URL}/api/save_order`, {
+      num_gallons_order: gallons.value,
+      date: ingredient.value
+    });
+
+    console.log('Order saved:', response.data);
+    visible.value = false;
+    gallons.value = '';
+  } catch (error) {
+    console.error('Error saving order:', error);
+  }
+};
+
 const qrCodeSize = computed(() => {
   const screenWidth = window.innerWidth;
   if (screenWidth < 768) {
-    return 100; 
+    return 100;
   } else if (screenWidth < 1024) {
     return 120;
   } else {
-    return 150; 
+    return 150;
   }
 });
 
@@ -79,16 +100,22 @@ function formatCurrency(value) {
 
       <Dialog v-model:visible="visible" modal header="Order Now" :style="{ width: '25rem' }">
         <div class="flex items-center gap-4 mb-4">
-          <label for="username" class="font-semibold w-25">Order Gallons : </label>
-          <InputText id="username" class="flex-auto" autocomplete="off" />
+          <div class="flex items-center gap-2">
+            <RadioButton v-model="ingredient" inputId="ingredient1" name="day" value="Tuesday" />
+            <label for="ingredient1">Tuesday</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <RadioButton v-model="ingredient" inputId="ingredient2" name="day" value="Thursday" />
+            <label for="ingredient2">Thursday</label>
+          </div>
         </div>
         <div class="flex items-center gap-4 mb-8">
-          <label for="email" class="font-semibold w-24">Date : </label>
-          <DatePicker v-model="icondisplay" showIcon fluid iconDisplay="input" />
+          <label for="gallons" class="font-semibold w-25">Order Gallons : </label>
+          <InputText id="gallons" v-model="gallons" class="flex-auto" autocomplete="off" />
         </div>
         <div class="flex justify-end gap-2">
           <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-          <Button type="button" label="Order" @click="visible = false"></Button>
+          <Button type="button" label="Order" @click="placeOrder"></Button>
         </div>
       </Dialog>
 
