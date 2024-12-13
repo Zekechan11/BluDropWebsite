@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 
-const apiUrl = 'http://localhost:9090'; // Update with your actual API base URL
+const INVENTORY_URL = 'http://localhost:9090'; // Go API base URL
 
 const toast = useToast();
 const dt = ref();
@@ -14,31 +14,6 @@ const deleteInventorysDialog = ref(false);
 const inventory = ref({});
 const selectedInventorys = ref();
 const submitted = ref(false);
-
-const fetchInventory = async () => {
-    try {
-        const response = await axios.get(`${apiUrl}/api/get_inventory`);
-        if (Array.isArray(response.data)) {
-            inventorys.value = response.data.map(item => ({
-                id: item.inventory_id,
-                item: item.item,
-                noOfItems: item.no_of_items,
-            }));
-        } else {
-            inventorys.value = [];
-        }
-    } catch (error) {
-        console.error('Error fetching inventory:', error);
-    }
-};
-
-onMounted(() => {
-    fetchInventory();
-});
-
-const saveInventory = async () => {
-    
-};
 
 const openNew = () => {
     inventory.value = {};
@@ -51,16 +26,49 @@ const hideDialog = () => {
     submitted.value = false;
 };
 
-const editInventory = (prod) => {
-    inventory.value = {
-        id: prod.id,
-        item: prod.Item, // Map `Item` to `item`
-        noOfItems: prod.noOfItems, // Use as is
-    };
+const fetchInventory = async () => {
+    try {
+        const response = await axios.get(`${INVENTORY_URL}/api/get_inventory`);
+        const data = response.data;
+
+        inventorys.value = data.map((inventory) => {
+            return {
+                ...inventory,
+            };
+        })
+    } catch (error) {
+        console.error("Error fetching inventorys:", error);
+    }
+};
+
+const saveInventory = async () => {
+    submitted.value = true;
+
+    if (!inventory.value.inventory || !inventory.value.no_of_items)  {
+        try {
+            if (inventory.value.id) {
+                await axios.put(`${INVENTORY_URL}/api/update_inventory/${inventory.value.id}`, inventory.value)
+                inventorys.value[findIndexById(inventory.value.id)] = inventory.value;
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Updated', life: 3000 });
+            } else {
+                const response = await axios.post(`${INVENTORY_URL}/api/save_inventory`, inventory.value);
+                inventorys.value.push({ ...inventory.value, id: response.data.id });
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Created', life: 3000 });
+            }
+            inventoryDialog.value = false;
+            inventory.value = {};
+        } catch (error) {
+            console.error("Failed to save inventory:", error);
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save inventory', life: 3000 });
+        }
+    }
+};
+
+const editInventory = (selectedInventory) => {
+    inventory.value = { ...selectedInventory };
     inventoryDialog.value = true;
 };
 
-// Confirm delete dialog
 const confirmDeleteInventory = (prod) => {
     inventory.value = prod;
     deleteInventoryDialog.value = true;
@@ -68,15 +76,20 @@ const confirmDeleteInventory = (prod) => {
 
 const deleteInventory = async () => {
     try {
-        await axios.delete(`${apiUrl}/DeleteInventory/${inventory.value.id}`);
-        inventorys.value = inventorys.value.filter(p => p.id !== inventory.value.id);
+        await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${inventory.value.id}`);
+        inventorys.value = inventorys.value.filter(val => val.id !== inventory.value.id);
         deleteInventoryDialog.value = false;
-        inventory.value = {};
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Deleted', life: 3000 });
+        inventory.value = {}; // Reset the selected inventory
+        
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Permanently Deleted', life: 3000 });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete inventory.', life: 3000 });
+        console.error('Error deleting inventory:', error);
+        const errorMessage = error.response?.data?.error || 'Failed to delete inventory';
+        toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
     }
 };
+
+
 
 const confirmDeleteSelected = () => {
     deleteInventorysDialog.value = true;
@@ -84,18 +97,30 @@ const confirmDeleteSelected = () => {
 
 const deleteSelectedInventorys = async () => {
     try {
-        const promises = selectedInventorys.value.map(prod => 
-            axios.delete(`${apiUrl}/DeleteInventory/${prod.id}`));
-        await Promise.all(promises);
-        inventorys.value = inventorys.value.filter(p => !selectedInventorys.value.includes(p));
+        for (const selected of selectedInventorys.value) {
+            await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${selected.id}`);
+        }
+        inventorys.value = inventorys.value.filter(val => !selectedInventorys.value.includes(val));
         deleteInventorysDialog.value = false;
         selectedInventorys.value = null;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventorys Deleted', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Selected Inventory Deleted', life: 3000 });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected inventorys.', life: 3000 });
+        console.error("Failed to delete selected inventory:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected inventory', life: 3000 });
     }
 };
+
+const findIndexById = (id) => {
+    return inventorys.value.findIndex(inventory => inventory.id === id);
+};
+
+onMounted(() => {
+    fetchInventory();
+});
+
 </script>
+
+
 
 <template>
     <div class="space">
@@ -126,7 +151,7 @@ const deleteSelectedInventorys = async () => {
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="item" header="Items" sortable style="min-width: 16rem"></Column>
-                <Column field="noOfItems" header="No of Items" sortable style="min-width: 16rem"></Column>
+                <Column field="no_of_items" header="No of Items" sortable style="min-width: 16rem"></Column>
   
                 <Column :exportable="false" header="Actions" style="min-width: 12rem;">
                     <template #body="slotProps">
@@ -145,9 +170,9 @@ const deleteSelectedInventorys = async () => {
                     <small v-if="submitted && !inventory.item" class="text-red-500">Item is required.</small>
                 </div>
                 <div>
-                    <label for="noOfItems" class="block font-semibold mb-3">No of Items</label>
-                    <InputText id="noOfItems" v-model.trim="inventory.noOfItems" required="true" autofocus :invalid="submitted && !inventory.noOfItems" fluid />
-                    <small v-if="submitted && !inventory.noOfItems" class="text-red-500">No of Item is required.</small>
+                    <label for="no_of_items" class="block font-semibold mb-3">No of Items</label>
+                    <InputText id="no_of_items" v-model="inventory.no_of_items" required="true" autofocus :invalid="submitted && !inventory.no_of_items" fluid />
+                    <small v-if="submitted && !inventory.no_of_items" class="text-red-500">No of Item is required.</small>
                 </div>
             </div>
 

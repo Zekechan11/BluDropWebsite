@@ -1,27 +1,27 @@
 <script setup>
 import axios from "axios"; // Make sure to import axios
 
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 
 const ORDER_URL = 'http://localhost:9090';
 
-const products = ref();
+const orders = ref([]);
 const visible = ref(false);
 
-// Fetch order data when the component mounts
 const fetchOrders = async () => {
   try {
-    const response = await axios.get(`${ORDER_URL}/api/get_order`); // Replace with your actual API endpoint
-    products.value = response.data; // Assuming the response contains the array of orders
+    const response = await axios.get(`${ORDER_URL}/api/get_order`);
+    orders.value = response.data;
   } catch (error) {
     console.error('Error fetching orders:', error);
   }
 };
 
 onMounted(() => {
-  fetchOrders(); // Fetch orders when the component mounts
+  fetchOrders();
 });
 
+const orderCount = computed(() => orders.value.length);
 
 const formatCurrency = (value) => {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -105,7 +105,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">CUSTOMER'S ORDER</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              2
+              {{ orderCount }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
@@ -118,7 +118,7 @@ const formatCurrency = (value) => {
 
     <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-      <DataTable :value="products" showGridlines tableStyle="min-width: 40rem">
+      <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
         <Column field="name" header="Name"></Column>
         <Column field="Num_gallons_order" header="Quantity"></Column>
         <Column field="Date" header="Date"></Column>

@@ -205,8 +205,8 @@ const deleteSelectedProducts = () => {
 
         <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
         <Column field="name" header="Name" sortable style="min-width: 16rem"></Column>
-        <Column field="address" header="Address" sortable style="min-width: 16rem"></Column>
-        <Column field="status" header="Status" sortable style="min-width: 16rem">
+        <Column field="address" header="Address" sortable style="min-width: 18rem"></Column>
+        <Column field="status" header="Status" sortable style="min-width: 12rem">
           <template #body="slotProps">
             <span class="px-2 py-1 rounded text-white" :style="{
               backgroundColor:
@@ -216,9 +216,9 @@ const deleteSelectedProducts = () => {
             </span>
           </template>
         </Column>
-        <Column field="price" header="Price" sortable style="min-width: 16rem"></Column>
+        <Column field="price" header="Price" sortable style="min-width: 12rem"></Column>
 
-        <Column :exportable="false" header="Actions" style="min-width: 12rem">
+        <Column :exportable="false" header="Actions" style="min-width: 10rem">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
               @click="editProduct(slotProps.data)" />
