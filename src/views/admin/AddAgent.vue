@@ -4,33 +4,48 @@ import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
 import axios from "axios";
 
+
+const AGENT_URL = 'http://localhost:9090';
+const AREA_URL = 'http://localhost:9090';
+
 const toast = useToast();
 const dt = ref();
+const agent = ref({});
+const area = ref({});
 const agents = ref([]);
 const agentDialog = ref(false);
 const deleteAgentDialog = ref(false);
 const deleteAgentsDialog = ref(false);
-const agent = ref({});
-const area = ref({});
 const selectedAgents = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
 
-// Dropdown options for areas
+const openNew = () => {
+    agent.value = {};
+    area.value = {};
+    submitted.value = false;
+    agentDialog.value = true;
+};
+
+const hideDialog = () => {
+    agentDialog.value = false;
+    submitted.value = false;
+};
+
 const areas = ref([]);
 
 const fetchAreas = async () => {
     try {
-        const response = await axios.get("http://localhost:9090/area");
+        const response = await axios.get(`${AREA_URL}/area`);
         const data = response.data;
 
         areas.value = data.map((area) => {
             return {
                 ...area,
             };
-        })
+        });
     } catch (error) {
         console.error("Error fetching areas:", error);
     }
@@ -38,10 +53,9 @@ const fetchAreas = async () => {
 
 const fetchAgents = async () => {
     try {
-        const response = await axios.get("http://localhost:9090/agent");
+        const response = await axios.get(`${AGENT_URL}/agent`);
         const data = response.data;
 
-        // Add area name to each agent based on area_id
         agents.value = data.map((agent) => {
             return {
                 ...agent,
@@ -57,154 +71,123 @@ onMounted(async () => {
     await fetchAgents();
 });
 
-// Function to open the dialog for adding a new agent
-const openNew = () => {
-    agent.value = {};
-    submitted.value = false;
-    agentDialog.value = true;
+
+const createAgent = async () => {
+    try {
+        const payload = {
+            agent_name: agent.value.agent_name,
+            area_id: area.value.area_name,
+        };
+
+        const response = await axios.post(`${AGENT_URL}/agent`, payload);
+        agents.value.push({
+            id: response.data.id,
+            agent_name: agent.value.agent_name,
+            area_name: areas.value.find(a => a.id === area.value.area_name)?.area,
+            area_id: area.value.area_name,
+        });
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Agent Created', life: 3000 });
+    } catch (error) {
+        console.error("Failed to create agent:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create agent', life: 3000 });
+    }
+}
+
+const updateAgent = async () => {
+    try {
+        const payload = {
+            id: agent.value.id,
+            area_id: area.value.area_name,
+        };
+
+        await axios.put(`${AGENT_URL}/agent/${agent.value.id}`, payload);
+        const index = agents.value[findIndexById(a => a.id === agent.value.id)];
+        if (index !== -1) {
+            agents.value[index] = {
+                ...agents.value[index],
+                agent_name: agent.value.agent_name,
+                area_name: areas.value.find(a => a.id === area.value.area_name)?.area,
+                area_id: area.value.area_name,
+            };
+        }
+        toast.add({severity: 'success',summary: 'Successful',detail: 'Agent Updated',life: 3000
+        });
+    } catch (error) {
+        console.error("Failed to update agent:", error);
+        toast.add({severity: 'error',summary: 'Error',detail: 'Failed to update agent',life: 3000
+        });
+    }
 };
 
-// Function to hide the agent dialog
-const hideDialog = () => {
-    agentDialog.value = false;
-    submitted.value = false;
-};
 
 const saveAgent = async () => {
     submitted.value = true;
 
-    // Validate required fields
-    if (!agent.value.agent_name?.trim() || !area.value.area_name) {
-        toast.add({
-            severity: "warn",
-            summary: "Validation Error",
-            detail: "Please provide all required fields.",
-            life: 3000,
-        });
+    if (!agent.value.agent_name || !area.value.area_name) {
         return;
     }
 
-    // Prepare the payload
-    const payload = {
-        agent_name: agent.value.agent_name,
-        area_id: area.value.area_name, // Use area_id for consistency with your API
-    };
-
-    console.log("Payload being sent:", payload);
-
-    try {
-        if (agent.value.id) {
-            // Update existing agent
-            const response = await axios.put(
-                `http://localhost:9090/agent/${agent.value.id}`, 
-                payload
-            );
-            // Update the local list of agents
-            const index = agents.value.findIndex(a => a.id === agent.value.id);
-            if (index !== -1) {
-                agents.value[index] = response.data;
-            }
-            toast.add({
-                severity: "success",
-                summary: "Successful",
-                detail: "Agent Updated",
-                life: 3000,
-            });
-        } else {
-            // Create new agent
-            const response = await axios.post("http://localhost:9090/agent", payload);
-            agents.value.push(response.data);
-            toast.add({
-                severity: "success",
-                summary: "Successful",
-                detail: "Agent Created",
-                life: 3000,
-            });
-        }
-
-        // Reset the form and close the dialog
-        agentDialog.value = false;
-        agent.value = {};
-        area.value.area_name = null; // Reset the area dropdown
-
-    } catch (error) {
-        console.error("Server Error:", error.response?.data || error.message);
-        toast.add({
-            severity: "error",
-            summary: "Error",
-            detail: error.response?.data?.message || "Failed to save agent.",
-            life: 3000,
-        });
+    if (agent.value.id) {
+        await updateAgent();
+    } else {
+        await createAgent();
     }
+
+    agentDialog.value = false;
+    agent.value = {};
+    area.value = {};
 };
 
 
+
 const editAgent = (selectedAgent) => {
-    agent.value = { ...selectedAgent }; // Copy the selected agent's details
-    area.value.area_name = selectedAgent.area_id; // Set the area dropdown to the agent's current area
+    agent.value = { ...selectedAgent };
     agentDialog.value = true;
 };
 
 
-// Confirm deletion of a single agent
-const confirmDeleteAgent = (selectedAgent) => {
+// Confirm and delete a single agent
+const confirmDeleteAgent = selectedAgent => {
     agent.value = selectedAgent;
     deleteAgentDialog.value = true;
 };
 
 const deleteAgent = async () => {
     try {
-        await axios.delete(`http://localhost:9090/agent/${agent.value.id}`); // Send DELETE request
-        agents.value = agents.value.filter(val => val.id !== agent.value.id); // Remove from local list
-        deleteAgentDialog.value = false; // Close the dialog
-        agent.value = {}; // Reset the agent object
-        toast.add({
-            severity: "success",
-            summary: "Successful",
-            detail: "Agent Deleted",
-            life: 3000,
-        });
+        await axios.delete(`${AGENT_URL}/agent/${agent.value.id}`);
+        agents.value = agents.value.filter(agent => agent.id !== agent.value.id);
+        toast.add({severity: "success",summary: "Agent Deleted",detail: "Successfully deleted agent",life: 3000,});
     } catch (error) {
-        console.error("Error deleting agent:", error.response?.data || error.message);
-        toast.add({
-            severity: "error",
-            summary: "Error",
-            detail: "Failed to delete the agent. Please try again.",
-            life: 3000,
-        });
+        console.error("Error deleting agent:", error);
     }
 };
 
-
-// Confirm deletion of selected agents
 const confirmDeleteSelected = () => {
     deleteAgentsDialog.value = true;
 };
 
-// Function to delete selected agents
-const deleteselectedAgents = async () => {
+const deleteSelectedAgents = async () => {
     try {
         for (const selectedAgent of selectedAgents.value) {
             await axios.delete(`http://localhost:9090/agent/${selectedAgent.id}`);
         }
         agents.value = agents.value.filter(
-            (agent) => !selectedAgents.value.some((selected) => selected.id === agent.id)
+            agent => !selectedAgents.value.some(selected => selected.id === agent.id)
         );
-        selectedAgents.value = null;
+        selectedAgents.value = null
         deleteAgentsDialog.value = false;
-        toast.add({
-            severity: "success",
-            summary: "Successful",
-            detail: "Selected Agents Deleted",
-            life: 3000,
-        });
+        toast.add({severity: "success",summary: "Successful",detail: "Selected Agents Deleted",life: 3000,});
     } catch (error) {
-        console.error("Error deleting selected agents:", error.response?.data || error.message);
+        console.error("Error deleting selected agents:", error);
     }
 };
 
-// Additional functions like createId() if needed...
+const findIndexById = (id) => {
+    return agents.value.findIndex(agent => agent.id === id);
+};
+
 </script>
+
 
 
 <template>
@@ -216,7 +199,8 @@ const deleteselectedAgents = async () => {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedAgents || !selectedAgents.length" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+                        :disabled="!selectedAgents || !selectedAgents.length" />
                 </template>
             </Toolbar>
 
@@ -243,8 +227,10 @@ const deleteselectedAgents = async () => {
 
                 <Column :exportable="false" header="Actions" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2" @click="editAgent(slotProps.data)" />
-                        <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger" @click="confirmDeleteAgent(slotProps.data)" />
+                        <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+                            @click="editAgent(slotProps.data)" />
+                        <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
+                            @click="confirmDeleteAgent(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
@@ -254,12 +240,14 @@ const deleteselectedAgents = async () => {
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="agent_name" class="block font-semibold mb-3">Agent Name</label>
-                    <InputText id="agent_name" v-model.trim="agent.agent_name" required="true" autofocus :invalid="submitted && !agent.agent_name" fluid />
+                    <InputText id="agent_name" v-model.trim="agent.agent_name" required="true" autofocus
+                        :invalid="submitted && !agent.agent_name" fluid />
                     <small v-if="submitted && !agent.agent_name" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
                     <label for="area" class="block font-semibold mb-3">Area</label>
-                    <Dropdown id="area" v-model="area.area_name" :options="areas" optionLabel="area" optionValue="id" placeholder="Select an Area" />
+                    <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
+                        optionValue="id" placeholder="Select an Area" />
                     <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
                 </div>
             </div>
@@ -288,7 +276,7 @@ const deleteselectedAgents = async () => {
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteAgentsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteselectedAgents" />
+                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedAgents" />
             </template>
         </Dialog>
     </div>

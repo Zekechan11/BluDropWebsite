@@ -150,15 +150,10 @@ const deleteSelectedAgents = async () => {
 
 <template>
     <div class="space">
-        <h1 class="text-4xl font-semibold mb-6" style="color: #899499">Manage Agents</h1>
+        <h1 class="text-4xl font-semibold mb-6" style="color: #899499">Manage Agents FGS</h1>
     </div>
     <div>
         <div class="card shadow-md">
-            <Toolbar class="mb-6">
-                <template #start>
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedAgents || !selectedAgents.length" />
-                </template>
-            </Toolbar>
 
             <DataTable ref="dt" v-model:selection="selectedAgents" :value="agents" dataKey="id" :paginator="true"
                 :rows="10" :filters="filters"
@@ -172,20 +167,18 @@ const deleteSelectedAgents = async () => {
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="agent_name" header="Agent Name" sortable style="min-width: 12rem"></Column>
                 <Column field="ContainerOnLoan" header="Container on Loan" sortable style="min-width: 16rem"></Column>
 
                 <Column :exportable="false" header="Actions" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2" @click="editAgent(slotProps.data)" />
-                        <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger" @click="confirmDeleteAgent(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add/Edit Agent" :modal="true">
+        <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Stock" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="ContainerOnLoan" class="block font-semibold mb-3">Container on Loan</label>

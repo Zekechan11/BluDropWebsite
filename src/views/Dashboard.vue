@@ -1,92 +1,51 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import DatePicker from "primevue/datepicker";
-
-import { ref, onMounted } from "vue";
-
-const products = ref();
-const visible = ref(false);
-const schedule = ref(false);
-const delivery = ref(false);
-const selectedCity1 = ref();
+import axios from "axios"; // Import Axios
+import { ref, onMounted, computed } from "vue";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
+const CUSTOMER_URL = "http://localhost:9090";
+const ORDER_URL = "http://localhost:9090";
+
+const products = ref();
+const schedule = ref(false);
+const selectedCity1 = ref();
+const totalCustomer = ref(0);
+const orders = ref([]);
+const visible = ref(false);
+
+const orderCount = computed(() => orders.value.length);
+
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get(`${ORDER_URL}/api/get_order`);
+    orders.value = response.data;
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+  }
+};
+
+const fetchTotalCustomer = async () => {
+  try {
+    const response = await axios.get(`${CUSTOMER_URL}/users/count`);
+    totalCustomer.value = response.data.total_users;
+  } catch (error) {
+    console.error("Error fetching total users:", error);
+  }
+};
 
 onMounted(() => {
   products.value = [
     {
       name: "Zeke",
-      category: "Gudalupe",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Jemar",
-      category: "Malingin",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Edison",
-      category: "Nailon",
-      status: "delayed",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Leonardo",
-      category: "Siocon",
-      status: "ongoing",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
-      status: "complete",
-      profileImage: "/demo/images/user.jpg",
-    },
-    {
-      name: "Joe",
-      category: "Odlot",
+      area: "Guadalupe",
       status: "complete",
       profileImage: "/demo/images/user.jpg",
     },
   ];
+  fetchTotalCustomer();
+  fetchOrders();
 });
 
 // Schedules data
@@ -99,9 +58,8 @@ const schedules = ref([
   { day: "Saturday", area: "Cogon", type: "priority" },
 ]);
 
-
-const selectedDay = ref(null); // For the selected day in the DatePicker
-const selectedArea = ref(""); // For the input area
+const selectedDay = ref(null);
+const selectedArea = ref("");
 
 const saveSchedule = () => {
   if (selectedDay.value && selectedArea.value) {
@@ -130,9 +88,8 @@ const saveSchedule = () => {
   }
 };
 
-// Function to remove a schedule
 const removeSchedule = (index) => {
-  schedules.value.splice(index, 1); // Remove the schedule at the given index
+  schedules.value.splice(index, 1);
 };
 
 const formatCurrency = (value) => {
@@ -148,7 +105,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">TOTAL CUSTOMERS</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              500
+              {{ totalCustomer }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
@@ -158,13 +115,13 @@ const formatCurrency = (value) => {
         </div>
       </div>
     </div>
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4">NEW CUSTOMERS</span>
+            <span class="block text-muted-color font-medium mb-4">DELIVERY</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              100
+             {{ orderCount }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
@@ -173,6 +130,23 @@ const formatCurrency = (value) => {
           </div>
         </div>
       </div>
+      <Dialog
+          v-model:visible="visible"
+          modal
+          header="Customer's Order"
+          :style="{ width: '50rem' }"
+          :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        >
+          <DataTable
+            :value="orders"
+            showGridlines
+            tableStyle="min-width: 40rem"
+          >
+            <Column field="name" header="Name"></Column>
+            <Column field="Num_gallons_order" header="Quantity"></Column>
+            <Column field="Date" header="Date"></Column>
+          </DataTable>
+        </Dialog>
     </div>
     <div class="col-span-12 lg:col-span-6 xl:col-span-4">
       <div class="card mb-0 shadow-md">
@@ -191,7 +165,6 @@ const formatCurrency = (value) => {
       </div>
     </div>
 
-
     <div class="col-span-12 xl:col-span-8">
       <div class="card shadow-md" style="background-color: #fbfcfc">
         <div class="font-semibold text-xl">AGENTS</div>
@@ -209,7 +182,7 @@ const formatCurrency = (value) => {
                 </div>
               </template>
             </Column>
-            <Column field="category" header="Area"></Column>
+            <Column field="area" header="Area"></Column>
             <Column header="Status">
               <template #body="slotProps">
                 <span :class="{
@@ -236,30 +209,6 @@ const formatCurrency = (value) => {
     </div>
 
     <div class="col-span-12 lg:col-span-6 xl:col-span-4">
-      <div class="card mb-0 shadow-md cursor-pointer" @click="delivery = true">
-        <div class="flex justify-between mb-4">
-          <div>
-            <span class="block text-muted-color font-medium mb-4">CUSTOMER DELIVERY</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              2
-            </div>
-          </div>
-          <div class="flex items-center justify-center bg-blue-100 dark:bg-purple-400/10 rounded-border"
-            style="width: 5rem; height: 5rem">
-            <i class="pi pi-truck text-purple-500 !text-4xl"></i>
-          </div>
-        </div>
-        <Dialog v-model:visible="delivery" modal header="Customer's Order" :style="{ width: '50rem' }"
-          :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-          <DataTable :value="products" showGridlines tableStyle="min-width: 40rem">
-            <Column field="name" header="Name"></Column>
-            <Column field="quantity" header="Quantity"></Column>
-            <Column field="date" header="Date"></Column>
-          </DataTable>
-        </Dialog>
-      </div>
-
-
       <div class="col-span-12 xl:col-span-4">
         <div class="card shadow-md" style="background-color: #fbfcfc">
           <div class="flex items-center justify-between mb-6">
@@ -271,10 +220,12 @@ const formatCurrency = (value) => {
 
           <ul class="p-0 mx-0 mt-0 mb-6 list-none">
             <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
-              <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="schedule.color, {
-                'bg-blue-300': schedule.type === 'regular',
-                'bg-yellow-200': schedule.type === 'priority',
-              }">
+              <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="(schedule.color,
+                {
+                  'bg-blue-300': schedule.type === 'regular',
+                  'bg-yellow-200': schedule.type === 'priority',
+                })
+                ">
                 {{ schedule.day }} - {{ schedule.area }}
               </span>
               <i class="pi pi-times text-red-500 cursor-pointer ml-4" @click="removeSchedule(index)"></i>
@@ -298,9 +249,7 @@ const formatCurrency = (value) => {
             <Button type="button" label="Save" @click="saveSchedule"></Button>
           </div>
         </Dialog>
-
       </div>
     </div>
   </div>
-
 </template>

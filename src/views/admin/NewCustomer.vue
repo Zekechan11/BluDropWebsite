@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import QrcodeVue from 'qrcode.vue';
 
 // Define reactive variables
@@ -13,8 +12,7 @@ const password = ref('');
 const confirmPassword = ref('');
 const passwordVisible = ref(false);
 const confirmPasswordVisible = ref(false);
-const role = ref(''); // Default role is customer
-const router = useRouter();
+const role = ref('');
 
 // Function to toggle password visibility
 const togglePasswordVisibility = () => {

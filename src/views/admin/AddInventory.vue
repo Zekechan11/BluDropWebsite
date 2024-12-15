@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 
-const INVENTORY_URL = 'http://localhost:9090'; // Go API base URL
+const INVENTORY_URL = 'http://localhost:9090';
 
 const toast = useToast();
 const dt = ref();
@@ -12,7 +12,7 @@ const inventoryDialog = ref(false);
 const deleteInventoryDialog = ref(false);
 const deleteInventorysDialog = ref(false);
 const inventory = ref({});
-const selectedInventorys = ref();
+const selectedInventorys = ref([]);
 const submitted = ref(false);
 
 const openNew = () => {
@@ -35,33 +35,49 @@ const fetchInventory = async () => {
             return {
                 ...inventory,
             };
-        })
+        });
     } catch (error) {
         console.error("Error fetching inventorys:", error);
+    }
+};
+
+const createInventory = async () => {
+    try {
+        const response = await axios.post(`${INVENTORY_URL}/api/save_inventory`, inventory.value);
+        inventorys.value.push({ ...inventory.value, inventory_id: response.data.inventory_id });
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Created', life: 3000 });
+    } catch (error) {
+        console.error("Failed to create inventory:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create inventory', life: 3000 });
+    }
+};
+
+const updateInventory = async () => {
+    try {
+        await axios.put(`${INVENTORY_URL}/api/update_inventory/${inventory.value.inventory_id}`, inventory.value);
+        inventorys.value[findIndexById(inventory.value.inventory_id)] = inventory.value;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Updated', life: 3000 });
+    } catch (error) {
+        console.error("Failed to update inventory:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update inventory', life: 3000 });
     }
 };
 
 const saveInventory = async () => {
     submitted.value = true;
 
-    if (!inventory.value.inventory || !inventory.value.no_of_items)  {
-        try {
-            if (inventory.value.id) {
-                await axios.put(`${INVENTORY_URL}/api/update_inventory/${inventory.value.id}`, inventory.value)
-                inventorys.value[findIndexById(inventory.value.id)] = inventory.value;
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Updated', life: 3000 });
-            } else {
-                const response = await axios.post(`${INVENTORY_URL}/api/save_inventory`, inventory.value);
-                inventorys.value.push({ ...inventory.value, id: response.data.id });
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Created', life: 3000 });
-            }
-            inventoryDialog.value = false;
-            inventory.value = {};
-        } catch (error) {
-            console.error("Failed to save inventory:", error);
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save inventory', life: 3000 });
-        }
+    if (!inventory.value.item || !inventory.value.no_of_items) {
+        return;
     }
+
+    if (inventory.value.inventory_id) {
+        await updateInventory();
+    } else {
+        await createInventory();
+    }
+
+    inventoryDialog.value = false;
+    inventory.value = {};
 };
 
 const editInventory = (selectedInventory) => {
@@ -76,11 +92,11 @@ const confirmDeleteInventory = (prod) => {
 
 const deleteInventory = async () => {
     try {
-        await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${inventory.value.id}`);
-        inventorys.value = inventorys.value.filter(val => val.id !== inventory.value.id);
+        await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${inventory.value.inventory_id}`);
+        inventorys.value = inventorys.value.filter(val => val.inventory_id !== inventory.value.inventory_id);
         deleteInventoryDialog.value = false;
-        inventory.value = {}; // Reset the selected inventory
-        
+        inventory.value = {};
+
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Permanently Deleted', life: 3000 });
     } catch (error) {
         console.error('Error deleting inventory:', error);
@@ -89,8 +105,6 @@ const deleteInventory = async () => {
     }
 };
 
-
-
 const confirmDeleteSelected = () => {
     deleteInventorysDialog.value = true;
 };
@@ -98,11 +112,11 @@ const confirmDeleteSelected = () => {
 const deleteSelectedInventorys = async () => {
     try {
         for (const selected of selectedInventorys.value) {
-            await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${selected.id}`);
+            await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${selected.inventory_id}`);
         }
         inventorys.value = inventorys.value.filter(val => !selectedInventorys.value.includes(val));
         deleteInventorysDialog.value = false;
-        selectedInventorys.value = null;
+        selectedInventorys.value = [];
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Selected Inventory Deleted', life: 3000 });
     } catch (error) {
         console.error("Failed to delete selected inventory:", error);
@@ -111,7 +125,7 @@ const deleteSelectedInventorys = async () => {
 };
 
 const findIndexById = (id) => {
-    return inventorys.value.findIndex(inventory => inventory.id === id);
+    return inventorys.value.findIndex(inventory => inventory.inventory_id === id);
 };
 
 onMounted(() => {
@@ -141,7 +155,7 @@ onMounted(() => {
                 ref="dt"
                 v-model:selection="selectedInventorys"
                 :value="inventorys"
-                dataKey="id"
+                dataKey="inventory_id"
                 :paginator="true"
                 :rows="10"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
