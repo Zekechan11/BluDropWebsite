@@ -1,20 +1,15 @@
 <script setup>
+import { useRouter } from "vue-router";
+import { LogoutService } from "../../service/LogoutService";
 import Menu from "./Menu.vue";
-import { useRouter } from 'vue-router';
 
 const router = useRouter();
-
-const Logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-    router.push('/auth/login');
-};
 </script>
 
 <template>
   <div class="layout-sidebar shadow-md">
     <Menu />
-    <button type="button" class="logout-button" @click="Logout">
+    <button type="button" class="logout-button" @click="LogoutService(router)">
       <i class="pi pi-sign-out"></i>
       <span>Logout</span>
     </button>
@@ -33,7 +28,7 @@ const Logout = () => {
   margin: 0;
   padding: 0;
   list-style-type: none;
-  
+
   font-weight: 400;
   color: var(--text-color);
   margin: 1.75rem 0;
@@ -42,5 +37,4 @@ const Logout = () => {
 .logout-button i {
   margin-right: 8px; // Adjust the space between the icon and the text
 }
-
 </style>

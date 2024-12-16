@@ -1,20 +1,16 @@
 <script setup>
-import { useRouter } from "vue-router";
 import AgentMenu from "./AgentMenu.vue";
+import { LogoutService } from "../../service/LogoutService";
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const Logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-  router.push("/auth/login");
-};
 </script>
 
 <template>
   <div class="layout-sidebar shadow-md">
     <AgentMenu />
-    <button type="button" class="logout-button" @click="Logout">
+    <button type="button" class="logout-button" @click="LogoutService(router)">
       <i class="pi pi-sign-out"></i>
       <span>Logout</span>
     </button>
