@@ -53,7 +53,7 @@ const fetchAreas = async () => {
 
 const fetchAgents = async () => {
     try {
-        const response = await axios.get(`${AGENT_URL}/agent`);
+        const response = await axios.get(`${AGENT_URL}/api/agents`);
         const data = response.data;
 
         agents.value = data.map((agent) => {
@@ -79,7 +79,7 @@ const createAgent = async () => {
             area_id: area.value.area_name,
         };
 
-        const response = await axios.post(`${AGENT_URL}/agent`, payload);
+        const response = await axios.post(`${AGENT_URL}/api/agent`, payload);
         agents.value.push({
             id: response.data.id,
             agent_name: agent.value.agent_name,
@@ -222,8 +222,9 @@ const findIndexById = (id) => {
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="agent_name" header="Agent Name" sortable style="min-width: 12rem"></Column>
-                <Column field="area_name" header="Area" sortable style="min-width: 16rem"></Column>
+                <Column field="FirstName" header="First Name" sortable style="min-width: 12rem"></Column>
+                <Column field="LastName" header="Last Name" sortable style="min-width: 12rem"></Column>
+                <Column field="Area" header="Area" sortable style="min-width: 16rem"></Column>
 
                 <Column :exportable="false" header="Actions" style="min-width: 12rem">
                     <template #body="slotProps">
@@ -239,16 +240,34 @@ const findIndexById = (id) => {
         <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Agent" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="agent_name" class="block font-semibold mb-3">Agent Name</label>
-                    <InputText id="agent_name" v-model.trim="agent.agent_name" required="true" autofocus
-                        :invalid="submitted && !agent.agent_name" fluid />
-                    <small v-if="submitted && !agent.agent_name" class="text-red-500">Name is required.</small>
+                    <label for="firstname" class="block font-semibold mb-3">First Name</label>
+                    <InputText id="firstname" v-model.trim="agent.firstname" required="true" autofocus
+                        :invalid="submitted && !agent.firstname" fluid />
+                    <small v-if="submitted && !agent.firstname" class="text-red-500">First Name is required.</small>
+                </div>
+                <div>
+                    <label for="lastname" class="block font-semibold mb-3">Last Name</label>
+                    <InputText id="lastname" v-model.trim="agent.lastname" required="true" autofocus
+                        :invalid="submitted && !agent.lastname" fluid />
+                    <small v-if="submitted && !agent.lastname" class="text-red-500">Last Name is required.</small>
+                </div>
+                <div>
+                    <label for="email" class="block font-semibold mb-3">Email</label>
+                    <InputText id="email" v-model.trim="agent.email" required="true" autofocus
+                        :invalid="submitted && !agent.email" fluid />
+                    <small v-if="submitted && !agent.email" class="text-red-500">Email is required.</small>
                 </div>
                 <div>
                     <label for="area" class="block font-semibold mb-3">Area</label>
                     <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
                         optionValue="id" placeholder="Select an Area" />
                     <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
+                </div>
+                <div>
+                    <label for="password" class="block font-semibold mb-3">Password</label>
+                    <InputText id="password" v-model.trim="agent.password" required="true" autofocus
+                        :invalid="submitted && !agent.password" fluid />
+                    <small v-if="submitted && !agent.password" class="text-red-500">Password is required.</small>
                 </div>
             </div>
 
