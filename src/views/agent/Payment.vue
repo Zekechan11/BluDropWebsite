@@ -1,6 +1,6 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
@@ -16,22 +16,35 @@ const customerData = ref({
   totalPrice: 0,
   status: "",
   customerArea: "",
+  amountPaid: 0,
+  gallonsReturned: 0
 });
+
+const error = ref('');
 
 // Extract route parameter (if QR code data is passed via route)
 const route = useRoute();
 const slug = route.params.slug;
 
-// Mock raw data from QR code (replace this with actual decoded QR data)
-const rawData = `{"orderId":39,"customerFirstName":"Ezekiel Angelo","customerLastName":"Pelayo","gallons":10,"date":"Tuesday","dateCreated":"2024-12-18 23:16:50","totalPrice":200,"status":"Pending","customerArea":"Cayang, Bogo City, Cebu"}`;
-
-// Parse raw data and assign it to the customerData object
-try {
-  const parsedData = JSON.parse(rawData);
-  Object.assign(customerData.value, parsedData);
-} catch (error) {
-  console.error("Failed to parse QR code data:", error);
-}
+// Parse the route parameter dynamically
+onMounted(() => {
+  try {
+    // Decode the URL-encoded JSON string
+    const decodedData = decodeURIComponent(slug);
+    const parsedData = JSON.parse(decodedData);
+    
+    // Assign parsed data to customerData
+    Object.assign(customerData.value, parsedData);
+    
+    // Ensure additional fields are initialized
+    customerData.value.amountPaid = 0;
+    customerData.value.gallonsReturned = 0;
+  } catch (error) {
+    console.error("Failed to parse QR code data:", error);
+    // Show an error message to the user
+    error.value = "Invalid QR code data";
+  }
+});
 
 // Method to handle payment submission
 const submitPayment = async () => {
@@ -42,9 +55,9 @@ const submitPayment = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        order_id: customerData.orderId,
-        amount_paid: customerData.amountPaid,
-        gallons_returned: customerData.gallonsReturned || 0,
+        order_id: customerData.value.orderId,
+        amount_paid: customerData.value.amountPaid,
+        gallons_returned: customerData.value.gallonsReturned || 0,
       }),
     });
 
@@ -67,6 +80,8 @@ const formatCurrency = (value) => {
 
 <template>
   <div class="space">
+    <p v-if="error" class="text-red-500 mb-4">{{ error }}</p>
+    
     <h1 class="font-semibold">{{ customerData.customerFirstName }} {{ customerData.customerLastName }}'s Payment</h1>
   </div>
 
@@ -122,7 +137,7 @@ const formatCurrency = (value) => {
               style="font-size: 1.25rem; border: solid 1px;"
               id="amountPaid"
               type="number"
-              v-model="customerData.amountPaid"
+              v-model.number="customerData.amountPaid"
               min="0"
             />
           </div>
@@ -137,7 +152,7 @@ const formatCurrency = (value) => {
               style="font-size: 1.25rem; border: solid 1px;"
               id="gallonsReturned"
               type="number"
-              v-model="customerData.gallonsReturned"
+              v-model.number="customerData.gallonsReturned"
               min="0"
             />
           </div>

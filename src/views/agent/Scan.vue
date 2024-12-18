@@ -27,20 +27,26 @@ const onInit = async (promise) => {
   }
 };
 
-// Update the onDecode method to pass the decoded data as query params
+// Update the onDecode method to pass the decoded data as encoded JSON
 const onDecode = (decodedStr) => {
   try {
+    // Parse the decoded string to ensure it's valid JSON
+    const parsedData = JSON.parse(decodedStr);
+    
+    // Encode the JSON string for URL routing
+    const encodedData = encodeURIComponent(JSON.stringify(parsedData));
+    
     // Log raw decoded data
     console.log('Raw Decoded Data:', decodedStr);
 
-    // Redirect with decoded data as query params
-    window.location.replace(`/agent/payment/${decodedStr}`);
+    // Redirect with encoded data as route parameter
+    window.location.replace(`/agent/payment/${encodedData}`);
   } catch (error) {
     console.error('Error processing decoded data:', error);
-    console.log('Raw Decoded Data on Error:', decodedStr);
-
-    // Proceed with the redirect with raw decoded string
-    window.location.replace(`/agent/payment/${decodedStr}`);
+    
+    // If parsing fails, try redirecting with raw string (fallback)
+    const encodedFallback = encodeURIComponent(decodedStr);
+    window.location.replace(`/agent/payment/${encodedFallback}`);
   }
 };
 
@@ -106,8 +112,6 @@ const saveImage = () => {
 
   localStorage.setItem('savedQRImages', JSON.stringify(savedImages.value));
 };
-
-// Other existing methods remain the same...
 </script>
 
 <template>
