@@ -1,0 +1,59 @@
+<script setup>
+import { ref } from 'vue';
+import { QrcodeStream } from 'vue3-qrcode-reader';
+
+const error = ref('');
+const decodedString = ref('');
+const torch = ref(false);
+
+const onInit = async (promise) => {
+  try {
+    const { capabilities } = await promise;
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      error.value = "User denied camera access permission";
+    } else if (err.name === 'NotFoundError') {
+      error.value = "No suitable camera device installed";
+    } else if (err.name === 'NotSupportedError') {
+      error.value = "Page is not served over HTTPS (or localhost)";
+    } else if (err.name === 'NotReadableError') {
+      error.value = "Maybe camera is already in use";
+    } else if (err.name === 'OverconstrainedError') {
+      error.value = "Did you request the front camera although there is none?";
+    } else if (err.name === 'StreamApiNotSupportedError') {
+      error.value = "Browser seems to be lacking features";
+    }
+  }
+};
+
+const onDecode = (decodedStr) => {
+  // Parse the JSON string from the QR code
+  try {
+    const parsedData = JSON.parse(decodedStr);
+    
+    // Log the entire parsed data object to the console
+    console.log('Scanned QR Code Data:', parsedData);
+    
+    // Set the decodedString for potential future use
+    decodedString.value = decodedStr;
+    
+    // Redirect to the payment page with the order ID
+    window.location.replace(`/agent/payment/${parsedData.orderId}`);
+  } catch (error) {
+    console.error('Error parsing QR code data:', error);
+    // Fallback to original behavior if parsing fails
+    window.location.replace(`/agent/payment/${decodedStr}`);
+  }
+};
+</script>
+
+<template>
+  <div class="space">
+    <h1 class="text-4xl font-semibold mb-6" style="color: #899499">Scanner</h1>
+  </div>
+  <div class="card shadow-md flex justify-center items-center" style="height: 550px;">
+    <p>{{ error }}</p>
+    <button @click="torch = !torch"></button>
+    <qrcode-stream @init="onInit" @decode="onDecode" :torch="torch" />
+  </div>
+</template>

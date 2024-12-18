@@ -27,19 +27,17 @@ const onInit = async (promise) => {
   }
 };
 
-// Update the onDecode method to pass the decoded data as query params
+// Decoding handler for both camera and uploaded images
 const onDecode = (decodedStr) => {
   try {
-    // Log raw decoded data
-    console.log('Raw Decoded Data:', decodedStr);
-
-    // Redirect with decoded data as query params
-    window.location.replace(`/agent/payment/${decodedStr}`);
+    const parsedData = JSON.parse(decodedStr);
+    
+    console.log('Scanned QR Code Data:', parsedData);
+    decodedString.value = decodedStr;
+    
+    window.location.replace(`/agent/payment/${parsedData.orderId}`);
   } catch (error) {
-    console.error('Error processing decoded data:', error);
-    console.log('Raw Decoded Data on Error:', decodedStr);
-
-    // Proceed with the redirect with raw decoded string
+    console.error('Error parsing QR code data:', error);
     window.location.replace(`/agent/payment/${decodedStr}`);
   }
 };
@@ -58,7 +56,7 @@ const selectDeviceImage = () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-
+        
         canvas.toBlob(blob => {
           selectedFile.value = new File([blob], 'device-screenshot.png', { type: 'image/png' });
           stream.getTracks().forEach(track => track.stop());
@@ -97,7 +95,7 @@ const saveImage = () => {
   if (!selectedFile.value) return;
 
   const imageURL = URL.createObjectURL(selectedFile.value);
-
+  
   savedImages.value.push({
     name: selectedFile.value.name,
     url: imageURL,
@@ -116,11 +114,11 @@ const saveImage = () => {
       QR Code Scanner
     </h1>
   </div>
-
+  
   <div class="card shadow-md flex flex-col justify-center items-center" style="height: 550px;">
     <!-- Error Display -->
     <p v-if="error" class="text-red-500 mb-4">{{ error }}</p>
-
+    
     <!-- Camera Mode -->
     <qrcode-stream 
       @init="onInit" 
@@ -128,7 +126,7 @@ const saveImage = () => {
       :torch="torch" 
       class="w-full h-full"
     />
-
+    
     <!-- Device Image Selection Buttons -->
     <div class="mt-4 flex space-x-2">
       <button 
@@ -137,7 +135,7 @@ const saveImage = () => {
       >
         Capture Screen
       </button>
-
+      
       <button 
         @click="selectFromGallery" 
         class="px-4 py-2 bg-green-500 text-white rounded"
@@ -145,7 +143,7 @@ const saveImage = () => {
         Select from Gallery
       </button>
     </div>
-
+    
     <!-- Selected File Preview and Scan -->
     <div v-if="selectedFile" class="mt-4 text-center">
       <qrcode-capture 
@@ -159,3 +157,5 @@ const saveImage = () => {
     </div>
   </div>
 </template>
+
+after a successful scan, make it so that the data decoded is displayed in the console.
