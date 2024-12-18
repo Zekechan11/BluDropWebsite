@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from "vue";
-
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -32,26 +31,40 @@ const handelLogin = async () => {
       body: JSON.stringify(loginData),
     });
 
+    const responseData = await request.json(); // Extract response data
+
     if (!request.ok) {
-      const errorData = await request.json();
-      console.error("Error creating customer:", errorData);
-      alert("Failed to create customer: " + errorData.error);
+      // Handle error case
+      console.error("Error during login:", responseData);
+      alert("Login failed: " + (responseData.error || "Unknown error"));
     } else {
-      const responseData = await request.json();
-      localStorage.setItem("token", responseData.token);
-      localStorage.setItem("role", responseData.role);
-      localStorage.setItem("firstName", responseData.firstName);
-      localStorage.setItem("lastName", responseData.lastName);
-      localStorage.setItem("area", responseData.area);
-      if (responseData.role === "Staff") {
-        router.push("/agent/dashboard");
-      } else if (responseData.role === "Customer") {
-        router.push("/user/dashboard");
-      } else if (responseData.role === "Admin") {
-        router.push("/views/dashboard");
+      // Validate that all fields are present
+      const { id, token, role, firstName, lastName, area } = responseData;
+
+      if (id && token && role && firstName && lastName && area) {
+        // Save to localStorage
+        localStorage.setItem("id", id);
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+        localStorage.setItem("firstName", firstName);
+        localStorage.setItem("lastName", lastName);
+        localStorage.setItem("area", area);
+
+        // Redirect based on role
+        if (role === "Staff") {
+          router.push("/agent/dashboard");
+        } else if (role === "Customer") {
+          router.push("/user/dashboard");
+        } else if (role === "Admin") {
+          router.push("/views/dashboard");
+        }
+      } else {
+        console.error("Missing data in the response:", responseData);
+        alert("Login failed: Missing data in response from the server.");
       }
     }
   } catch (error) {
+    // Handle fetch errors
     console.error("Fetch error:", error);
     alert("An error occurred: " + error.message);
   }
@@ -87,14 +100,13 @@ const handelLogin = async () => {
             class="card1 w-full bg-surface-0 dark:bg-surface-900 py-10 px-8 sm:px-12 shadow-md"
             style="border-radius: 0 20px 20px 0"
           >
-          
             <div class="text-center mb-6">
               <router-link to="/" class="layout-topbar-logo">
-              <img
-                src="/demo/images/logo.png"
-                class="mb-6 w-16 shrink-0 mx-auto"
-              />
-            </router-link>
+                <img
+                  src="/demo/images/logo.png"
+                  class="mb-6 w-16 shrink-0 mx-auto"
+                />
+              </router-link>
               <div
                 class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4"
               >

@@ -1,14 +1,15 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
-import { ref, onMounted, computed } from 'vue';
-import QrcodeVue from 'qrcode.vue';
 import axios from 'axios'; // Import axios
+import QrcodeVue from 'qrcode.vue';
+import { computed, onMounted, ref } from 'vue';
 
 const ORDER_URL = 'http://localhost:9090';
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
 const userData = ref('');
+const customer_id = localStorage.getItem("id");
 const customerName = localStorage.getItem("firstName");
 const customerLastName = localStorage.getItem("lastName");
 const customerArea = localStorage.getItem("area");
@@ -25,6 +26,7 @@ const fullName = computed(() => {
 const placeOrder = async () => {
   try {
     const response = await axios.post(`${ORDER_URL}/api/save_order`, {
+      customer_id: customer_id,
       num_gallons_order: gallons.value,
       date: ingredient.value
     });
