@@ -1,13 +1,16 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
-import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router"; // Import useRouter
+
+const ORDER_URL = "http://localhost:9090";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
 // State to hold parsed customer data
 const customerData = ref({
   orderId: null,
+  customerId: null, // Include customerId here
   customerFirstName: "",
   customerLastName: "",
   gallons: 0,
@@ -17,62 +20,90 @@ const customerData = ref({
   status: "",
   customerArea: "",
   amountPaid: 0,
-  gallonsReturned: 0
+  gallonsReturned: 0,
 });
 
-const error = ref('');
+const error = ref("");
+const isLoading = ref(false);
+const successMessage = ref("");
 
 // Extract route parameter (if QR code data is passed via route)
 const route = useRoute();
+const router = useRouter(); // Initialize the router
 const slug = route.params.slug;
 
 // Parse the route parameter dynamically
 onMounted(() => {
   try {
-    // Decode the URL-encoded JSON string
     const decodedData = decodeURIComponent(slug);
     const parsedData = JSON.parse(decodedData);
-    
-    // Assign parsed data to customerData
+
     Object.assign(customerData.value, parsedData);
-    
+
     // Ensure additional fields are initialized
     customerData.value.amountPaid = 0;
     customerData.value.gallonsReturned = 0;
   } catch (error) {
     console.error("Failed to parse QR code data:", error);
-    // Show an error message to the user
     error.value = "Invalid QR code data";
   }
 });
 
 // Method to handle payment submission
 const submitPayment = async () => {
+  error.value = "";
+  successMessage.value = "";
+
+  const backendURL = "http://localhost:9090/api/process-payment";
+
+  if (customerData.value.amountPaid < customerData.value.totalPrice) {
+    error.value = "The amount paid is less than the total price.";
+    return;
+  }
+
+  isLoading.value = true;
+
   try {
-    const response = await fetch('/api/process_payment', {
-      method: 'POST',
+    const response = await fetch(backendURL, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        order_id: customerData.value.orderId,
-        amount_paid: customerData.value.amountPaid,
-        gallons_returned: customerData.value.gallonsReturned || 0,
+        orderId: customerData.value.orderId,
+        customerId: customerData.value.customerId, // Include customerId here
+        amountPaid: customerData.value.amountPaid,
+        gallonsReturned: customerData.value.gallonsReturned || 0,
       }),
     });
 
-    const result = await response.json();
-    if (response.ok) {
-      alert(result.message);
-    } else {
-      console.error(result.error);
-      alert("Error processing payment: " + result.error);
+    let result = {};
+    try {
+      result = await response.json();
+    } catch {
+      if (!response.ok) throw new Error("Unexpected server error");
     }
-  } catch (error) {
-    console.error("Payment submission failed:", error);
+
+    if (response.ok) {
+      successMessage.value = result.message || "Payment processed successfully!";
+      customerData.value.status = "Completed";
+
+      // Redirect to /agent/dashboard after successful payment
+      setTimeout(() => {
+        router.push("/agent/dashboard");
+      }, 2000); // Optional: Add a slight delay for UX
+    } else {
+      error.value = result.error || "An error occurred while processing the payment.";
+    }
+  } catch (err) {
+    console.error("Payment submission failed:", err);
+    error.value = "Failed to connect to the server. Please try again later.";
+  } finally {
+    isLoading.value = false;
   }
 };
 
+// Utility function for formatting currency
 const formatCurrency = (value) => {
   return value.toLocaleString("en-US", { style: "currency", currency: "PHP" });
 };
@@ -81,8 +112,11 @@ const formatCurrency = (value) => {
 <template>
   <div class="space">
     <p v-if="error" class="text-red-500 mb-4">{{ error }}</p>
-    
-    <h1 class="font-semibold">{{ customerData.customerFirstName }} {{ customerData.customerLastName }}'s Payment</h1>
+    <p v-if="successMessage" class="text-green-500 mb-4">{{ successMessage }}</p>
+
+    <h1 class="font-semibold">
+      {{ customerData.customerFirstName }} {{ customerData.customerLastName }}'s Payment
+    </h1>
   </div>
 
   <div class="card shadow-md flex flex-col justify-between" style="height: 565px">
@@ -91,6 +125,9 @@ const formatCurrency = (value) => {
       <ul class="list-none p-0 m-0 mt-12">
         <li class="mb-4 text-base">
           <strong>Order ID:</strong> {{ customerData.orderId }}
+        </li>
+        <li class="mb-4 text-base">
+          <strong>Customer ID:</strong> {{ customerData.customerId }}
         </li>
         <li class="mb-4 text-base">
           <strong>Name:</strong> {{ customerData.customerFirstName }} {{ customerData.customerLastName }}
@@ -162,8 +199,11 @@ const formatCurrency = (value) => {
 
     <!-- Submit Payment Button -->
     <div class="flex justify-end" style="margin-top: -1rem;">
-      <button @click="submitPayment" class="px-6 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700">
-        Submit Payment
+      <button 
+        @click="submitPayment" 
+        :disabled="isLoading" 
+        class="px-6 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700">
+        {{ isLoading ? "Processing..." : "Submit Payment" }}
       </button>
     </div>
   </div>

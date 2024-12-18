@@ -36,6 +36,7 @@ const fetchLatestOrder = async () => {
       
       userData.value = {
         orderId: orderData.ID,
+        customerId: orderData.CustomerID,
         customerFirstName: orderData.CustomerFirstName,
         customerLastName: orderData.CustomerLastName,
         gallons: orderData.Num_gallons_order,
