@@ -28,6 +28,16 @@ const model = ref([
             label: 'Scanner', 
             icon: 'pi pi-qrcode', 
             to: '/agent/scanner' 
+        },
+        { 
+            label: 'Create Customer', 
+            icon: 'pi pi-user-plus', 
+            to: '/agent/create-customer' 
+        },
+        { 
+            label: 'Customer Record', 
+            icon: 'pi pi-list', 
+            to: '/agent/record' 
         }
         
         ]

@@ -120,8 +120,10 @@ const formatCurrency = (value) => {
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
       <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
         <Column field="name" header="Name"></Column>
+        <Column field="/" header="Area"></Column>
         <Column field="Num_gallons_order" header="Quantity"></Column>
         <Column field="Date" header="Date"></Column>
+       
       </DataTable>
     </Dialog>
 

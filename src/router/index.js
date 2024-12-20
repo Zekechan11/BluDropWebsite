@@ -77,6 +77,16 @@ const router = createRouter({
           path: '/agent/payment/:slug',
           name: 'payment',
           component: () => import('@/views/agent/Payment.vue')
+        },
+        {
+          path: '/agent/create-customer',
+          name: 'create-customer',
+          component: () => import('@/views/agent/Create_Customer.vue')
+        },
+        {
+          path: '/agent/record',
+          name: 'record',
+          component: () => import('@/views/agent/Customer_record.vue')
         }
       ]
     },
@@ -103,17 +113,17 @@ const router = createRouter({
         {
           path: '/admin/Customer/add-customer',
           name: 'add-customer',
-          component: () => import('@/views/admin/Customer/AddCustomer.vue')
+          component: () => import('@/views/admin/Add Customer/AddCustomer.vue')
         },
         {
           path: '/admin/Customer/active-customer',
           name: 'active-customer',
-          component: () => import('@/views/admin/Customer/ActiveCustomer.vue')
+          component: () => import('@/views/admin/Add Customer/ActiveCustomer.vue')
         },
         {
           path: '/admin/Customer/inactive-customer',
           name: 'inactive-customer',
-          component: () => import('@/views/admin/Customer/InactiveCustomer.vue')
+          component: () => import('@/views/admin/Add Customer/InactiveCustomer.vue')
         },
         {
           path: '/admin/add-staff',

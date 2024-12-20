@@ -12,7 +12,9 @@ const password = ref('');
 const confirmPassword = ref('');
 const passwordVisible = ref(false);
 const confirmPasswordVisible = ref(false);
-const role = ref('');
+
+// Set default role as 'customer'
+const role = ref('customer');
 
 // Function to toggle password visibility
 const togglePasswordVisibility = () => {
@@ -37,7 +39,7 @@ const handleFormSubmit = async () => {
     return;
   }
 
-  // Save user data and QR code to localStorage
+  // Save user data with role set to 'customer'
   const userData = {
     firstName: firstName.value,
     lastName: lastName.value,
@@ -45,7 +47,7 @@ const handleFormSubmit = async () => {
     email: email.value,
     area: area.value,
     password: password.value, // Password can be stored, but consider hashing for security
-    role: role.value // Adding role to the user data
+    role: role.value, // Ensure the role is always 'customer'
   };
 
   localStorage.setItem('userData', JSON.stringify(userData));
@@ -77,7 +79,6 @@ const handleFormSubmit = async () => {
   }
 };
 </script>
-
 <template>
   <div class="space">
     <h1 class="text-2xl md:text-4xl font-bold mb-6 text-gray-500">Create Account</h1>
@@ -147,16 +148,6 @@ const handleFormSubmit = async () => {
           placeholder="Enter your username" required />
       </div>
 
-      <!-- Role Selection -->
-      <div class="mb-4">
-        <label for="role" class="block text-gray-600 font-bold mb-2">Role</label>
-        <select id="role" v-model="role"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-          <option value="customer">Customer</option>
-          <option value="staff">Staff</option>
-        </select>
-      </div>
-
       <!-- QR Code Preview -->
       <qrcode-vue v-if="username" :value="username" :size="200" level="H" class="mt-4 mx-auto" />
 
@@ -170,10 +161,3 @@ const handleFormSubmit = async () => {
     </form>
   </div>
 </template>
-
-<style scoped>
-.card {
-  background-color: white;
-  border-radius: 10px;
-}
-</style>

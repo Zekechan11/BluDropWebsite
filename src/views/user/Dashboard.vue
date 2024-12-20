@@ -28,12 +28,12 @@ const fetchLatestOrder = async () => {
     const response = await axios.get(`${ORDER_URL}/api/get_order`, {
       params: { customer_id: customer_id }
     });
-    
+
     const orderData = Array.isArray(response.data) ? response.data[0] : response.data;
-    
+
     if (orderData) {
       latestOrder.value = orderData;
-      
+
       userData.value = {
         orderId: orderData.ID,
         customerId: orderData.CustomerID,
@@ -61,7 +61,7 @@ const placeOrder = async () => {
     });
 
     console.log('Order saved:', response.data);
-    
+
     await fetchLatestOrder();
 
     visible.value = false;
@@ -109,6 +109,31 @@ const customers2 = ref([
     amountPaid: "₱ 400.00",
     date: "2024-10-10",
   },
+  {
+    activity: 15,
+    representative: { name: "2" },
+    amountPaid: "₱ 750.00",
+    date: "2024-10-11",
+  },
+  {
+    activity: 8,
+    representative: { name: "3" },
+    amountPaid: "₱ 400.00",
+    date: "2024-10-10",
+  },
+  {
+    activity: 15,
+    representative: { name: "2" },
+    amountPaid: "₱ 750.00",
+    date: "2024-10-11",
+  },
+  {
+    activity: 8,
+    representative: { name: "3" },
+    amountPaid: "₱ 400.00",
+    date: "2024-10-10",
+  },
+
 ]);
 
 function formatCurrency(value) {
@@ -125,12 +150,7 @@ function formatCurrency(value) {
           <p class="mt-2 text-gray-800 font-semibold"> {{ customerArea }} </p>
           <div class="flex space-x-4">
             <Button label="Order Now" @click="visible = true" />
-            <Button 
-              v-if="userData" 
-              label="View QR Code" 
-              severity="secondary" 
-              @click="qrCodeModal = true" 
-            />
+            <Button v-if="userData" label="View QR Code" severity="secondary" @click="qrCodeModal = true" />
           </div>
         </div>
       </div>
@@ -158,18 +178,9 @@ function formatCurrency(value) {
       </Dialog>
 
       <!-- QR Code Modal -->
-      <Dialog 
-        v-model:visible="qrCodeModal" 
-        modal 
-        header="Your Order QR Code" 
-        :style="{ width: '25rem' }"
-      >
+      <Dialog v-model:visible="qrCodeModal" modal header="Your Order QR Code" :style="{ width: '25rem' }">
         <div v-if="userData" class="flex justify-center">
-          <qrcode-vue 
-            :value="JSON.stringify(userData)" 
-            :size="qrCodeSize" 
-            level="H" 
-          />
+          <qrcode-vue :value="JSON.stringify(userData)" :size="qrCodeSize" level="H" />
         </div>
         <div v-else class="text-center">
           <p class="text-red-500">No QR code available.</p>
@@ -186,16 +197,20 @@ function formatCurrency(value) {
         </DataTable>
       </div>
     </div>
-    
+
     <div class="w-full space-y-8 md:w-1/3">
       <div class="space-y-4">
+
         <div class="flex items-center justify-between p-4 rounded-lg bg-teal-100 shadow-md">
           <div class="flex items-center space-x-3">
-            <div class="bg-teal-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+            <div class="bg-teal-300 p-5 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor">
+                <!-- Head -->
+                <circle cx="12" cy="8" r="4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle>
+                <!-- Body -->
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-3a7 7 0 11-7 7 7 7 0 017-7z" />
+                  d="M6 20v-4a4 4 0 014-4h4a4 4 0 014 4v4"></path>
               </svg>
             </div>
             <div class="font-semibold">
@@ -204,12 +219,20 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
+
         <div class="flex items-center justify-between p-4 rounded-lg bg-indigo-100 shadow-md">
           <div class="flex items-center space-x-3">
-            <div class="bg-indigo-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+            <div class="bg-indigo-300 p-5 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <!-- Bottle Body -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 6c-1 0-2 .8-2 2v10c0 1.2 1 2 2 2h6c1 0 2-.8 2-2V8c0-1.2-1-2-2-2H9z" />
+                <!-- Bottle Neck -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 2h4c.6 0 1 .4 1 1v3H9V3c0-.6.4-1 1-1z" />
+                <!-- Water Lines -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 11h4M10 14h4M10 17h4" />
               </svg>
             </div>
             <div class="font-semibold">
@@ -218,76 +241,11 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
+
         <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
-            <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">₱ 25.00</h2>
-              <p class="text-sm text-gray-600">Price Per. Gallon</p>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
-          <div class="flex items-center space-x-3">
-            <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">02/11/2020</h2>
-              <p class="text-sm text-gray-600">Date</p>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
-          <div class="flex items-center space-x-3">
-            <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">20</h2>
-              <p class="text-sm text-gray-600">Purchased Gallons</p>
-            </div>
-          </div>
-        </div>
-        <div style="position: relative;top: 30px;"
-          class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
-          <div class="flex items-center space-x-3">
-            <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">{{ formatCurrency(16) }}</h2>
-              <p class="text-sm text-gray-600">Amount Paid</p>
-            </div>
-          </div>
-        </div>
-        <div style="position: relative;top: 30px;"
-          class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
-          <div class="flex items-center space-x-3">
-            <div class="bg-pink-300 p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7h8M8 11h4m-6 4h10a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
+            <div class="bg-pink-300  p-5 rounded-full text-white text-4xl flex items-center justify-center" style="height: 75px;width: 75px;">
+                ₱
             </div>
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">{{ formatCurrency(16) }}</h2>
@@ -295,6 +253,8 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
+
+
       </div>
     </div>
   </div>
