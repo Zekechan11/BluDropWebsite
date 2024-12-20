@@ -2,8 +2,10 @@
 import { ref, onMounted } from "vue";
 import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
+import axios from "axios";
 
 onMounted(() => {
+  getCustomers();
   // Add some manual results for demonstration
   products.value = [
     {
@@ -69,6 +71,7 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
+const customers = ref([]);
 
 const openNew = () => {
   product.value = {};
@@ -79,6 +82,13 @@ const hideDialog = () => {
   productDialog.value = false;
   submitted.value = false;
 };
+
+const getCustomers = async () => {
+  const response  = await axios.get("http://localhost:9090/api/customers");
+  customers.value = response.data;
+}
+
+
 const saveProduct = () => {
   submitted.value = true;
 
@@ -186,7 +196,7 @@ const deleteSelectedProducts = () => {
         </template>
       </Toolbar>
 
-      <DataTable ref="dt" v-model:selection="selectedProducts" :value="products" dataKey="id" :paginator="true"
+      <DataTable ref="dt" v-model:selection="selectedProducts" :value="customers" dataKey="id" :paginator="true"
         :rows="10" :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         :rowsPerPageOptions="[5, 10, 25]"
@@ -204,8 +214,9 @@ const deleteSelectedProducts = () => {
         </template>
 
         <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-        <Column field="name" header="Name" sortable style="min-width: 16rem"></Column>
-        <Column field="address" header="Address" sortable style="min-width: 18rem"></Column>
+        <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
+        <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
+        <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
         <Column field="status" header="Status" sortable style="min-width: 12rem">
           <template #body="slotProps">
             <span class="px-2 py-1 rounded text-white" :style="{
@@ -216,7 +227,7 @@ const deleteSelectedProducts = () => {
             </span>
           </template>
         </Column>
-        <Column field="price" header="Price" sortable style="min-width: 12rem"></Column>
+        <!-- <Column field="price" header="Price" sortable style="min-width: 12rem"></Column> -->
 
         <Column :exportable="false" header="Actions" style="min-width: 10rem">
           <template #body="slotProps">
