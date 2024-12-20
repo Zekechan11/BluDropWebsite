@@ -2,7 +2,7 @@
 import { useLayout } from "@/layout/composables/layout";
 import axios from 'axios';
 import QrcodeVue from 'qrcode.vue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 
 const ORDER_URL = 'http://localhost:9090';
 
@@ -26,30 +26,44 @@ const fullName = computed(() => {
 const fetchLatestOrder = async () => {
   try {
     const response = await axios.get(`${ORDER_URL}/api/get_order`, {
-      params: { customer_id: customer_id }
+      params: { 
+        customer_id: customer_id,
+        status: 'Pending'
+      }
     });
 
     const orderData = Array.isArray(response.data) ? response.data[0] : response.data;
 
-    if (orderData) {
-      latestOrder.value = orderData;
-
-      userData.value = {
-        orderId: orderData.ID,
-        customerId: orderData.CustomerID,
-        customerFirstName: orderData.CustomerFirstName,
-        customerLastName: orderData.CustomerLastName,
-        gallons: orderData.Num_gallons_order,
-        date: orderData.Date,
-        dateCreated: orderData.Date_created,
-        totalPrice: orderData.Total_price,
-        status: orderData.Status,
-        customerArea: customerArea
-      };
+    if (orderData && orderData.CustomerID === parseInt(customer_id)) {
+      updateUserData(orderData);
+    } else {
+      resetOrderData();
     }
   } catch (error) {
     console.error('Error fetching latest order:', error);
+    resetOrderData();
   }
+};
+
+const updateUserData = (orderData) => {
+  latestOrder.value = orderData;
+  userData.value = {
+    orderId: orderData.ID,
+    customerId: orderData.CustomerID,
+    customerFirstName: orderData.CustomerFirstName,
+    customerLastName: orderData.CustomerLastName,
+    gallons: orderData.Num_gallons_order,
+    date: orderData.Date,
+    dateCreated: orderData.Date_created,
+    totalPrice: orderData.Total_price,
+    status: orderData.Status,
+    customerArea: customerArea
+  };
+};
+
+const resetOrderData = () => {
+  latestOrder.value = null;
+  userData.value = null;
 };
 
 const placeOrder = async () => {
@@ -62,32 +76,45 @@ const placeOrder = async () => {
 
     console.log('Order saved:', response.data);
 
-    await fetchLatestOrder();
+    // Update the order data immediately after placing the order
+    if (response.data) {
+      const newOrderData = {
+        ID: response.data.id || response.data.ID,
+        CustomerID: parseInt(customer_id),
+        CustomerFirstName: customerName,
+        CustomerLastName: customerLastName,
+        Num_gallons_order: gallons.value,
+        Date: ingredient.value,
+        Date_created: new Date().toISOString(),
+        Total_price: response.data.total_price || 0,
+        Status: 'Pending'
+      };
+      
+      updateUserData(newOrderData);
+    }
 
     visible.value = false;
+    qrCodeModal.value = true; // Show QR code modal immediately after order
     gallons.value = '';
   } catch (error) {
     console.error('Error saving order:', error);
   }
 };
 
+// Watch for changes in the order data
+watchEffect(() => {
+  if (latestOrder.value && !userData.value) {
+    updateUserData(latestOrder.value);
+  }
+});
+
 onMounted(fetchLatestOrder);
 
 const qrCodeSize = computed(() => {
   const screenWidth = window.innerWidth;
-  if (screenWidth < 768) {
-    return 250;
-  } else if (screenWidth < 1024) {
-    return 300;
-  } else {
-    return 350;
-  }
-});
-
-watch(latestOrder, async (newOrder) => {
-  if (newOrder && newOrder.Status === 'Completed') {
-    userData.value = null;
-  }
+  if (screenWidth < 768) return 250;
+  if (screenWidth < 1024) return 300;
+  return 350;
 });
 
 const customers2 = ref([
@@ -150,7 +177,12 @@ function formatCurrency(value) {
           <p class="mt-2 text-gray-800 font-semibold"> {{ customerArea }} </p>
           <div class="flex space-x-4">
             <Button label="Order Now" @click="visible = true" />
-            <Button v-if="userData" label="View QR Code" severity="secondary" @click="qrCodeModal = true" />
+            <Button 
+              v-if="userData && userData.status === 'Pending'" 
+              label="View QR Code" 
+              severity="secondary" 
+              @click="qrCodeModal = true" 
+            />
           </div>
         </div>
       </div>
