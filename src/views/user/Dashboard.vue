@@ -214,8 +214,8 @@ function formatCurrency(value) {
               </svg>
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">Zeke</h2>
-              <p class="text-sm text-gray-600">Agent</p>
+              <h2 class="text-2xl font-semibold">[Name of Agent]</h2>
+              <p class="text-sm text-gray-600">Assigned Agent</p>
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ function formatCurrency(value) {
             </div>
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">50</h2>
-              <p class="text-sm text-gray-600">COL</p>
+              <p class="text-sm text-gray-600">Containers on Hold</p>
             </div>
           </div>
         </div>
@@ -249,7 +249,7 @@ function formatCurrency(value) {
             </div>
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">{{ formatCurrency(16) }}</h2>
-              <p class="text-sm text-gray-600">Amount Payable</p>
+              <p class="text-sm text-gray-600">Total Amount Payable</p>
             </div>
           </div>
         </div>
