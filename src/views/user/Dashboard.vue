@@ -76,10 +76,9 @@ const placeOrder = async () => {
 
     console.log('Order saved:', response.data);
 
-    // Update the order data immediately after placing the order
     if (response.data) {
       const newOrderData = {
-        ID: response.data.id || response.data.ID,
+        orderId: response.data.ID, // Correctly map the capitalized ID field
         CustomerID: parseInt(customer_id),
         CustomerFirstName: customerName,
         CustomerLastName: customerLastName,
@@ -91,15 +90,17 @@ const placeOrder = async () => {
       };
       
       updateUserData(newOrderData);
+      console.log('QR Code Data:', JSON.stringify(newOrderData));
+      console.log('API Response:', response.data);
     }
 
     visible.value = false;
-    qrCodeModal.value = true; // Show QR code modal immediately after order
+    qrCodeModal.value = true;
     gallons.value = '';
   } catch (error) {
     console.error('Error saving order:', error);
   }
-};
+};;
 
 // Watch for changes in the order data
 watchEffect(() => {
