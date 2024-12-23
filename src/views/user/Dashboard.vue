@@ -48,7 +48,7 @@ const fetchLatestOrder = async () => {
 const updateUserData = (orderData) => {
   latestOrder.value = orderData;
   userData.value = {
-    orderId: orderData.ID,
+    orderId: orderData.ID, // Make sure to map from the ID field
     customerId: orderData.CustomerID,
     customerFirstName: orderData.CustomerFirstName,
     customerLastName: orderData.CustomerLastName,
@@ -78,20 +78,19 @@ const placeOrder = async () => {
 
     if (response.data) {
       const newOrderData = {
-        orderId: response.data.ID, // Correctly map the capitalized ID field
+        ID: response.data.order_id, // Map from the API response
         CustomerID: parseInt(customer_id),
         CustomerFirstName: customerName,
         CustomerLastName: customerLastName,
-        Num_gallons_order: gallons.value,
+        Num_gallons_order: parseInt(gallons.value),
         Date: ingredient.value,
         Date_created: new Date().toISOString(),
-        Total_price: response.data.total_price || 0,
+        Total_price: response.data.total_price,
         Status: 'Pending'
       };
       
       updateUserData(newOrderData);
       console.log('QR Code Data:', JSON.stringify(newOrderData));
-      console.log('API Response:', response.data);
     }
 
     visible.value = false;
@@ -100,7 +99,7 @@ const placeOrder = async () => {
   } catch (error) {
     console.error('Error saving order:', error);
   }
-};;
+};
 
 // Watch for changes in the order data
 watchEffect(() => {
