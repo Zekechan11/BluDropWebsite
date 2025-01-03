@@ -9,4 +9,5 @@ export default [
   {languageOptions: { globals: {...globals.browser, ...globals.node} }},
   pluginJs.configs.recommended,
   ...pluginVue.configs["flat/essential"],
+  {"vue/multi-word-component-names": ["error", {"ignores": []}]},
 ];
