@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { API_BASE_URL } from '../../config';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -17,7 +18,7 @@ const truncateMessage = (message, maxLength = 40) => {
 };
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:9090/ws');
+    socket = new WebSocket('ws://localhost:9090/chat');
 
     socket.onopen = () => {
         console.log('WebSocket connected');
@@ -61,7 +62,7 @@ function selectConversation(conversation) {
     selectedConversation.value = conversation;
     const conversationId = conversation.name;
 
-    fetch(`http://localhost:9090/get_message/${conversationId}`)
+    fetch(`${API_BASE_URL}/get_message/${conversationId}`)
         .then((res) => {
             if (!res.ok) {
                 throw new Error('Failed to fetch messages');

@@ -12,6 +12,8 @@ const customer_id = localStorage.getItem("id");
 const customerName = localStorage.getItem("firstName");
 const customerLastName = localStorage.getItem("lastName");
 const customerArea = localStorage.getItem("area");
+
+const user_data = JSON.parse(localStorage.getItem("user_data"));
 const visible = ref(false);
 const qrCodeModal = ref(false);
 const ingredient = ref("Tuesday");
@@ -20,7 +22,7 @@ const latestOrder = ref(null);
 const userData = ref(null);
 
 const fullName = computed(() => {
-  return `${customerName} ${customerLastName}`;
+  return `${user_data.firstname} ${user_data.lastname}`;
 });
 
 const fetchLatestOrder = async () => {
@@ -82,8 +84,8 @@ const placeOrder = async () => {
       const newOrderData = {
         ID: response.data.order_id, // Map from the API response
         CustomerID: parseInt(customer_id),
-        CustomerFirstName: customerName,
-        CustomerLastName: customerLastName,
+        CustomerFirstName: user_data.firstname,
+        CustomerLastName: user_data.lastname,
         Num_gallons_order: parseInt(gallons.value),
         Date: ingredient.value,
         Date_created: new Date().toISOString(),
