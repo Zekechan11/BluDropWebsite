@@ -3,6 +3,7 @@ import { useLayout } from "@/layout/composables/layout";
 import axios from "axios";
 import QrcodeVue from "qrcode.vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
+import { WATER_API } from "../../config";
 
 const ORDER_URL = "http://localhost:9090";
 
@@ -20,6 +21,7 @@ const ingredient = ref("Tuesday");
 const gallons = ref();
 const latestOrder = ref(null);
 const userData = ref(null);
+const days = ref({});
 
 const fullName = computed(() => {
   return `${user_data.firstname} ${user_data.lastname}`;
@@ -70,6 +72,17 @@ const resetOrderData = () => {
   userData.value = null;
 };
 
+const getSchedule = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/api/get_schedule`);
+    days.value = response.data.days;
+    console.log("Schedule:", days);
+    
+  } catch (error) {
+    console.error("Error fetching schedule:", error);
+  }
+};
+
 const placeOrder = async () => {
   try {
     const response = await axios.post(`${ORDER_URL}/api/save_order`, {
@@ -112,7 +125,10 @@ watchEffect(() => {
   }
 });
 
-onMounted(fetchLatestOrder);
+onMounted(() => {
+  getSchedule();
+  fetchLatestOrder();
+});
 
 const qrCodeSize = computed(() => {
   const screenWidth = window.innerWidth;
@@ -188,14 +204,19 @@ function formatCurrency(value) {
 
       <!-- Order Dialog -->
       <Dialog v-model:visible="visible" modal header="Order Now" :style="{ width: '25rem' }">
-        <div class="flex items-center gap-4 mb-4">
+        <div
+          v-for="day in days"
+          :key="day"
+          class="flex items-center gap-4 mb-4"
+        >
           <div class="flex items-center gap-2">
-            <RadioButton v-model="ingredient" inputId="ingredient1" name="day" value="Tuesday" />
-            <label for="ingredient1">Tuesday</label>
-          </div>
-          <div class="flex items-center gap-2">
-            <RadioButton v-model="ingredient" inputId="ingredient2" name="day" value="Thursday" />
-            <label for="ingredient2">Thursday</label>
+            <RadioButton
+              v-model="ingredient"
+              :inputId="'ingredient' + day"
+              name="day"
+              :value="day"
+            />
+            <label for="ingredient1">{{day}}</label>
           </div>
         </div>
         <div class="flex flex-col gap-2 mb-8">
