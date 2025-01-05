@@ -11,24 +11,7 @@ const model = ref([
             {
                 label: 'Customer',
                 icon: 'pi pi-user-plus',
-                items: [
-                    { 
-                        label: 'Customer', 
-                        icon: 'pi pi-user-plus', 
-                        to: '/admin/customer/add-customer', 
-                        class: 'rotated-icon' 
-                    },
-                    {
-                        label: 'Active',
-                        icon: 'pi pi-fw pi-bookmark',
-                        to: '/admin/customer/active-customer'
-                    },
-                    {
-                        label: 'Inactive',
-                        icon: 'pi pi-ban',
-                        to: '/admin/customer/inactive-customer'
-                    },
-                ]
+                to: '/admin/customer/add-customer', 
             },
            
             { label: 'Agents', icon: 'pi pi-users', to: '/admin/add-agent' },

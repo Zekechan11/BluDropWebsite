@@ -113,18 +113,9 @@ const router = createRouter({
         {
           path: '/admin/Customer/add-customer',
           name: 'add-customer',
-          component: () => import('@/views/admin/Add Customer/AddCustomer.vue')
+          component: () => import('@/views/admin/AddCustomer.vue')
         },
-        {
-          path: '/admin/Customer/active-customer',
-          name: 'active-customer',
-          component: () => import('@/views/admin/Add Customer/ActiveCustomer.vue')
-        },
-        {
-          path: '/admin/Customer/inactive-customer',
-          name: 'inactive-customer',
-          component: () => import('@/views/admin/Add Customer/InactiveCustomer.vue')
-        },
+
         {
           path: '/admin/add-staff',
           name: 'addstaff',

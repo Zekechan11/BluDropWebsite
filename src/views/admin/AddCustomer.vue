@@ -6,57 +6,7 @@ import axios from "axios";
 
 onMounted(() => {
   getCustomers();
-  // Add some manual results for demonstration
-  products.value = [
-    {
-      id: createId(),
-      code: "1",
-      name: "Ezekiel Angelo Pelayo",
-      address: "Guadalupe, Bogo City, Cebu",
-      status: "Dealer",
-      price: "₱ 20.00",
-    },
-    {
-      id: createId(),
-      code: "2",
-      name: "Karl Lawrenz Pino",
-      address: "Nailon, Bogo City, Cebu",
-      status: "Dealer",
-      price: "₱ 20.00",
-    },
-    {
-      id: createId(),
-      code: "3",
-      name: "Anton Retuya",
-      address: "Lapaz, Bogo City, Cebu",
-      status: "Regular",
-      price: "₱ 25.00",
-    },{
-      id: createId(),
-      code: "3",
-      name: "Jemar Diamante",
-      address: "Gairan, Bogo City, Cebu",
-      status: "Regular",
-      price: "₱ 25.00",
-    },
-    {
-      id: createId(),
-      code: "3",
-      name: "Bob Johnson",
-      address: "Lapaz, Bogo City, Cebu",
-      status: "Regular",
-      price: "₱ 25.00",
-    },
-    {
-      id: createId(),
-      code: "3",
-      name: "Charlie Brown",
-      address: "Lapaz, Bogo City, Cebu",
-      status: "Dealer",
-      price: "₱ 25.00",
-    },
-    
-  ];
+
 });
 
 const toast = useToast();
@@ -84,7 +34,7 @@ const hideDialog = () => {
 };
 
 const getCustomers = async () => {
-  const response  = await axios.get("http://localhost:9090/api/customers");
+  const response = await axios.get("http://localhost:9090/api/customers");
   customers.value = response.data;
 }
 
@@ -183,62 +133,120 @@ const deleteSelectedProducts = () => {
 <template>
   <div class="space">
     <h1 class="text-4xl font-semibold mb-6" style="color: #899499">
-      Add Customer
+      Manage Customer
     </h1>
   </div>
+
   <div>
-    <div class="card shadow-md">
-      <Toolbar class="mb-6">
-        <template #start>
-          <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-          <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
-            :disabled="!selectedProducts || !selectedProducts.length" />
-        </template>
-      </Toolbar>
+    <Tabs value="0" class="shadow-lg">
+      <TabList>
+        <Tab value="0">Manage Customer</Tab>
+        <Tab value="1">Inactive</Tab>
+      </TabList>
 
-      <DataTable ref="dt" v-model:selection="selectedProducts" :value="customers" dataKey="id" :paginator="true"
-        :rows="10" :filters="filters"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products">
-        <template #header>
-          <div class="flex flex-wrap gap-2 items-center justify-between">
-            <h4 class="m-0 font-semibold">Manage Customer</h4>
-            <IconField>
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText v-model="filters['global'].value" placeholder="Search..." />
-            </IconField>
-          </div>
-        </template>
+      <TabPanels>
+        <TabPanel value="0">
 
-        <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-        <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
-        <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
-        <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
-        <Column field="status" header="Status" sortable style="min-width: 12rem">
-          <template #body="slotProps">
-            <span class="px-2 py-1 rounded text-white" :style="{
-              backgroundColor:
-                slotProps.data.status === 'Dealer' ? '#4CAF50' : '#FF5722',
-            }">
-              {{ slotProps.data.status }}
-            </span>
-          </template>
-        </Column>
-        <!-- <Column field="price" header="Price" sortable style="min-width: 12rem"></Column> -->
+          <Toolbar class="mb-6">
+            <template #start>
+              <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+              <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+                :disabled="!selectedProducts || !selectedProducts.length" />
+            </template>
+          </Toolbar>
 
-        <Column :exportable="false" header="Actions" style="min-width: 10rem">
-          <template #body="slotProps">
-            <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
-              @click="editProduct(slotProps.data)" />
-            <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
-              @click="confirmDeleteProduct(slotProps.data)" />
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+          <DataTable ref="dt" v-model:selection="selectedProducts" :value="customers" dataKey="id" :paginator="true"
+            :rows="10" :filters="filters"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+            :rowsPerPageOptions="[5, 10, 25]"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products">
+            <template #header>
+              <div class="flex flex-wrap gap-2 items-center justify-between">
+                <h4 class="m-0 font-semibold">Customer's</h4>
+                <IconField>
+                  <InputIcon>
+                    <i class="pi pi-search" />
+                  </InputIcon>
+                  <InputText v-model="filters['global'].value" placeholder="Search..." />
+                </IconField>
+              </div>
+            </template>
+
+            <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+            <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
+            <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
+            <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
+            <Column field="status" header="Status" sortable style="min-width: 12rem">
+              <template #body="slotProps">
+                <span class="px-2 py-1 rounded text-white" :style="{
+                  backgroundColor:
+                    slotProps.data.status === 'Dealer' ? '#4CAF50' : '#FF5722',
+                }">
+                  {{ slotProps.data.status }}
+                </span>
+              </template>
+            </Column>
+            <!-- <Column field="price" header="Price" sortable style="min-width: 12rem"></Column> -->
+
+            <Column :exportable="false" header="Actions" style="min-width: 10rem">
+              <template #body="slotProps">
+                <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+                  @click="editProduct(slotProps.data)" />
+                <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
+                  @click="confirmDeleteProduct(slotProps.data)" />
+              </template>
+            </Column>
+          </DataTable>
+
+        </TabPanel>
+        <TabPanel value="1">
+          <DataTable ref="dt" v-model:selection="selectedProducts" :value="customers" dataKey="id" :paginator="true"
+            :rows="10" :filters="filters"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+            :rowsPerPageOptions="[5, 10, 25]"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products">
+            <template #header>
+              <div class="flex flex-wrap gap-2 items-center justify-between">
+                <h4 class="m-0 font-semibold">Inactive Customer</h4>
+                <IconField>
+                  <InputIcon>
+                    <i class="pi pi-search" />
+                  </InputIcon>
+                  <InputText v-model="filters['global'].value" placeholder="Search..." />
+                </IconField>
+              </div>
+            </template>
+
+            <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+            <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
+            <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
+            <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
+            <Column field="col" header="COL" sortable style="min-width: 12rem"></Column>
+            <Column field="status" header="Status" sortable style="min-width: 12rem">
+              <template #body="slotProps">
+                <span class="px-2 py-1 rounded text-white" :style="{
+                  backgroundColor:
+                    slotProps.data.status === 'Dealer' ? '#4CAF50' : '#FF5722',
+                }">
+                  {{ slotProps.data.status }}
+                </span>
+              </template>
+            </Column>
+            <!-- <Column field="price" header="Price" sortable style="min-width: 12rem"></Column> -->
+
+            <Column :exportable="false" header="Actions" style="min-width: 10rem">
+              <template #body="slotProps">
+                <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+                  @click="editProduct(slotProps.data)" />
+                <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
+                  @click="confirmDeleteProduct(slotProps.data)" />
+              </template>
+            </Column>
+          </DataTable>
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
+
 
     <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Add Customer" :modal="true">
       <div class="flex flex-col gap-6">
