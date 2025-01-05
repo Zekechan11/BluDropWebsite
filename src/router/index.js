@@ -98,7 +98,7 @@ const router = createRouter({
         {
           path: '/views/dashboard',
           name: 'dashboardss',
-          component: () => import('@/views/Dashboard.vue')
+          component: () => import('@/views/admin/Dashboard.vue')
         },
         {
           path: '/admin/settings',

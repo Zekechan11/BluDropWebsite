@@ -122,6 +122,7 @@ const formatCurrency = (value) => {
         <Column field="name" header="Name"></Column>
         <Column field="/" header="Area"></Column>
         <Column field="Num_gallons_order" header="Quantity"></Column>
+        <Column field="Acc_Payables" header="Payables"></Column>
         <Column field="Date" header="Date"></Column>
        
       </DataTable>

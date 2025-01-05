@@ -14,6 +14,7 @@ const selectedCity1 = ref();
 const totalCustomer = ref(0);
 const orders = ref([]);
 const visible = ref(false);
+const customers = ref(false);
 
 const orderCount = computed(() => orders.value.length);
 
@@ -99,7 +100,7 @@ const formatCurrency = (value) => {
 
 <template>
   <div class="grid grid-cols-12 gap-8">
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="customers = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
@@ -114,14 +115,34 @@ const formatCurrency = (value) => {
           </div>
         </div>
       </div>
+      <Dialog v-model:visible="customers" modal header="Total Customer's" :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+
+        <div class="flex justify-end mb-4">
+          <div class="flex items-center gap-2 w-auto">
+            <label for="areaFilter" class="font-semibold">Filter Area:</label>
+            <Dropdown id="areaFilter" v-model="selectedArea" :options="areaOptions" optionLabel="label"
+              placeholder="Select an area" style="width: 12rem;" />
+          </div>
+        </div>
+
+        <DataTable :value="filteredCustomers" showGridlines tableStyle="min-width: 40rem">
+          <Column field="name" header="Name"></Column>
+          <Column field="area" header="Area"></Column>
+          <Column field="payables" header="Payables"></Column>
+          <Column field="col" header="COL"></Column>
+        </DataTable>
+      </Dialog>
+
     </div>
+
     <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
             <span class="block text-muted-color font-medium mb-4">DELIVERY</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-             {{ orderCount }}
+              {{ orderCount }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
@@ -130,24 +151,17 @@ const formatCurrency = (value) => {
           </div>
         </div>
       </div>
-      <Dialog
-          v-model:visible="visible"
-          modal
-          header="Customer's Order"
-          :style="{ width: '50rem' }"
-          :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-        >
-          <DataTable
-            :value="orders"
-            showGridlines
-            tableStyle="min-width: 40rem"
-          >
-            <Column field="name" header="Name"></Column>
-            <Column field="Num_gallons_order" header="Quantity"></Column>
-            <Column field="Date" header="Date"></Column>
-          </DataTable>
-        </Dialog>
+      <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+        <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
+          <Column field="name" header="Name"></Column>
+          <Column field="Num_gallons_order" header="Quantity"></Column>
+          <Column field="payable" header="Payables"></Column>
+          <Column field="Date" header="Date"></Column>
+        </DataTable>
+      </Dialog>
     </div>
+
     <div class="col-span-12 lg:col-span-6 xl:col-span-4">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
@@ -221,10 +235,10 @@ const formatCurrency = (value) => {
           <ul class="p-0 mx-0 mt-0 mb-6 list-none">
             <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
               <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="(schedule.color,
-                {
-                  'bg-blue-300': schedule.type === 'regular',
-                  'bg-yellow-200': schedule.type === 'priority',
-                })
+              {
+                'bg-blue-300': schedule.type === 'regular',
+                'bg-yellow-200': schedule.type === 'priority',
+              })
                 ">
                 {{ schedule.day }} - {{ schedule.area }}
               </span>

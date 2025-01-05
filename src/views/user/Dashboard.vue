@@ -1,10 +1,10 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
-import axios from 'axios';
-import QrcodeVue from 'qrcode.vue';
-import { computed, onMounted, ref, watchEffect } from 'vue';
+import axios from "axios";
+import QrcodeVue from "qrcode.vue";
+import { computed, onMounted, ref, watchEffect } from "vue";
 
-const ORDER_URL = 'http://localhost:9090';
+const ORDER_URL = "http://localhost:9090";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
@@ -14,7 +14,7 @@ const customerLastName = localStorage.getItem("lastName");
 const customerArea = localStorage.getItem("area");
 const visible = ref(false);
 const qrCodeModal = ref(false);
-const ingredient = ref('Tuesday');
+const ingredient = ref("Tuesday");
 const gallons = ref();
 const latestOrder = ref(null);
 const userData = ref(null);
@@ -26,13 +26,15 @@ const fullName = computed(() => {
 const fetchLatestOrder = async () => {
   try {
     const response = await axios.get(`${ORDER_URL}/api/get_order`, {
-      params: { 
+      params: {
         customer_id: customer_id,
-        status: 'Pending'
-      }
+        status: "Pending",
+      },
     });
 
-    const orderData = Array.isArray(response.data) ? response.data[0] : response.data;
+    const orderData = Array.isArray(response.data)
+      ? response.data[0]
+      : response.data;
 
     if (orderData && orderData.CustomerID === parseInt(customer_id)) {
       updateUserData(orderData);
@@ -40,7 +42,7 @@ const fetchLatestOrder = async () => {
       resetOrderData();
     }
   } catch (error) {
-    console.error('Error fetching latest order:', error);
+    console.error("Error fetching latest order:", error);
     resetOrderData();
   }
 };
@@ -57,7 +59,7 @@ const updateUserData = (orderData) => {
     dateCreated: orderData.Date_created,
     totalPrice: orderData.Total_price,
     status: orderData.Status,
-    customerArea: customerArea
+    customerArea: customerArea,
   };
 };
 
@@ -71,10 +73,10 @@ const placeOrder = async () => {
     const response = await axios.post(`${ORDER_URL}/api/save_order`, {
       customer_id: customer_id,
       num_gallons_order: gallons.value,
-      date: ingredient.value
+      date: ingredient.value,
     });
 
-    console.log('Order saved:', response.data);
+    console.log("Order saved:", response.data);
 
     if (response.data) {
       const newOrderData = {
@@ -86,18 +88,18 @@ const placeOrder = async () => {
         Date: ingredient.value,
         Date_created: new Date().toISOString(),
         Total_price: response.data.total_price,
-        Status: 'Pending'
+        Status: "Pending",
       };
-      
+
       updateUserData(newOrderData);
-      console.log('QR Code Data:', JSON.stringify(newOrderData));
+      console.log("QR Code Data:", JSON.stringify(newOrderData));
     }
 
     visible.value = false;
     qrCodeModal.value = true;
-    gallons.value = '';
+    gallons.value = "";
   } catch (error) {
-    console.error('Error saving order:', error);
+    console.error("Error saving order:", error);
   }
 };
 
@@ -160,7 +162,6 @@ const customers2 = ref([
     amountPaid: "₱ 400.00",
     date: "2024-10-10",
   },
-
 ]);
 
 function formatCurrency(value) {
@@ -173,16 +174,12 @@ function formatCurrency(value) {
     <div class="w-full space-y-8 md:w-2/3">
       <div class="flex items-center justify-between rounded-lg bg-blue-400 p-6 shadow-md">
         <div>
-          <h1 class="text-2xl font-semibold"> {{ fullName }}! </h1>
-          <p class="mt-2 text-gray-800 font-semibold"> {{ customerArea }} </p>
+          <h1 class="text-2xl font-semibold">{{ fullName }}!</h1>
+          <p class="mt-2 text-gray-800 font-semibold">{{ customerArea }}</p>
           <div class="flex space-x-4">
             <Button label="Order Now" @click="visible = true" />
-            <Button 
-              v-if="userData && userData.status === 'Pending'" 
-              label="View QR Code" 
-              severity="secondary" 
-              @click="qrCodeModal = true" 
-            />
+            <Button v-if="userData && userData.status === 'Pending'" label="View QR Code" severity="secondary"
+              @click="qrCodeModal = true" />
           </div>
         </div>
       </div>
@@ -199,15 +196,30 @@ function formatCurrency(value) {
             <label for="ingredient2">Thursday</label>
           </div>
         </div>
-        <div class="flex items-center gap-4 mb-8">
-          <label for="gallons" class="font-semibold w-25">Order Gallons : </label>
-          <InputText id="gallons" v-model="gallons" class="flex-auto" autocomplete="off" />
+        <div class="flex flex-col gap-2 mb-8">
+          <div class="flex items-center gap-4">
+            <label for="gallons" class="font-semibold w-25">Order Gallons:</label>
+            <InputText id="gallons" v-model="gallons" class="flex-auto" autocomplete="off" />
+          </div>
+
+          <div class="text-sm text-red-500 font-semibold">
+            Note: Only 80 gallons are available for order.
+          </div>
+
+          <div class="text-sm text-gray-600">
+            Price per gallon: ₱5.00
+          </div>
+
+          <div class="text-lg font-bold text-blue-600">
+            Total Payment: ₱54.00
+          </div>
         </div>
         <div class="flex justify-end gap-2">
           <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
           <Button type="button" label="Order" @click="placeOrder"></Button>
         </div>
       </Dialog>
+
 
       <!-- QR Code Modal -->
       <Dialog v-model:visible="qrCodeModal" modal header="Your Order QR Code" :style="{ width: '25rem' }">
@@ -232,7 +244,6 @@ function formatCurrency(value) {
 
     <div class="w-full space-y-8 md:w-1/3">
       <div class="space-y-4">
-
         <div class="flex items-center justify-between p-4 rounded-lg bg-teal-100 shadow-md">
           <div class="flex items-center space-x-3">
             <div class="bg-teal-300 p-5 rounded-full">
@@ -276,8 +287,9 @@ function formatCurrency(value) {
 
         <div class="flex items-center justify-between p-4 rounded-lg bg-pink-100 shadow-md">
           <div class="flex items-center space-x-3">
-            <div class="bg-pink-300  p-5 rounded-full text-white text-4xl flex items-center justify-center" style="height: 75px;width: 75px;">
-                ₱
+            <div class="bg-pink-300 p-5 rounded-full text-white text-4xl flex items-center justify-center"
+              style="height: 75px; width: 75px">
+              ₱
             </div>
             <div class="font-semibold">
               <h2 class="text-2xl font-semibold">{{ formatCurrency(16) }}</h2>
@@ -285,8 +297,6 @@ function formatCurrency(value) {
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
   </div>
