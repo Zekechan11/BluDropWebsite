@@ -5,33 +5,29 @@ import QrcodeVue from "qrcode.vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
 import { WATER_API } from "../../config";
 
-const ORDER_URL = "http://localhost:9090";
-
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
-const customer_id = localStorage.getItem("id");
-const customerName = localStorage.getItem("firstName");
-const customerLastName = localStorage.getItem("lastName");
-const customerArea = localStorage.getItem("area");
-
 const user_data = JSON.parse(localStorage.getItem("user_data"));
+
 const visible = ref(false);
 const qrCodeModal = ref(false);
-const ingredient = ref("Tuesday");
-const gallons = ref();
+const ingredient = ref("");
 const latestOrder = ref(null);
 const userData = ref(null);
 const days = ref({});
+const pricePerGallon = ref(5.00);
+const gallons = ref(0);
 
+const customerArea = user_data.area;
 const fullName = computed(() => {
   return `${user_data.firstname} ${user_data.lastname}`;
 });
 
 const fetchLatestOrder = async () => {
   try {
-    const response = await axios.get(`${ORDER_URL}/api/get_order`, {
+    const response = await axios.get(`${WATER_API}/api/get_order`, {
       params: {
-        customer_id: customer_id,
+        customer_id: user_data.uid,
         status: "Pending",
       },
     });
@@ -40,7 +36,7 @@ const fetchLatestOrder = async () => {
       ? response.data[0]
       : response.data;
 
-    if (orderData && orderData.CustomerID === parseInt(customer_id)) {
+    if (orderData && orderData.CustomerID === parseInt(user_data.uid)) {
       updateUserData(orderData);
     } else {
       resetOrderData();
@@ -85,8 +81,8 @@ const getSchedule = async () => {
 
 const placeOrder = async () => {
   try {
-    const response = await axios.post(`${ORDER_URL}/api/save_order`, {
-      customer_id: customer_id,
+    const response = await axios.post(`${WATER_API}/api/save_order`, {
+      customer_id: user_data.uid,
       num_gallons_order: gallons.value,
       date: ingredient.value,
     });
@@ -96,7 +92,7 @@ const placeOrder = async () => {
     if (response.data) {
       const newOrderData = {
         ID: response.data.order_id, // Map from the API response
-        CustomerID: parseInt(customer_id),
+        CustomerID: parseInt(user_data.uid),
         CustomerFirstName: user_data.firstname,
         CustomerLastName: user_data.lastname,
         Num_gallons_order: parseInt(gallons.value),
@@ -185,6 +181,18 @@ const customers2 = ref([
 function formatCurrency(value) {
   return value.toLocaleString("en-US", { style: "currency", currency: "PHP" });
 }
+
+const validateGallons = () => {
+  if (gallons.value > 80) {
+    gallons.value = 80;
+  } else if (gallons.value < 0) {
+    gallons.value = 0;
+  }
+};
+
+const totalPayment = computed(() => {
+  return gallons.value * pricePerGallon.value;
+});
 </script>
 
 <template>
@@ -222,7 +230,16 @@ function formatCurrency(value) {
         <div class="flex flex-col gap-2 mb-8">
           <div class="flex items-center gap-4">
             <label for="gallons" class="font-semibold w-25">Order Gallons:</label>
-            <InputText id="gallons" v-model="gallons" class="flex-auto" autocomplete="off" />
+            <InputText 
+              id="gallons" 
+              v-model="gallons" 
+              class="flex-auto" 
+              autocomplete="off" 
+              @input="validateGallons"
+              type="number"
+              min="0"
+              max="80"
+            />
           </div>
 
           <div class="text-sm text-red-500 font-semibold">
@@ -230,11 +247,11 @@ function formatCurrency(value) {
           </div>
 
           <div class="text-sm text-gray-600">
-            Price per gallon: ₱5.00
+            Price per gallon: ₱{{ pricePerGallon.toFixed(2) }}
           </div>
 
           <div class="text-lg font-bold text-blue-600">
-            Total Payment: ₱54.00
+            Total Payment: ₱{{ totalPayment.toFixed(2) }}
           </div>
         </div>
         <div class="flex justify-end gap-2">
