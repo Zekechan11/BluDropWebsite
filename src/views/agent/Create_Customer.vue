@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import QrcodeVue from 'qrcode.vue';
+import { WATER_API } from '../../config';
+import { useToast } from "primevue/usetoast";
 
 // Define reactive variables
 const firstName = ref('');
@@ -16,6 +18,8 @@ const confirmPasswordVisible = ref(false);
 // Set default role as 'customer'
 const role = ref('customer');
 
+const toast = useToast();
+
 // Function to toggle password visibility
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;
@@ -27,7 +31,6 @@ const togglePasswordVisibility2 = () => {
 
 // Combined form submission
 const handleFormSubmit = async () => {
-  const url = "http://localhost:9090/accounts"; // Corrected API URL
 
   if (!firstName.value || !lastName.value || !username.value || !email.value || !area.value || !password.value || !confirmPassword.value) {
     alert('All fields are required!');
@@ -41,19 +44,16 @@ const handleFormSubmit = async () => {
 
   // Save user data with role set to 'customer'
   const userData = {
-    firstName: firstName.value,
-    lastName: lastName.value,
+    firstname: firstName.value,
+    lastname: lastName.value,
     username: username.value,
     email: email.value,
-    area: area.value,
+    area_id: area.value,
     password: password.value, // Password can be stored, but consider hashing for security
-    role: role.value, // Ensure the role is always 'customer'
   };
 
-  localStorage.setItem('userData', JSON.stringify(userData));
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(`${WATER_API}/v2/api/create_client`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -68,7 +68,22 @@ const handleFormSubmit = async () => {
     } else {
       const responseData = await response.json();
       console.log("Customer created successfully:", responseData);
-      alert("Customer created successfully: " + JSON.stringify(responseData));
+      // alert("Customer created successfully: " + JSON.stringify(responseData));
+
+      toast.add({
+        severity: "success",
+        summary: "Successful",
+        detail: "User added sucker",
+        life: 10000,
+      });
+
+      firstName.value = "";
+      lastName.value = "";
+      username.value = "";
+      email.value = "";
+      area.value = "";
+      password.value = "";
+      confirmPassword.value = "";
 
       // Optionally, redirect to login or dashboard after account creation
       // router.push('/login'); // Uncomment this if you want to redirect to login page

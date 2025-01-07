@@ -53,7 +53,7 @@ function sendMessage() {
     if (newMessage.value.trim() !== '' && socket) {
         const msg = {
             sender_id: userData.uid.toString(),
-            area_id: "1",
+            area_id: userData.area_id,
             customer: userData.username,
             content: newMessage.value,
         };
@@ -108,7 +108,7 @@ onUnmounted(() => {
 <template>
     <div class="flex flex-col md:flex-row gap-8">
         <!-- Conversation List (Scrollable) -->
-        <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
+        <!-- <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
             <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Chat</div>
             <div class="p-4 bg-white">
                 <input
@@ -117,7 +117,6 @@ onUnmounted(() => {
                     class="w-full p-2 rounded-lg border border-gray-300"
                 />
             </div>
-            <!-- Scrollable conversation list -->
             <div class="overflow-y-auto flex-grow max-h-[520px]">
                 <div
                     v-for="(conversation, index) in conversations"
@@ -126,7 +125,6 @@ onUnmounted(() => {
                              selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']"
                 >
                     <div class="flex items-center gap-4">
-                        <!-- Profile Image -->
                         <img :src="conversation.img" alt="Profile image" class="w-10 h-10 rounded-full bg-gray-300" />
                         <div>
                             <p class="font-semibold">{{ conversation.name }}</p>
@@ -136,7 +134,7 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Chat Window - Only displayed if a conversation is selected -->
         <div class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">

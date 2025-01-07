@@ -1,19 +1,45 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { WATER_API } from '../../config';
 
 const messages = ref([]);
 const newMessage = ref('');
 const selectedConversation = ref(null); // Tracks the selected conversation
 
 const conversations = ref([
-    { name: 'Ricky Monsales', lastMessage: 'sir pa deliver ko 10 gallons', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    { name: 'Admin', lastMessage: 'okay sir', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    { name: 'Ezekiel Angelo Pelayo', lastMessage: 'sir pa deliver ko 15 gallons', time: '1h', img: 'https://i.pravatar.cc/100?u=edison' },
-    { name: 'Edison Pagatpat', lastMessage: 'You sent a photo', time: '1h', img: 'https://i.pravatar.cc/100?u=gojo' },
-    { name: 'Jemar Diamante', lastMessage: '.', time: '1h', img: 'https://i.pravatar.cc/100?u=diamante' },
-    { name: 'Karl Lawrenz Pino', lastMessage: 'sir papuno ko 5 gallons', time: '2h', img: '/demo/images/gojo.png' },
-    { name: 'Anton Retuya ', lastMessage: 'sir pa puno ko 10 gallons', time: '3h', img: 'https://i.pravatar.cc/100?u=sukuna' },
+    // { name: 'Ricky Monsales', lastMessage: 'sir pa deliver ko 10 gallons', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
+    // { name: 'Admin', lastMessage: 'okay sir', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
+    // { name: 'Ezekiel Angelo Pelayo', lastMessage: 'sir pa deliver ko 15 gallons', time: '1h', img: 'https://i.pravatar.cc/100?u=edison' },
+    // { name: 'Edison Pagatpat', lastMessage: 'You sent a photo', time: '1h', img: 'https://i.pravatar.cc/100?u=gojo' },
+    // { name: 'Jemar Diamante', lastMessage: '.', time: '1h', img: 'https://i.pravatar.cc/100?u=diamante' },
+    // { name: 'Karl Lawrenz Pino', lastMessage: 'sir papuno ko 5 gallons', time: '2h', img: '/demo/images/gojo.png' },
+    // { name: 'Anton Retuya ', lastMessage: 'sir pa puno ko 10 gallons', time: '3h', img: 'https://i.pravatar.cc/100?u=sukuna' },
 ]);
+
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
+function getConversations() {
+    fetch(`${WATER_API}/chat/list/agent/${userData.area_id}`)
+    .then((res) => {
+        if (!res.ok) {
+            throw new Error('Failed to fetch convo');
+        }
+        return res.json();
+    })
+    .then((data) => {
+        console.log(data);
+        conversations.value = data.messages.map((msg) => ({
+            name: msg.fullname,
+            lastMessage: msg.content,
+            img: 'https://i.pravatar.cc/100?u=ricky',
+            cus: msg.customer,
+            time: new Date(msg.timestamp).toLocaleTimeString(),
+        }));
+    })
+    .catch((err) => {
+        console.error('Error fetching convo:', err);
+    });
+}
 
 // WebSocket reference
 let socket = null;
@@ -23,7 +49,7 @@ const truncateMessage = (message, maxLength = 40) => {
 };
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:9090/ws');
+    socket = new WebSocket('ws://localhost:9090/chat');
 
     socket.onopen = () => {
         console.log('WebSocket connected');
@@ -33,7 +59,7 @@ function connectWebSocket() {
         const data = JSON.parse(event.data);
         messages.value.push({
             content: data.content,
-            sender: data.sender,
+            sender_id: data.sender_id,
             timestamp: new Date(data.timestamp).toLocaleTimeString(),
         });
     };
@@ -48,12 +74,13 @@ function connectWebSocket() {
     };
 }
 
-function sendMessage() {
+function sendMessage(customer) {
     if (newMessage.value.trim() !== '' && socket) {
         const msg = {
+            sender_id: userData.uid.toString(),
+            area_id: userData.area_id,
+            customer: customer,
             content: newMessage.value,
-            recipient: selectedConversation.value.name,
-            sender: 'agent', // Can be 'user' or 'bot' or others based on your use case
         };
         socket.send(JSON.stringify(msg));
         newMessage.value = '';
@@ -63,9 +90,9 @@ function sendMessage() {
 // Function to select a conversation when clicked
 function selectConversation(conversation) {
     selectedConversation.value = conversation;
-    const conversationId = conversation.name;
+    const conversationId = conversation.cus;
 
-    fetch(`http://localhost:9090/get_message/${conversationId}`)
+    fetch(`${WATER_API}/chat/customer/${conversationId}`)
         .then((res) => {
             if (!res.ok) {
                 throw new Error('Failed to fetch messages');
@@ -75,7 +102,7 @@ function selectConversation(conversation) {
         .then((data) => {
             messages.value = data.messages.map((msg) => ({
                 content: msg.content,
-                sender: msg.sender,
+                sender_id: msg.sender_id,
                 timestamp: new Date(msg.timestamp).toLocaleTimeString(),
             }));
         })
@@ -89,6 +116,7 @@ onMounted(() => {
     if (conversations.value.length > 0) {
         selectedConversation.value = conversations.value[0];
     }
+    getConversations();
     connectWebSocket();
 });
 onUnmounted(() => {
@@ -138,7 +166,7 @@ onUnmounted(() => {
             <div class="flex-grow p-4 overflow-y-auto space-y-4">
                 <!-- Messages Loop -->
                 <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-                    <div v-if="msg.sender === 'agent'" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                    <div v-if="msg.sender_id === userData.uid.toString()" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
                         <p>{{ msg.content }}</p>
                         <span class="text-xs text-right block">{{ msg.timestamp }}</span>
                     </div>
@@ -158,7 +186,7 @@ onUnmounted(() => {
                     class="flex-grow p-2 rounded-lg border border-gray-300"
                 />
                 <button
-                    @click="sendMessage"
+                    @click="sendMessage(selectedConversation.cus)"
                     :disabled="newMessage === ''"
                     class="bg-blue-500 text-white p-2 rounded-lg"
                 >
