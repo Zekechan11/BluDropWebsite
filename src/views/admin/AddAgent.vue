@@ -196,6 +196,13 @@ const findIndexById = (id) => {
     </div>
     <div>
         <div class="card shadow-md">
+            <Toolbar class="mb-6">
+                <template #start>
+                    <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+                        :disabled="!selectedAgents || !selectedAgents.length" />
+                </template>
+            </Toolbar>
 
             <DataTable ref="dt" v-model:selection="selectedAgents" :value="agents" dataKey="id" :paginator="true"
                 :rows="10" :filters="filters"
@@ -214,6 +221,7 @@ const findIndexById = (id) => {
                     </div>
                 </template>
 
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="FirstName" header="First Name" sortable style="min-width: 12rem"></Column>
                 <Column field="LastName" header="Last Name" sortable style="min-width: 12rem"></Column>
                 <Column field="Area" header="Area" sortable style="min-width: 16rem"></Column>

@@ -4,6 +4,11 @@ import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
 import axios from "axios";
 
+onMounted(() => {
+  getCustomers();
+
+});
+
 const toast = useToast();
 const dt = ref();
 const products = ref();
@@ -17,11 +22,6 @@ const filters = ref({
 });
 const submitted = ref(false);
 const customers = ref([]);
-
-
-onMounted(() => {
-  getCustomers();
-});
 
 const openNew = () => {
   product.value = {};
@@ -37,6 +37,7 @@ const getCustomers = async () => {
   const response = await axios.get("http://localhost:9090/api/customers");
   customers.value = response.data;
 }
+
 
 const saveProduct = () => {
   submitted.value = true;
@@ -146,6 +147,14 @@ const deleteSelectedProducts = () => {
       <TabPanels>
         <TabPanel value="0">
 
+          <Toolbar class="mb-6">
+            <template #start>
+              <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+              <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+                :disabled="!selectedProducts || !selectedProducts.length" />
+            </template>
+          </Toolbar>
+
           <DataTable ref="dt" v-model:selection="selectedProducts" :value="customers" dataKey="id" :paginator="true"
             :rows="10" :filters="filters"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
@@ -163,6 +172,7 @@ const deleteSelectedProducts = () => {
               </div>
             </template>
 
+            <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
             <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
             <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
             <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
@@ -207,6 +217,7 @@ const deleteSelectedProducts = () => {
               </div>
             </template>
 
+            <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
             <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
             <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
             <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
