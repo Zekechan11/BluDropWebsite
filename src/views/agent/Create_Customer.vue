@@ -1,22 +1,21 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import QrcodeVue from 'qrcode.vue';
 import { WATER_API } from '../../config';
 import { useToast } from "primevue/usetoast";
+import axios from "axios";
 
 // Define reactive variables
 const firstName = ref('');
 const lastName = ref('');
 const username = ref('');
 const email = ref('');
-const area = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const passwordVisible = ref(false);
 const confirmPasswordVisible = ref(false);
-
-// Set default role as 'customer'
-const role = ref('customer');
+const areas = ref([]);
+const area = ref([]);
 
 const toast = useToast();
 
@@ -27,6 +26,21 @@ const togglePasswordVisibility = () => {
 
 const togglePasswordVisibility2 = () => {
   confirmPasswordVisible.value = !confirmPasswordVisible.value;
+};
+
+const fetchAreas = async () => {
+    try {
+        const response = await axios.get(`${WATER_API}/area`);
+        const data = response.data;
+
+        areas.value = data.map((area) => {
+            return {
+                ...area,
+            };
+        });
+    } catch (error) {
+        console.error("Error fetching areas:", error);
+    }
 };
 
 // Combined form submission
@@ -48,7 +62,7 @@ const handleFormSubmit = async () => {
     lastname: lastName.value,
     username: username.value,
     email: email.value,
-    area_id: area.value,
+    area_id: area.value.area_name,
     password: password.value, // Password can be stored, but consider hashing for security
   };
 
@@ -93,6 +107,10 @@ const handleFormSubmit = async () => {
     alert("An error occurred: " + error.message);
   }
 };
+
+onMounted(() => {
+  fetchAreas();
+});
 </script>
 <template>
   <div class="space">
@@ -128,9 +146,9 @@ const handleFormSubmit = async () => {
       <!-- Area -->
       <div class="mb-4">
         <label for="area" class="block text-gray-600 font-bold mb-2">Area</label>
-        <input type="text" id="area" v-model="area"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your area" required />
+        <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
+                  optionValue="id" placeholder="Select an Area" />
+        <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
       </div>
 
       <!-- Password -->

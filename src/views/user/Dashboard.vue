@@ -17,6 +17,7 @@ const userData = ref(null);
 const days = ref({});
 const pricePerGallon = ref(5.00);
 const gallons = ref(0);
+const agentName = ref("");
 
 const customerArea = user_data.area;
 const fullName = computed(() => {
@@ -79,6 +80,15 @@ const getSchedule = async () => {
   }
 };
 
+const getAgent = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
+    agentName.value = response.data.data;
+  } catch (error) {
+    console.error("Error fetching schedule:", error);
+  }
+}
+
 const placeOrder = async () => {
   try {
     const response = await axios.post(`${WATER_API}/api/save_order`, {
@@ -124,6 +134,7 @@ watchEffect(() => {
 onMounted(() => {
   getSchedule();
   fetchLatestOrder();
+  getAgent();
 });
 
 const qrCodeSize = computed(() => {
@@ -297,7 +308,7 @@ const totalPayment = computed(() => {
               </svg>
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">[Name of Agent]</h2>
+              <h2 class="text-2xl font-semibold">{{ agentName }}</h2>
               <p class="text-sm text-gray-600">Assigned Agent</p>
             </div>
           </div>

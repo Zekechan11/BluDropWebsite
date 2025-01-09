@@ -3,8 +3,7 @@ import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-
-const apiBaseUrl = 'http://localhost:9090';
+import { WATER_API } from '../../config';
 
 const toast = useToast();
 const dt = ref();
@@ -14,6 +13,10 @@ const deleteStafftDialog = ref(false);
 const deleteStaffsDialog = ref(false);
 const staff = ref({});
 const selectedStaffs = ref();
+const area = ref({});
+const areas = ref([]);
+
+
 const filters = ref({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
@@ -32,7 +35,7 @@ const hideDialog = () => {
 
 const fetchStaffs = async () => {
     try {
-        const response = await axios.get(`${apiBaseUrl}/api/get_staff`);
+        const response = await axios.get(`${WATER_API}/v2/api/get_staff/all/Staff`);
         const data = response.data;
 
         staffs.value = data.map((staff) => {
@@ -45,18 +48,43 @@ const fetchStaffs = async () => {
     }
 };
 
+const fetchAreas = async () => {
+    try {
+        const response = await axios.get(`${WATER_API}/area`);
+        const data = response.data;
+
+        areas.value = data.map((area) => {
+            return {
+                ...area,
+            };
+        });
+    } catch (error) {
+        console.error("Error fetching areas:", error);
+    }
+};
+
 const saveStaff = async () => {
     submitted.value = true;
 
     if (!staff.value.staff || !staff.value.address)  {
         try {
-            if (staff.value.id) {
-                await axios.put(`${apiBaseUrl}/api/update_staff/${staff.value.id}`, staff.value)
+            const payload = {
+                firstname: staff.value.firstname,
+                lastname: staff.value.lastname,
+                area_id: area.value.area_name,
+            }
+
+            if (staff.value.staff_id) {
+                await axios.put(`${WATER_API}/v2/api/update_staff/${staff.value.staff_id}`, payload)
                 staffs.value[findIndexById(staff.value.id)] = staff.value;
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Staff Updated', life: 3000 });
             } else {
-                const response = await axios.post(`${apiBaseUrl}/api/save_staff`, staff.value);
-                staffs.value.push({ ...staff.value, id: response.data.id });
+                const response = await axios.post(`${WATER_API}/v2/api/create_staff/Staff`, payload);
+                staffs.value.push({
+                    ...staff.value,
+                    area: areas.value.find(a => a.id === area.value.area_name)?.area,
+                    id: response.data.id
+                });
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Staff Created', life: 3000 });
             }
             staffDialog.value = false;
@@ -80,8 +108,8 @@ const confirmDeleteStaff = (prod) => {
 
 const deleteStaff = async () => {
     try {
-        await axios.delete(`${apiBaseUrl}/api/delete_staff/${staff.value.id}`);
-        staffs.value = staffs.value.filter(val => val.id !== staff.value.id);
+        await axios.delete(`${WATER_API}/v2/api/delete_staff/${staff.value.staff_id}`);
+        staffs.value = staffs.value.filter(val => val.staff_id !== staff.value.staff_id);
         deleteStafftDialog.value = false;
         staff.value = {};
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Staff Deleted', life: 3000 });
@@ -98,7 +126,7 @@ const confirmDeleteSelected = () => {
 const deleteSelectedStaffs = async () => {
     try {
         for (const selected of selectedStaffs.value) {
-            await axios.delete(`${apiBaseUrl}/api/delete_staff/${selected.id}`);
+            await axios.delete(`${WATER_API}/v2/api/delete_staff/${selected.staff_id}`);
         }
         staffs.value = staffs.value.filter(val => !selectedStaffs.value.includes(val));
         deleteStaffsDialog.value = false;
@@ -116,6 +144,7 @@ const findIndexById = (id) => {
 
 onMounted(() => {
     fetchStaffs();
+    fetchAreas();
 });
 </script>
 
@@ -161,8 +190,9 @@ onMounted(() => {
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>  
-                <Column field="staff_name" header="Staff Name" sortable style="min-width: 12rem"></Column>
-                <Column field="address" header="Address" sortable style="min-width: 16rem"></Column>
+                <Column field="firstname" header="First Name" sortable style="min-width: 12rem"></Column>
+                <Column field="lastname" header="Last Name" sortable style="min-width: 12rem"></Column>
+                <Column field="area" header="Address" sortable style="min-width: 16rem"></Column>
   
                 <Column :exportable="false" header="Actions" style="min-width: 12rem;">
                     <template #body="slotProps">
@@ -176,14 +206,20 @@ onMounted(() => {
         <Dialog v-model:visible="staffDialog" :style="{ width: '450px' }" header="Add Staff" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="staff_name" class="block font-semibold mb-3">Staff Name</label>
-                    <InputText id="staff_name" v-model.trim="staff.staff_name" required="true" autofocus :invalid="submitted && !staff.staff_name" fluid />
-                    <small v-if="submitted && !staff.staff_name" class="text-red-500">Name is required.</small>
+                    <label for="firstname" class="block font-semibold mb-3">First Name</label>
+                    <InputText id="firstname" v-model.trim="staff.firstname" required="true" autofocus :invalid="submitted && !staff.firstname" fluid />
+                    <small v-if="submitted && !staff.firstname" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
-                    <label for="address" class="block font-semibold mb-3">Address</label>
-                    <InputText id="address" v-model.trim="staff.address" required="true" autofocus :invalid="submitted && !staff.address" fluid />
-                    <small v-if="submitted && !staff.address" class="text-red-500">Name is required.</small>
+                    <label for="lastname" class="block font-semibold mb-3">Last Name</label>
+                    <InputText id="lastname" v-model.trim="staff.lastname" required="true" autofocus :invalid="submitted && !staff.lastname" fluid />
+                    <small v-if="submitted && !staff.lastname" class="text-red-500">Name is required.</small>
+                </div>
+                <div>
+                    <label for="area" class="block font-semibold mb-3">Address</label>
+                    <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
+                        optionValue="id" placeholder="Select an Area" />
+                    <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
                 </div>
 
             </div>

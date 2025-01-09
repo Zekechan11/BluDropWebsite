@@ -6,15 +6,7 @@ const messages = ref([]);
 const newMessage = ref('');
 const selectedConversation = ref(null); // Tracks the selected conversation
 
-const conversations = ref([
-    // { name: 'Ricky Monsales', lastMessage: 'sir pa deliver ko 10 gallons', time: '1m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    // { name: 'Admin', lastMessage: 'okay sir', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
-    // { name: 'Ezekiel Angelo Pelayo', lastMessage: 'sir pa deliver ko 15 gallons', time: '1h', img: 'https://i.pravatar.cc/100?u=edison' },
-    // { name: 'Edison Pagatpat', lastMessage: 'You sent a photo', time: '1h', img: 'https://i.pravatar.cc/100?u=gojo' },
-    // { name: 'Jemar Diamante', lastMessage: '.', time: '1h', img: 'https://i.pravatar.cc/100?u=diamante' },
-    // { name: 'Karl Lawrenz Pino', lastMessage: 'sir papuno ko 5 gallons', time: '2h', img: '/demo/images/gojo.png' },
-    // { name: 'Anton Retuya ', lastMessage: 'sir pa puno ko 10 gallons', time: '3h', img: 'https://i.pravatar.cc/100?u=sukuna' },
-]);
+const conversations = ref([]);
 
 const userData = JSON.parse(localStorage.getItem("user_data"));
 

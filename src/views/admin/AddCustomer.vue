@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
 import axios from "axios";
+import { WATER_API } from "../../config";
 
 onMounted(() => {
   getCustomers();
@@ -34,8 +35,8 @@ const hideDialog = () => {
 };
 
 const getCustomers = async () => {
-  const response = await axios.get("http://localhost:9090/api/customers");
-  customers.value = response.data;
+  const response = await axios.get(`${WATER_API}/v2/api/get_client/all/Active`);
+  customers.value = response.data.data;
 }
 
 
@@ -173,9 +174,9 @@ const deleteSelectedProducts = () => {
             </template>
 
             <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-            <Column field="FirstName" header="FirstName" sortable style="min-width: 16rem"></Column>
-            <Column field="LastName" header="LastName" sortable style="min-width: 16rem"></Column>
-            <Column field="Area" header="Address" sortable style="min-width: 18rem"></Column>
+            <Column field="firstname" header="FirstName" sortable style="min-width: 16rem"></Column>
+            <Column field="lastname" header="LastName" sortable style="min-width: 16rem"></Column>
+            <Column field="area" header="Address" sortable style="min-width: 18rem"></Column>
             <Column field="status" header="Status" sortable style="min-width: 12rem">
               <template #body="slotProps">
                 <span class="px-2 py-1 rounded text-white" :style="{
