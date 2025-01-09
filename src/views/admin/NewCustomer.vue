@@ -164,7 +164,7 @@ const handleFormSubmit = async () => {
       <div>
         <button type="submit"
           class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none">
-          Create Account & Generate QR Code
+          Create Account
         </button>
       </div>
     </form>
