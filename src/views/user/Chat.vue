@@ -1,9 +1,16 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { WATER_API } from '../../config';
 
 const messages = ref([]);
 const newMessage = ref('');
 const selectedConversation = ref(null);
+
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
+const fullName = computed(() => {
+  return `${userData.firstname} ${userData.lastname}`;
+});
 
 const conversations = ref([
     { name: 'Agent', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
@@ -17,7 +24,7 @@ const truncateMessage = (message, maxLength = 40) => {
 };
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:9090/ws');
+    socket = new WebSocket('ws://localhost:9090/chat');
 
     socket.onopen = () => {
         console.log('WebSocket connected');
@@ -27,7 +34,7 @@ function connectWebSocket() {
         const data = JSON.parse(event.data);
         messages.value.push({
             content: data.content,
-            sender: data.sender,
+            sender_id: data.sender_id,
             timestamp: new Date(data.timestamp).toLocaleTimeString(),
         });
     };
@@ -45,8 +52,9 @@ function connectWebSocket() {
 function sendMessage() {
     if (newMessage.value.trim() !== '' && socket) {
         const msg = {
-            sender: 'user',
-            recipient: selectedConversation.value.name,
+            sender_id: userData.uid.toString(),
+            area_id: userData.area_id,
+            customer: userData.username,
             content: newMessage.value,
         };
 
@@ -57,11 +65,11 @@ function sendMessage() {
 }
 
 
-function selectConversation(conversation) {
-    selectedConversation.value = conversation;
-    const conversationId = conversation.name;
+function startConversation() {
+    // selectedConversation.value = conversation;
+    // const conversationId = conversation.name;
 
-    fetch(`http://localhost:9090/get_message/${conversationId}`)
+    fetch(`${WATER_API}/chat/customer/${userData.username}`)
         .then((res) => {
             if (!res.ok) {
                 throw new Error('Failed to fetch messages');
@@ -71,7 +79,7 @@ function selectConversation(conversation) {
         .then((data) => {
             messages.value = data.messages.map((msg) => ({
                 content: msg.content,
-                sender: msg.sender,
+                sender_id: msg.sender_id,
                 timestamp: new Date(msg.timestamp).toLocaleTimeString(),
             }));
         })
@@ -82,9 +90,10 @@ function selectConversation(conversation) {
 
 
 onMounted(() => {
-    if (conversations.value.length > 0) {
-        selectedConversation.value = conversations.value[0];
-    }
+    // if (conversations.value.length > 0) {
+    //     selectedConversation.value = conversations.value[0];
+    // }
+    startConversation();
     connectWebSocket();
 });
 
@@ -99,7 +108,7 @@ onUnmounted(() => {
 <template>
     <div class="flex flex-col md:flex-row gap-8">
         <!-- Conversation List (Scrollable) -->
-        <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
+        <!-- <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
             <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Chat</div>
             <div class="p-4 bg-white">
                 <input
@@ -108,17 +117,14 @@ onUnmounted(() => {
                     class="w-full p-2 rounded-lg border border-gray-300"
                 />
             </div>
-            <!-- Scrollable conversation list -->
             <div class="overflow-y-auto flex-grow max-h-[520px]">
                 <div
                     v-for="(conversation, index) in conversations"
                     :key="index"
-                    @click="selectConversation(conversation)"
                     :class="['p-4 border-b cursor-pointer', 
                              selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']"
                 >
                     <div class="flex items-center gap-4">
-                        <!-- Profile Image -->
                         <img :src="conversation.img" alt="Profile image" class="w-10 h-10 rounded-full bg-gray-300" />
                         <div>
                             <p class="font-semibold">{{ conversation.name }}</p>
@@ -128,19 +134,21 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Chat Window - Only displayed if a conversation is selected -->
-        <div v-if="selectedConversation" class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">{{ selectedConversation.name }}</div>
+        <div class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
+            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Agent</div>
             <div class="flex-grow p-4 overflow-y-auto space-y-4">
                 <!-- Messages Loop -->
                 <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-                    <div v-if="msg.sender === 'user'" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                    <div v-if="msg.sender_id === userData.uid.toString()" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        <p class="font-bold">{{ fullName }}</p>
                         <p>{{ msg.content }}</p>
                         <span class="text-xs text-right block">{{ msg.timestamp }}</span>
                     </div>
                     <div v-else class="self-start bg-gray-300 p-2 rounded-lg max-w-xs">
+                        <p class="font-bold">Agent 47</p>
                         <p>{{ msg.content }}</p>
                         <span class="text-xs text-right block">{{ msg.timestamp }}</span>
                     </div>

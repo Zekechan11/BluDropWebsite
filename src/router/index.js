@@ -181,7 +181,7 @@ const router = createRouter({
 // Navigation guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role'); // Get the role from localStorage
+  const user_data = JSON.parse(localStorage.getItem('user_data'));// Get the role from localStorage
 
   // Define public routes (routes that don't require authentication)
   const publicRoutes = ['/auth/login', '/'];
@@ -194,11 +194,11 @@ router.beforeEach((to, from, next) => {
    // If user is already logged in and trying to access the login page
    if (token && to.path === '/auth/login') {
     // Redirect to the appropriate dashboard based on the user's role
-    if (role === 'Admin') {
+    if (user_data.role === 'Admin') {
       return next({ name: 'dashboardss' }); // Redirect to Admin Dashboard
-    } else if (role === 'Staff') {
+    } else if (user_data.role === 'Agent') {
       return next({ name: 'dashboards' }); // Redirect to Staff Dashboard
-    } else if (role === 'Customer') {
+    } else if (user_data.role === 'Customer') {
       return next({ name: 'dashboard' }); // Redirect to Customer Dashboard
     }
   }
@@ -206,19 +206,19 @@ router.beforeEach((to, from, next) => {
   // If the user is logged in, prevent them from accessing routes not allowed for their role
   if (token) {
     // Redirect based on the user's role
-    if (role === 'Admin') {
+    if (user_data.role === 'Admin') {
       if (to.path.startsWith('/admin')) {
         return next(); // Allow access to admin routes
       } else if (to.path.startsWith('/agent') || to.path.startsWith('/user')) {
         return next({ name: 'dashboardss' }); // Redirect to Admin Dashboard
       }
-    } else if (role === 'Staff') {
+    } else if (user_data.role === 'Agent') {
       if (to.path.startsWith('/admin') || to.path.startsWith('/user')) {
         return next({ name: 'dashboards' }); // Redirect to Staff Dashboard
       } else if (to.path.startsWith('/user')) {
         return next(); // Allow access to user routes
       }
-    } else if (role === 'Customer') {
+    } else if (user_data.role === 'Customer') {
       if (to.path.startsWith('/admin') || to.path.startsWith('/agent')) {
         return next({ name: 'dashboard' }); // Redirect to Customer Dashboard
       } else if (to.path.startsWith('/user')) {

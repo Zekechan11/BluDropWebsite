@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { WATER_API } from "../../../config";
 
 const router = useRouter();
 
@@ -15,7 +16,6 @@ const togglePasswordVisibility = () => {
 };
 
 const handelLogin = async () => {
-  const url = "http://localhost:9090/login";
 
   const loginData = {
     email: email.value,
@@ -23,7 +23,7 @@ const handelLogin = async () => {
   };
 
   try {
-    const request = await fetch(url, {
+    const request = await fetch(`${WATER_API}/v2/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,24 +39,27 @@ const handelLogin = async () => {
       alert("Login failed: " + (responseData.error || "Unknown error"));
     } else {
       // Validate that all fields are present
-      const { id, token, role, firstName, lastName, area } = responseData;
+      const { token, user_info } = responseData;
 
-      if (id && token && role && firstName && lastName && area) {
-        // Save to localStorage
-        localStorage.setItem("id", id);
+      if (token && user_info) {
         localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        localStorage.setItem("firstName", firstName);
-        localStorage.setItem("lastName", lastName);
-        localStorage.setItem("area", area);
+        localStorage.setItem("user_data", JSON.stringify(user_info));
 
         // Redirect based on role
-        if (role === "Staff") {
-          router.push("/agent/dashboard");
-        } else if (role === "Customer") {
-          router.push("/user/dashboard");
-        } else if (role === "Admin") {
-          router.push("/views/dashboard");
+        switch (user_info.role) {
+          case "Agent":
+            router.push("/agent/dashboard");
+            break;
+          case "Customer":
+            router.push("/user/dashboard");
+            break;
+          case "Admin":
+            router.push("/views/dashboard");
+            break;
+          default:
+            console.error("Unknown role:", user_info.role);
+            alert("Login failed: Unknown role.");
+            break;
         }
       } else {
         console.error("Missing data in the response:", responseData);
