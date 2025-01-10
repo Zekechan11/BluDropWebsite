@@ -83,9 +83,11 @@ const createAgent = async () => {
       payload
     );
     agents.value.push({
-      id: response.data.id,
+      staff_id: response.data.data.staff_id,
       firstname: agent.value.firstname,
       lastname: agent.value.lastname,
+      email: agent.value.email,
+      password: agent.value.password,
       area: areas.value.find((a) => a.id === area.value.area_name)?.area,
       area_id: area.value.area_name,
     });
@@ -127,6 +129,8 @@ const updateAgent = async () => {
         ...agents.value[index],
         firstname: agent.value.firstname,
         lastname: agent.value.lastname,
+        email: agent.value.email,
+        password: agent.value.password,
         area_name: areas.value.find((a) => a.id === area.value.area_name)?.area,
         area_id: area.value.area_name,
       };
@@ -185,7 +189,7 @@ const deleteAgent = async () => {
     agents.value = agents.value.filter(
         (existingAgent) => existingAgent.staff_id !== agent.value.staff_id
     );
-    deleteAgentsDialog.value = false;
+    deleteAgentDialog.value = false;
     toast.add({
       severity: "success",
       summary: "Agent Deleted",
@@ -433,7 +437,7 @@ const findIndexById = (id) => {
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
         <span v-if="agent"
-          >Are you sure you want to delete <b>{{ agent.agent_name }}</b
+          >Are you sure you want to delete <b>{{ agent.firstname }} {{ agent.lastname }}</b
           >?</span
         >
       </div>

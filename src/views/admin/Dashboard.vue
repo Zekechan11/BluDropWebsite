@@ -240,9 +240,9 @@ const formatCurrency = (value) => {
                 'bg-yellow-200': schedule.type === 'priority',
               })
                 ">
-                {{ schedule.day }} - {{ schedule.area }}
+                {{ schedule.day }}
               </span>
-              <i class="pi pi-times text-red-500 cursor-pointer ml-4" @click="removeSchedule(index)"></i>
+              <i class="pi pi-eye text-green-500 cursor-pointer ml-4" @click="removeSchedule(index)"></i>
             </li>
           </ul>
         </div>
