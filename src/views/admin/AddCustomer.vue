@@ -5,11 +5,6 @@ import { useToast } from "primevue/usetoast";
 import axios from "axios";
 import { WATER_API } from "../../config";
 
-onMounted(() => {
-  getCustomers();
-
-});
-
 const toast = useToast();
 const dt = ref();
 const products = ref();
@@ -23,6 +18,9 @@ const filters = ref({
 });
 const submitted = ref(false);
 const customers = ref([]);
+const clientStatus = ref('Active');
+const area = ref({});
+const areas = ref([]);
 
 const openNew = () => {
   product.value = {};
@@ -34,46 +32,88 @@ const hideDialog = () => {
   submitted.value = false;
 };
 
-const getCustomers = async () => {
-  const response = await axios.get(`${WATER_API}/v2/api/get_client/all/Active`);
+const getCustomers = async (status) => {
+  clientStatus.value = status;
+  const response = await axios.get(`${WATER_API}/v2/api/get_client/all/${clientStatus.value}`);
   customers.value = response.data.data;
 }
+const fetchAreas = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/area`);
+    const data = response.data;
 
-
-const saveProduct = () => {
-  submitted.value = true;
-
-  if (product?.value.name?.trim()) {
-    if (product.value.id) {
-      product.value.inventoryStatus = product.value.inventoryStatus.value
-        ? product.value.inventoryStatus.value
-        : product.value.inventoryStatus;
-      products.value[findIndexById(product.value.id)] = product.value;
-      toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Product Updated",
-        life: 3000,
-      });
-    } else {
-      product.value.id = createId();
-      product.value.code = createId();
-      product.value.inventoryStatus = product.value.inventoryStatus
-        ? product.value.inventoryStatus.value
-        : "INSTOCK";
-      products.value.push(product.value);
-      toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Product Created",
-        life: 3000,
-      });
-    }
-
-    productDialog.value = false;
-    product.value = {};
+    areas.value = data.map((area) => {
+      return {
+        ...area,
+        label: area.area,
+        value: area.id
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching areas:", error);
   }
 };
+
+
+const saveProduct = async () => {
+  submitted.value = true;
+
+  if (product.value.staff_id) {
+    // await updateAgent();
+  } else {
+    await createClient();
+  }
+  
+  productDialog.value = false;
+  product.value = {};
+  
+};
+
+
+const createClient = async () => {
+  try {
+    const payload = {
+      firstname: product.value.firstname,
+      lastname: product.value.lastname,
+      email: product.value.email,
+      username: product.value.username,
+      password: product.value.password,
+      area_id: product.value.area,
+      type: product.value.type.label,
+    };
+
+    const response = await axios.post(
+      `${WATER_API}/v2/api/create_client`,
+      payload
+    );
+    customers.value.push({
+      client_id: response.data.data.client_id,
+      firstname: product.value.firstname,
+      lastname: product.value.lastname,
+      email: product.value.email,
+      password: product.value.password,
+      area: areas.value.find((a) => a.value === product.value.area)?.area,
+      area_id: product.value.area_name,
+      status: "S*x Active"
+    });
+    toast.add({
+      severity: "success",
+      summary: "Successful",
+      detail: "Agent Created",
+      life: 3000,
+    });
+  } catch (error) {
+    console.error("Failed to create agent:", error);
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail: "Failed to create agent",
+      life: 3000,
+    });
+  }
+};
+
+
 const editProduct = (prod) => {
   product.value = { ...prod };
   productDialog.value = true;
@@ -82,8 +122,11 @@ const confirmDeleteProduct = (prod) => {
   product.value = prod;
   deleteProductDialog.value = true;
 };
-const deleteProduct = () => {
-  products.value = products.value.filter((val) => val.id !== product.value.id);
+const deleteProduct = async () => {
+  await axios.delete(
+      `${WATER_API}/v2/api/delete_client/${product.value.client_id}`
+  );
+  customers.value = customers.value.filter((val) => val.client_id !== product.value.client_id);
   deleteProductDialog.value = false;
   product.value = {};
   toast.add({
@@ -93,31 +136,12 @@ const deleteProduct = () => {
     life: 3000,
   });
 };
-const findIndexById = (id) => {
-  let index = -1;
-  for (let i = 0; i < products.value.length; i++) {
-    if (products.value[i].id === id) {
-      index = i;
-      break;
-    }
-  }
-
-  return index;
-};
-const createId = () => {
-  let id = "";
-  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < 5; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-};
 
 const confirmDeleteSelected = () => {
   deleteProductsDialog.value = true;
 };
 const deleteSelectedProducts = () => {
-  products.value = products.value.filter(
+   customers.value = customers.value.filter(
     (val) => !selectedProducts.value.includes(val)
   );
   deleteProductsDialog.value = false;
@@ -129,6 +153,11 @@ const deleteSelectedProducts = () => {
     life: 3000,
   });
 };
+
+onMounted(() => {
+  getCustomers(clientStatus.value);
+  fetchAreas();
+});
 </script>
 
 <template>
@@ -141,8 +170,16 @@ const deleteSelectedProducts = () => {
   <div>
     <Tabs value="0" class="shadow-lg">
       <TabList>
-        <Tab value="0">Manage Customer</Tab>
-        <Tab value="1">Inactive</Tab>
+        <Tab
+          value="0"
+          @click="getCustomers('Active')"
+        >Manage Customer
+      </Tab>
+        <Tab
+        value="1"
+        @click="getCustomers('Inactive')"
+        >Inactive
+        </Tab>
       </TabList>
 
       <TabPanels>
@@ -251,42 +288,79 @@ const deleteSelectedProducts = () => {
 
     <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Add Customer" :modal="true">
       <div class="flex flex-col gap-6">
-        <!-- Name Input -->
+        <!-- FirstName Input -->
         <div>
-          <label for="name" class="block font-semibold mb-3">Name</label>
-          <InputText id="name" v-model.trim="product.name" required="true" autofocus
-            :invalid="submitted && !product.name" fluid />
-          <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+          <label for="firstname" class="block font-semibold mb-3">First Name</label>
+          <InputText id="firstname" v-model.trim="product.firstname" required="true" autofocus
+            :invalid="submitted && !product.firstname" fluid />
+          <small v-if="submitted && !product.firstname" class="text-red-500">Name is required.</small>
         </div>
 
-        <!-- Address Input -->
+        <!-- LastName Input -->
         <div>
-          <label for="address" class="block font-semibold mb-3">Address</label>
-          <InputText id="address" v-model.trim="product.address" required="true"
-            :invalid="submitted && !product.address" fluid />
-          <small v-if="submitted && !product.address" class="text-red-500">Address is required.</small>
+          <label for="lastname" class="block font-semibold mb-3">Last Name</label>
+          <InputText id="lastname" v-model.trim="product.lastname" required="true" autofocus
+            :invalid="submitted && !product.lastname" fluid />
+          <small v-if="submitted && !product.lastname" class="text-red-500">Name is required.</small>
         </div>
+
+        <!-- Email Input -->
+        <div>
+          <label for="email" class="block font-semibold mb-3">Email</label>
+          <InputText id="email" v-model.trim="product.email" required="true" autofocus
+            :invalid="submitted && !product.email" fluid />
+          <small v-if="submitted && !product.email" class="text-red-500">Email is required.</small>
+        </div>
+
+        <!-- Username Input -->
+        <div>
+          <label for="username" class="block font-semibold mb-3">Username</label>
+          <InputText id="username" v-model.trim="product.username" required="true"
+            :invalid="submitted && !product.username" fluid />
+          <small v-if="submitted && !product.username" class="text-red-500">Username is required.</small>
+        </div>
+
+        <!-- Password Input -->
+        <div>
+          <label for="password" class="block font-semibold mb-3">Password</label>
+          <InputText id="password" v-model.trim="product.password" required="true"
+            :invalid="submitted && !product.password" fluid />
+          <small v-if="submitted && !product.password" class="text-red-500">Password is required.</small>
+        </div>
+
+        <!-- Confirm Pass Input -->
+        <!-- <div>
+          <label for="password" class="block font-semibold mb-3">Confirm Password</label>
+          <InputText id="password" v-model.trim="product.password" required="true"
+            :invalid="submitted && !product.password" fluid />
+          <small v-if="submitted && !product.password" class="text-red-500">Password is required.</small>
+        </div> -->
 
         <!-- Dropdowns Container -->
         <div class="flex gap-4">
-          <!-- Status Dropdown -->
+          <!-- Type Dropdown -->
           <div class="w-full md:w-56">
-            <label for="status" class="block font-semibold mb-3">Status</label>
-            <Select v-model="product.status" id="status" :options="[
-              { label: 'Dealer', value: 'dealer' },
-              { label: 'Regular', value: 'regular' }
-            ]" optionLabel="label" placeholder="Select a Status" class="w-full border rounded" required />
-            <small v-if="submitted && !product.status" class="text-red-500">Status is required.</small>
+            <label for="type" class="block font-semibold mb-3">Type</label>
+            <Select v-model="product.type" id="type" :options="[
+              { label: 'Dealer', value: 'Dealer' },
+              { label: 'Regular', value: 'Regular' }
+            ]" optionLabel="label" placeholder="Select a Type" class="w-full border rounded" required />
+            <small v-if="submitted && !product.type" class="text-red-500">Type is required.</small>
           </div>
 
-          <!-- Category Dropdown -->
+          <!-- Area Dropdown -->
           <div class="w-full md:w-56">
-            <label for="category" class="block font-semibold mb-3">Price</label>
-            <Select v-model="product.category" id="category" :options="[
-              { label: '₱ 20', value: 'Dealer' },
-              { label: '₱ 25', value: 'Regular' },
-            ]" optionLabel="label" placeholder="Select Price" class="w-full border rounded" required />
-            <small v-if="submitted && !product.category" class="text-red-500">Category is required.</small>
+            <label for="area" class="block font-semibold mb-3">Address</label>
+            <Select
+              v-model="product.area"
+              id="area"
+              :options="areas"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select Area"
+              class="w-full border rounded"
+              required />
+            <small v-if="submitted && !product.area" class="text-red-500">Area is required.</small>
           </div>
         </div>
       </div>
