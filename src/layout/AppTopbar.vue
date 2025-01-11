@@ -13,11 +13,6 @@ const onSettingsClick = () => {
   router.push("/admin/settings"); a
 };
 
-const onCreateClick = () => {
-  topbarMenuActive.value = false;
-  router.push("/admin/create-account"); a
-};
-
 const notifications = ref([
   { id: 1, message: "Message you", addLine: true },
   { id: 2, message: "Message you", addLine: true },
@@ -78,11 +73,6 @@ const handleNotificationClick = (notification) => {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-
-          <button type="button" class="layout-topbar-action" @click="onCreateClick">
-            <i class="pi pi-user-plus" v-tooltip.bottom="'Create Customer'"></i>
-            <span class="font-semibold">Create Customer</span>
-          </button>
 
           <div class="notification-container">
             <button type="button" class="layout-topbar-action" @click="toggleNotifications">

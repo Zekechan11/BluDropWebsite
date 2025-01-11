@@ -41,7 +41,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">FGS </span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              250
+              0
             </div>
           </div>
           <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
@@ -73,7 +73,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">GALLONS RETURNED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              20
+              0
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
@@ -89,7 +89,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">AMOUNT COLLECTED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              20,000
+              0
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"

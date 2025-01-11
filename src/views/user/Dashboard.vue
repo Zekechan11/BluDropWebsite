@@ -330,7 +330,7 @@ const totalPayment = computed(() => {
               </svg>
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">50</h2>
+              <h2 class="text-2xl font-semibold">0</h2>
               <p class="text-sm text-gray-600">Containers on Hold</p>
             </div>
           </div>
@@ -343,7 +343,7 @@ const totalPayment = computed(() => {
               ₱
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">{{ formatCurrency(16) }}</h2>
+              <h2 class="text-2xl font-semibold">{{ formatCurrency(0) }}</h2>
               <p class="text-sm text-gray-600">Total Amount Payable</p>
             </div>
           </div>
