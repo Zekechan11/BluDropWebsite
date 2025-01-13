@@ -59,7 +59,7 @@ const saveProduct = async () => {
   submitted.value = true;
 
   if (product.value.staff_id) {
-    // await updateAgent();
+    await updateClient();
   } else {
     await createClient();
   }
@@ -91,6 +91,7 @@ const createClient = async () => {
       firstname: product.value.firstname,
       lastname: product.value.lastname,
       email: product.value.email,
+      username: product.value.username,
       password: product.value.password,
       area: areas.value.find((a) => a.value === product.value.area)?.area,
       area_id: product.value.area_name,
@@ -99,15 +100,61 @@ const createClient = async () => {
     toast.add({
       severity: "success",
       summary: "Successful",
-      detail: "Agent Created",
+      detail: "Clint Created",
       life: 3000,
     });
   } catch (error) {
-    console.error("Failed to create agent:", error);
+    console.error("Failed to create cleint:", error);
     toast.add({
       severity: "error",
       summary: "Error",
-      detail: "Failed to create agent",
+      detail: "Failed to create client",
+      life: 3000,
+    });
+  }
+};
+
+
+const updateClient = async () => {
+  try {
+    const payload = {
+      firstname: product.value.firstname,
+      lastname: product.value.lastname,
+      email: product.value.email,
+      username: product.value.username,
+      password: product.value.password,
+      area_id: product.value.area,
+      type: product.value.type.label,
+    };
+
+    await axios.put(
+      `${WATER_API}/v2/api/update_staff/${product.value.staff_id}`,
+      payload
+    );
+    const index = customers.value.findIndex((a) => a.staff_id === product.value.staff_id);
+    if (index !== -1) {
+      customers.value[index] = {
+        ...customers.value[index],
+        firstname: product.value.firstname,
+        lastname: product.value.lastname,
+        email: product.value.email,
+        password: product.value.password,
+        area_name: product.value.find((a) => a.id === area.value.area_name)?.area,
+        area_id: product.value.area_name,
+      };
+    }
+    toast.add({
+      severity: "success",
+      summary: "Successful",
+      detail: "Cleint Updated",
+      life: 3000,
+    });
+  } catch (error) {
+    console.error("Failed to update client:", error);
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail: "Failed to update client",
       life: 3000,
     });
   }

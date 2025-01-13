@@ -233,9 +233,9 @@ const totalPayment = computed(() => {
               v-model="ingredient"
               :inputId="'ingredient' + day"
               name="day"
-              :value="day"
+              :value="day.date"
             />
-            <label for="ingredient1">{{day}}</label>
+            <label for="ingredient1">{{day.day}} ({{ day.date }})</label>
           </div>
         </div>
         <div class="flex flex-col gap-2 mb-8">
@@ -308,7 +308,7 @@ const totalPayment = computed(() => {
               </svg>
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">{{ agentName }}</h2>
+              <h2 class="text-2xl font-semibold">{{ agentName || 'Agent is Dead💀' }}</h2>
               <p class="text-sm text-gray-600">Assigned Agent</p>
             </div>
           </div>

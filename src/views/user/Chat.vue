@@ -5,6 +5,7 @@ import { WATER_API } from '../../config';
 const messages = ref([]);
 const newMessage = ref('');
 const selectedConversation = ref(null);
+const agentName = ref();
 
 const userData = JSON.parse(localStorage.getItem("user_data"));
 
@@ -22,6 +23,15 @@ let socket = null;
 const truncateMessage = (message, maxLength = 40) => {
     return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
 };
+
+const getAgent = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
+    agentName.value = response.data.data;
+  } catch (error) {
+    console.error("Error fetching schedule:", error);
+  }
+}
 
 function connectWebSocket() {
     socket = new WebSocket('ws://localhost:9090/chat');
@@ -95,6 +105,7 @@ onMounted(() => {
     // }
     startConversation();
     connectWebSocket();
+    getAgent();
 });
 
 onUnmounted(() => {
@@ -138,7 +149,7 @@ onUnmounted(() => {
 
         <!-- Chat Window - Only displayed if a conversation is selected -->
         <div class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Agent</div>
+            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">{{agentName || 'Agent'}}</div>
             <div class="flex-grow p-4 overflow-y-auto space-y-4">
                 <!-- Messages Loop -->
                 <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
