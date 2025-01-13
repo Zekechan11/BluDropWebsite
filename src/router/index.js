@@ -132,9 +132,9 @@ const router = createRouter({
           component: () => import('@/views/admin/AddInventory.vue')
         },
         {
-          path: '/admin/container-loan',
-          name: 'container-loan',
-          component: () => import('@/views/admin/Containerloan.vue')
+          path: '/admin/fgs-loan',
+          name: 'fgs-loan',
+          component: () => import('@/views/admin/FGS.vue')
         },
         {
           path: '/admin/sales',
