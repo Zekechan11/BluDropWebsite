@@ -27,9 +27,9 @@ const model = ref([
                         class: 'rotated-icon' 
                     },
                     {
-                        label: 'Container on Loan',
+                        label: 'FGS',
                         icon: 'pi pi-list',
-                        to: '/admin/container-loan'
+                        to: '/admin/fgs-loan'
                     }
                 ]
             },
