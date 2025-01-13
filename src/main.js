@@ -3,6 +3,7 @@ import App from './App.vue';
 import router from './router';
 
 import Aura from '@primevue/themes/aura';
+import SplitButton from 'primevue/splitbutton';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
@@ -23,6 +24,7 @@ app.use(PrimeVue, {
         }
     }
 });
+app.component('SplitButton', SplitButton);
 app.use(ToastService);
 app.use(ConfirmationService);
 

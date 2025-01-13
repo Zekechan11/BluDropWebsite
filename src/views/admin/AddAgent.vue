@@ -2,7 +2,7 @@
 import { FilterMatchMode } from "@primevue/core/api";
 import axios from "axios";
 import { useToast } from "primevue/usetoast";
-import { onMounted, ref } from "vue";
+import { onMounted, ref} from "vue";
 import { WATER_API } from "../../config";
 
 const toast = useToast();
@@ -18,6 +18,15 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
+
+const items = [
+    {
+        label: 'Nailon, Bogo City, Cebu'
+    },
+    {
+        label: 'Guadalupe, Bogo City, Cebu'
+    }
+];
 
 const openNew = () => {
   agent.value = {};
@@ -187,7 +196,7 @@ const deleteAgent = async () => {
       `${WATER_API}/v2/api/delete_staff/${agent.value.staff_id}`
     );
     agents.value = agents.value.filter(
-        (existingAgent) => existingAgent.staff_id !== agent.value.staff_id
+      (existingAgent) => existingAgent.staff_id !== agent.value.staff_id
     );
     deleteAgentDialog.value = false;
     toast.add({
@@ -246,35 +255,17 @@ const findIndexById = (id) => {
     <div class="card shadow-md">
       <Toolbar class="mb-6">
         <template #start>
-          <Button
-            label="New"
-            icon="pi pi-plus"
-            severity="success"
-            class="mr-2"
-            @click="openNew"
-          />
-          <Button
-            label="Delete"
-            icon="pi pi-trash"
-            severity="danger"
-            @click="confirmDeleteSelected"
-            :disabled="!selectedAgents || !selectedAgents.length"
-          />
+          <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
+          <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+            :disabled="!selectedAgents || !selectedAgents.length" />
         </template>
       </Toolbar>
 
-      <DataTable
-        ref="dt"
-        v-model:selection="selectedAgents"
-        :value="agents"
-        dataKey="id"
-        :paginator="true"
-        :rows="10"
+      <DataTable ref="dt" v-model:selection="selectedAgents" :value="agents" dataKey="id" :paginator="true" :rows="10"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} agents"
-      >
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} agents">
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
             <h4 class="m-0 font-semibold">Manage Agent</h4>
@@ -282,143 +273,61 @@ const findIndexById = (id) => {
               <InputIcon>
                 <i class="pi pi-search" />
               </InputIcon>
-              <InputText
-                v-model="filters['global'].value"
-                placeholder="Search..."
-              />
+              <InputText v-model="filters['global'].value" placeholder="Search..." />
             </IconField>
           </div>
         </template>
 
-        <Column
-          selectionMode="multiple"
-          style="width: 3rem"
-          :exportable="false"
-        ></Column>
-        <Column
-          field="firstname"
-          header="First Name"
-          sortable
-          style="min-width: 12rem"
-        ></Column>
-        <Column
-          field="lastname"
-          header="Last Name"
-          sortable
-          style="min-width: 12rem"
-        ></Column>
-        <Column
-          field="area"
-          header="Area"
-          sortable
-          style="min-width: 16rem"
-        ></Column>
+        <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+        <Column field="firstname" header="First Name" sortable style="min-width: 12rem"></Column>
+        <Column field="lastname" header="Last Name" sortable style="min-width: 12rem"></Column>
+        <Column field="area" header="Area" sortable style="min-width: 16rem"></Column>
 
         <Column :exportable="false" header="Actions" style="min-width: 12rem">
           <template #body="slotProps">
-            <Button
-              icon="pi pi-pencil"
-              v-tooltip.bottom="'Edit'"
-              outlined
-              rounded
-              class="mr-2"
-              @click="editAgent(slotProps.data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              v-tooltip.bottom="'Delete'"
-              outlined
-              rounded
-              severity="danger"
-              @click="confirmDeleteAgent(slotProps.data)"
-            />
+            <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+              @click="editAgent(slotProps.data)" />
+            <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
+              @click="confirmDeleteAgent(slotProps.data)" />
+              
+            <SplitButton icon="pi pi-map-marker" outlined severity="info" label="Route" :model="items" />
+
           </template>
         </Column>
       </DataTable>
     </div>
 
-    <Dialog
-      v-model:visible="agentDialog"
-      :style="{ width: '450px' }"
-      header="Add Agent"
-      :modal="true"
-    >
+    <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Agent" :modal="true">
       <div class="flex flex-col gap-6">
         <div>
-          <label for="firstname" class="block font-semibold mb-3"
-            >First Name</label
-          >
-          <InputText
-            id="firstname"
-            v-model.trim="agent.firstname"
-            required="true"
-            autofocus
-            :invalid="submitted && !agent.firstname"
-            fluid
-          />
-          <small v-if="submitted && !agent.firstname" class="text-red-500"
-            >First Name is required.</small
-          >
+          <label for="firstname" class="block font-semibold mb-3">First Name</label>
+          <InputText id="firstname" v-model.trim="agent.firstname" required="true" autofocus
+            :invalid="submitted && !agent.firstname" fluid />
+          <small v-if="submitted && !agent.firstname" class="text-red-500">First Name is required.</small>
         </div>
         <div>
-          <label for="lastname" class="block font-semibold mb-3"
-            >Last Name</label
-          >
-          <InputText
-            id="lastname"
-            v-model.trim="agent.lastname"
-            required="true"
-            autofocus
-            :invalid="submitted && !agent.lastname"
-            fluid
-          />
-          <small v-if="submitted && !agent.lastname" class="text-red-500"
-            >Last Name is required.</small
-          >
+          <label for="lastname" class="block font-semibold mb-3">Last Name</label>
+          <InputText id="lastname" v-model.trim="agent.lastname" required="true" autofocus
+            :invalid="submitted && !agent.lastname" fluid />
+          <small v-if="submitted && !agent.lastname" class="text-red-500">Last Name is required.</small>
         </div>
         <div>
           <label for="email" class="block font-semibold mb-3">Email</label>
-          <InputText
-            id="email"
-            v-model.trim="agent.email"
-            required="true"
-            autofocus
-            :invalid="submitted && !agent.email"
-            fluid
-          />
-          <small v-if="submitted && !agent.email" class="text-red-500"
-            >Email is required.</small
-          >
+          <InputText id="email" v-model.trim="agent.email" required="true" autofocus
+            :invalid="submitted && !agent.email" fluid />
+          <small v-if="submitted && !agent.email" class="text-red-500">Email is required.</small>
         </div>
         <div>
           <label for="area" class="block font-semibold mb-3">Area</label>
-          <Dropdown
-            id="area"
-            v-model.trim="area.area_name"
-            :options="areas"
-            optionLabel="area"
-            optionValue="id"
-            placeholder="Select an Area"
-          />
-          <small v-if="submitted && !area.area_name" class="text-red-500"
-            >Area is required.</small
-          >
+          <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area" optionValue="id"
+            placeholder="Select an Area" />
+          <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
         </div>
         <div>
-          <label for="password" class="block font-semibold mb-3"
-            >Password</label
-          >
-          <InputText
-            id="password"
-            v-model.trim="agent.password"
-            required="true"
-            autofocus
-            :invalid="submitted && !agent.password"
-            fluid
-          />
-          <small v-if="submitted && !agent.password" class="text-red-500"
-            >Password is required.</small
-          >
+          <label for="password" class="block font-semibold mb-3">Password</label>
+          <InputText id="password" v-model.trim="agent.password" required="true" autofocus
+            :invalid="submitted && !agent.password" fluid />
+          <small v-if="submitted && !agent.password" class="text-red-500">Password is required.</small>
         </div>
       </div>
 
@@ -428,56 +337,34 @@ const findIndexById = (id) => {
       </template>
     </Dialog>
 
-    <Dialog
-      v-model:visible="deleteAgentDialog"
-      :style="{ width: '450px' }"
-      header="Confirm"
-      :modal="true"
-    >
+    <Dialog v-model:visible="deleteAgentDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
-        <span v-if="agent"
-          >Are you sure you want to delete <b>{{ agent.firstname }} {{ agent.lastname }}</b
-          >?</span
-        >
+        <span v-if="agent">Are you sure you want to delete <b>{{ agent.firstname }} {{ agent.lastname }}</b>?</span>
       </div>
       <template #footer>
-        <Button
-          label="No"
-          icon="pi pi-times"
-          text
-          @click="deleteAgentDialog = false"
-        />
+        <Button label="No" icon="pi pi-times" text @click="deleteAgentDialog = false" />
         <Button label="Yes" icon="pi pi-check" @click="deleteAgent" />
       </template>
     </Dialog>
 
-    <Dialog
-      v-model:visible="deleteAgentsDialog"
-      :style="{ width: '450px' }"
-      header="Confirm"
-      :modal="true"
-    >
+    <Dialog v-model:visible="deleteAgentsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
-        <span v-if="agent"
-          >Are you sure you want to delete the selected agents?</span
-        >
+        <span v-if="agent">Are you sure you want to delete the selected agents?</span>
       </div>
       <template #footer>
-        <Button
-          label="No"
-          icon="pi pi-times"
-          text
-          @click="deleteAgentsDialog = false"
-        />
-        <Button
-          label="Yes"
-          icon="pi pi-check"
-          text
-          @click="deleteSelectedAgents"
-        />
+        <Button label="No" icon="pi pi-times" text @click="deleteAgentsDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedAgents" />
       </template>
     </Dialog>
   </div>
 </template>
+
+<style scoped>
+/* Optional: Add styles if you want to customize dropdown appearance */
+.dropdown-menu {
+  position: absolute;
+  z-index: 1000;
+}
+</style>
