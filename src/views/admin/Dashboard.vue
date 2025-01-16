@@ -3,10 +3,10 @@ import { useLayout } from "@/layout/composables/layout";
 import DatePicker from "primevue/datepicker";
 import axios from "axios"; // Import Axios
 import { ref, onMounted, computed } from "vue";
+import { WATER_API } from "../../config";
+import { useToast } from "primevue/usetoast";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
-const CUSTOMER_URL = "http://localhost:9090";
-const ORDER_URL = "http://localhost:9090";
 
 const products = ref();
 const schedule = ref(false);
@@ -15,12 +15,15 @@ const totalCustomer = ref(0);
 const orders = ref([]);
 const visible = ref(false);
 const customers = ref(false);
+const schedules = ref([]);
+
+const toast = useToast();
 
 const orderCount = computed(() => orders.value.length);
 
 const fetchOrders = async () => {
   try {
-    const response = await axios.get(`${ORDER_URL}/api/get_order`);
+    const response = await axios.get(`${WATER_API}/api/get_order`);
     orders.value = response.data;
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -29,12 +32,45 @@ const fetchOrders = async () => {
 
 const fetchTotalCustomer = async () => {
   try {
-    const response = await axios.get(`${CUSTOMER_URL}/users/count`);
+    const response = await axios.get(`${WATER_API}/users/count`);
     totalCustomer.value = response.data.total_users;
   } catch (error) {
     console.error("Error fetching total users:", error);
   }
 };
+
+const fetchSchedules = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/api/admin/get_schedule`);
+    schedules.value = response.data.days;
+  } catch (error) {
+    console.error("Error fetching schedules:", error);
+  }
+};
+
+
+const saveSchedule = async () => {
+  try {
+    const payload = {};
+
+    schedules.value.forEach(day => {
+      payload[day.day.toLowerCase()] = day.type;
+    });
+
+    const response = await axios.put(`${WATER_API}/api/admin/update_schedule`, payload);
+    if(response.data.success) {
+      toast.add({
+      severity: "success",
+      summary: "Successful",
+      detail: response.data.message,
+      life: 3000,
+    });
+    }
+  } catch (error) {
+    console.error("Error updating schedule:", error);
+  }
+};
+
 
 onMounted(() => {
   products.value = [
@@ -47,51 +83,23 @@ onMounted(() => {
   ];
   fetchTotalCustomer();
   fetchOrders();
+  fetchSchedules();
 });
-
-// Schedules data
-const schedules = ref([
-  { day: "Monday", area: "Cogon", type: "regular" },
-  { day: "Tuesday", area: "Cogon", type: "priority" },
-  { day: "Wednesday", area: "Cogon", type: "regular" },
-  { day: "Thursday", area: "Cogon", type: "priority" },
-  { day: "Friday", area: "Cogon", type: "regular" },
-  { day: "Saturday", area: "Cogon", type: "priority" },
-]);
 
 const selectedDay = ref(null);
 const selectedArea = ref("");
 
-const saveSchedule = () => {
-  if (selectedDay.value && selectedArea.value) {
-    const date = new Date(selectedDay.value);
-
-    // Convert the selected date to the day name
-    const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-
-    // Determine the color class based on the day
-    const colorClass = ["Monday", "Wednesday", "Friday"].includes(dayName)
-      ? "bg-blue-300" // Blue for Mon, Wed, Fri
-      : ["Tuesday", "Thursday", "Saturday"].includes(dayName)
-        ? "bg-yellow-200" // Yellow for Tue, Thu, Sat
-        : "bg-gray-200"; // Default for Sunday or if not recognized
-
-    schedules.value.push({
-      day: dayName,
-      area: selectedArea.value,
-      type: "regular", // Default to 'regular'
-      color: colorClass, // Add the color class to the schedule
-    });
-
-    // Reset and close modal
-    selectedDay.value = null;
-    selectedArea.value = "";
+const disableSchedule = (index) => {
+  if (schedules.value[index]) {
+    schedules.value[index].type = false;
   }
 };
 
-const removeSchedule = (index) => {
-  schedules.value.splice(index, 1);
-};
+const enableSchedule = (index) => {
+  if (schedules.value[index]) {
+    schedules.value[index].type = true;
+  }
+}
 
 const formatCurrency = (value) => {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -228,7 +236,7 @@ const formatCurrency = (value) => {
           <div class="flex items-center justify-between mb-6">
             <div class="font-semibold text-xl">SCHEDULES</div>
             <div>
-              <Button label="Add Schedule" icon="pi pi-fw pi-plus" @click="schedule = true" />
+              <Button label="Save Schedule" icon="pi pi-fw pi-save" @click="saveSchedule" />
             </div>
           </div>
 
@@ -236,13 +244,20 @@ const formatCurrency = (value) => {
             <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
               <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="(schedule.color,
               {
-                'bg-blue-300': schedule.type === 'regular',
-                'bg-yellow-200': schedule.type === 'priority',
+                'bg-green-300': schedule.type === true,
+                'bg-gray-300': schedule.type === false,
               })
                 ">
-                {{ schedule.day }}
+                {{ schedule.day }} ({{ schedule.date }})
               </span>
-              <i class="pi pi-eye text-green-500 cursor-pointer ml-4" @click="removeSchedule(index)"></i>
+              <i
+                v-if="schedule.type === true"
+                class="pi pi-eye text-green-500 cursor-pointer ml-4"
+                @click="disableSchedule(index)"></i>
+              <i
+                v-if="schedule.type === false"
+                class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4"
+                @click="enableSchedule(index)"></i>
             </li>
           </ul>
         </div>

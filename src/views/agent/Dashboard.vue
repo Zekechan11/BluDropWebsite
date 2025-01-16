@@ -2,22 +2,34 @@
 import axios from "axios"; // Make sure to import axios
 
 import { ref, onMounted, computed } from "vue";
-
-const ORDER_URL = 'http://localhost:9090';
+import { WATER_API } from "../../config";
 
 const orders = ref([]);
 const visible = ref(false);
+const dashData = ref([]);
+
+const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const fetchOrders = async () => {
   try {
-    const response = await axios.get(`${ORDER_URL}/api/get_order`);
+    const response = await axios.get(`${WATER_API}/api/get_order`);
     orders.value = response.data;
   } catch (error) {
     console.error('Error fetching orders:', error);
   }
 };
 
+const fetchDashData = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/v2/api/agent/dashboard/${userData.area_id}`);
+    dashData.value = response.data;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+  }
+};
+
 onMounted(() => {
+  fetchDashData();
   fetchOrders();
 });
 
@@ -31,7 +43,7 @@ const formatCurrency = (value) => {
 <template>
   <div class="space">
     <h1 class="text-center font-semibold text-gray-500 mb-6 text-4xl">
-      Guadalupe
+      {{ userData.area }}
     </h1>
   </div>
   <div class="grid grid-cols-12 gap-8">
@@ -41,7 +53,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">FGS </span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              0
+              {{ dashData.data }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
