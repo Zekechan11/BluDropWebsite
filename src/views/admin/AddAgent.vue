@@ -290,8 +290,8 @@ const findIndexById = (id) => {
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
               @click="confirmDeleteAgent(slotProps.data)" />
               
-            <SplitButton icon="pi pi-map-marker" outlined severity="info" label="Route" :model="items" />
-
+            <SplitButton icon="pi pi-map-marker" outlined severity="info" label="Route" :model="items"
+              @click="updateRoute(slotProps.data)"/>
           </template>
         </Column>
       </DataTable>

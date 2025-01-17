@@ -9,17 +9,17 @@ import { useToast } from "primevue/usetoast";
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
 const products = ref();
-const schedule = ref(false);
-const selectedCity1 = ref();
 const totalCustomer = ref(0);
 const orders = ref([]);
 const visible = ref(false);
 const customers = ref(false);
 const schedules = ref([]);
+const totalSales = ref({});
 
 const toast = useToast();
 
 const orderCount = computed(() => orders.value.length);
+const customerCount = computed(() => totalCustomer.value.length);
 
 const fetchOrders = async () => {
   try {
@@ -30,10 +30,15 @@ const fetchOrders = async () => {
   }
 };
 
+const fetchDashboardData = async () => {
+  const response = await axios.get(`${WATER_API}/api/admin/dashboard`);
+  totalSales.value = response.data;
+}
+
 const fetchTotalCustomer = async () => {
   try {
-    const response = await axios.get(`${WATER_API}/users/count`);
-    totalCustomer.value = response.data.total_users;
+    const response = await axios.get(`${WATER_API}/v2/api/get_client/all`);
+    totalCustomer.value = response.data.data;
   } catch (error) {
     console.error("Error fetching total users:", error);
   }
@@ -84,6 +89,8 @@ onMounted(() => {
   fetchTotalCustomer();
   fetchOrders();
   fetchSchedules();
+
+  fetchDashboardData();
 });
 
 const selectedDay = ref(null);
@@ -114,7 +121,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">TOTAL CUSTOMERS</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              {{ totalCustomer }}
+              {{ customerCount }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
@@ -134,11 +141,11 @@ const formatCurrency = (value) => {
           </div>
         </div>
 
-        <DataTable :value="filteredCustomers" showGridlines tableStyle="min-width: 40rem">
-          <Column field="name" header="Name"></Column>
+        <DataTable :value="totalCustomer" showGridlines tableStyle="min-width: 40rem">
+          <Column field="firstname" header="Firstname"></Column>
+          <Column field="lastname" header="Lastame"></Column>
           <Column field="area" header="Area"></Column>
-          <Column field="payables" header="Payables"></Column>
-          <Column field="col" header="COL"></Column>
+          <Column field="total_containers_on_loan" header="COL"></Column>
         </DataTable>
       </Dialog>
 
@@ -162,10 +169,10 @@ const formatCurrency = (value) => {
       <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
         <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
-          <Column field="name" header="Name"></Column>
-          <Column field="Num_gallons_order" header="Quantity"></Column>
-          <Column field="payable" header="Payables"></Column>
-          <Column field="Date" header="Date"></Column>
+          <Column field="customer_fullname" header="Fullame"></Column>
+          <Column field="num_gallons_order" header="Quantity"></Column>
+          <Column field="total_price" header="Payables"></Column>
+          <Column field="date" header="Date"></Column>
         </DataTable>
       </Dialog>
     </div>
@@ -176,7 +183,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">MONTHLY SALES</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              20,000
+              ₱{{ totalSales.total_sales || 0 }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
@@ -263,7 +270,7 @@ const formatCurrency = (value) => {
         </div>
 
         <!-- Modal -->
-        <Dialog v-model:visible="schedule" modal header="Add Schedule" :style="{ width: '25rem' }">
+        <!-- <Dialog v-model:visible="schedule" modal header="Add Schedule" :style="{ width: '25rem' }">
           <div class="flex items-center gap-4 mb-4">
             <label for="day" class="font-semibold w-24">Day</label>
             <DatePicker id="day" v-model="selectedDay" class="flex-auto" dateFormat="dd/mm/yy"
@@ -277,7 +284,7 @@ const formatCurrency = (value) => {
             <Button type="button" label="Cancel" severity="secondary" @click="schedule = false"></Button>
             <Button type="button" label="Save" @click="saveSchedule"></Button>
           </div>
-        </Dialog>
+        </Dialog> -->
       </div>
     </div>
   </div>

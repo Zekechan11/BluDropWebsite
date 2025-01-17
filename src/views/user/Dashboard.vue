@@ -18,6 +18,8 @@ const days = ref({});
 const pricePerGallon = ref(5.00);
 const gallons = ref(0);
 const agentName = ref("");
+const dashboardData = ref("");
+const customers2 = ref([]);
 
 const customerArea = user_data.area;
 const fullName = computed(() => {
@@ -69,23 +71,23 @@ const resetOrderData = () => {
   userData.value = null;
 };
 
-const getSchedule = async () => {
-  try {
-    const response = await axios.get(`${WATER_API}/api/get_schedule`);
-    days.value = response.data.days;
-    console.log("Schedule:", days);
-    
-  } catch (error) {
-    console.error("Error fetching schedule:", error);
-  }
-};
 
-const getAgent = async () => {
+const getDashboardData = async () => {
   try {
-    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
-    agentName.value = response.data.data;
+    const countResponse  = await axios.get(`${WATER_API}/v2/api/dashboard/${user_data.uid}`);
+    dashboardData.value = countResponse.data;
+
+    const agentResponse = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
+    agentName.value = agentResponse.data.data;
+
+    const dayResponse = await axios.get(`${WATER_API}/api/get_schedule`);
+    days.value = dayResponse.data.days;
+
+    const transactionResponse = await axios.get(`${WATER_API}/v2/api/orders/${user_data.uid}`);
+    customers2.value = transactionResponse.data;
+
   } catch (error) {
-    console.error("Error fetching schedule:", error);
+    console.error("Error fetching dahsboard data:", error);
   }
 }
 
@@ -93,8 +95,9 @@ const placeOrder = async () => {
   try {
     const response = await axios.post(`${WATER_API}/api/save_order`, {
       customer_id: user_data.uid,
-      num_gallons_order: gallons.value,
+      num_gallons_order: parseInt(gallons.value),
       date: ingredient.value,
+      area_id: parseInt(user_data.area_id),
     });
 
     console.log("Order saved:", response.data);
@@ -132,9 +135,8 @@ watchEffect(() => {
 });
 
 onMounted(() => {
-  getSchedule();
+  getDashboardData();
   fetchLatestOrder();
-  getAgent();
 });
 
 const qrCodeSize = computed(() => {
@@ -144,50 +146,6 @@ const qrCodeSize = computed(() => {
   return 350;
 });
 
-const customers2 = ref([
-  {
-    activity: 10,
-    representative: { name: "5" },
-    amountPaid: "₱ 500.00",
-    date: "2024-10-12",
-  },
-  {
-    activity: 15,
-    representative: { name: "2" },
-    amountPaid: "₱ 750.00",
-    date: "2024-10-11",
-  },
-  {
-    activity: 8,
-    representative: { name: "3" },
-    amountPaid: "₱ 400.00",
-    date: "2024-10-10",
-  },
-  {
-    activity: 15,
-    representative: { name: "2" },
-    amountPaid: "₱ 750.00",
-    date: "2024-10-11",
-  },
-  {
-    activity: 8,
-    representative: { name: "3" },
-    amountPaid: "₱ 400.00",
-    date: "2024-10-10",
-  },
-  {
-    activity: 15,
-    representative: { name: "2" },
-    amountPaid: "₱ 750.00",
-    date: "2024-10-11",
-  },
-  {
-    activity: 8,
-    representative: { name: "3" },
-    amountPaid: "₱ 400.00",
-    date: "2024-10-10",
-  },
-]);
 
 function formatCurrency(value) {
   return value.toLocaleString("en-US", { style: "currency", currency: "PHP" });
@@ -285,9 +243,9 @@ const totalPayment = computed(() => {
       <!-- DataTable Card for Customers -->
       <div class="card shadow-md">
         <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
-          <Column field="activity" header="Purchase Gallons" style="min-width: 200px"></Column>
-          <Column field="representative.name" header="Gallons on Hold" style="min-width: 200px"></Column>
-          <Column field="amountPaid" header="Amount Paid" :body="formatCurrency" style="min-width: 200px"></Column>
+          <Column field="num_gallons_order" header="Purchase Gallons" style="min-width: 200px"></Column>
+          <Column field="returned_gallons" header="Returned Gallons" style="min-width: 200px"></Column>
+          <Column field="payment" header="Amount Paid" :body="formatCurrency" style="min-width: 200px"></Column>
           <Column field="date" header="Date" style="min-width: 200px" alignFrozen="right"></Column>
         </DataTable>
       </div>
@@ -330,7 +288,7 @@ const totalPayment = computed(() => {
               </svg>
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">0</h2>
+              <h2 class="text-2xl font-semibold">{{ dashboardData.col || 0 }}</h2>
               <p class="text-sm text-gray-600">Containers on Hold</p>
             </div>
           </div>
@@ -343,7 +301,7 @@ const totalPayment = computed(() => {
               ₱
             </div>
             <div class="font-semibold">
-              <h2 class="text-2xl font-semibold">{{ formatCurrency(0) }}</h2>
+              <h2 class="text-2xl font-semibold">{{ formatCurrency(dashboardData.loan || 0) }}</h2>
               <p class="text-sm text-gray-600">Total Amount Payable</p>
             </div>
           </div>

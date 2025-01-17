@@ -53,7 +53,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">FGS </span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              {{ dashData.data }}
+              {{ dashData.fgs || 0 }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
@@ -69,7 +69,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">GALLONS DELIVERED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              0
+              {{ dashData.gallons_delivered || 0 }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
@@ -85,7 +85,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">GALLONS RETURNED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              0
+              {{ dashData.gallons_returned || 0 }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
@@ -101,7 +101,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">AMOUNT COLLECTED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              0
+              ₱{{ dashData.collected_ammount || 0 }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"
@@ -131,11 +131,10 @@ const formatCurrency = (value) => {
     <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
       <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
-        <Column field="name" header="Name"></Column>
-        <Column field="/" header="Area"></Column>
-        <Column field="Num_gallons_order" header="Quantity"></Column>
-        <Column field="Acc_Payables" header="Payables"></Column>
-        <Column field="Date" header="Date"></Column>
+        <Column field="customer_fullname" header="Fullname"></Column>
+        <Column field="num_gallons_order" header="Quantity"></Column>
+        <Column field="total_price" header="Payables"></Column>
+        <Column field="date" header="Date"></Column>
        
       </DataTable>
     </Dialog>
