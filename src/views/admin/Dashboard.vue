@@ -14,38 +14,9 @@ const customers = ref(false);
 const schedules = ref([]);
 const totalSales = ref({});
 const selectedArea = ref("");
-const selectedType = ref(null);
 const selectedPrice = ref("");
 const areas = ref([]);
-
-const pricing = ref([
-  {
-    price: "30",
-    type: "Regular",
-  },
-  {
-    price: "20",
-    type: "Dealer",
-  },
-]);
-
-const typeOptions = [
-  { label: "Dealer", value: "Dealer" },
-  { label: "Regular", value: "Regular" },
-];
-
-watch(selectedType, (newValue) => {
-  updatePrice(newValue);
-});
-
-function updatePrice(type) {
-  const selectedPricing = pricing.value.find((item) => item.type === type);
-  if (selectedPricing) {
-    selectedPrice.value = selectedPricing.price;
-  } else {
-    selectedPrice.value = ""; 
-  }
-}
+const prices = ref({});
 
 const toast = useToast();
 
@@ -126,6 +97,10 @@ const saveSchedule = async () => {
     console.error("Error updating schedule:", error);
   }
 };
+
+const savePrice = async () => {
+  
+}
 
 
 onMounted(() => {
@@ -396,22 +371,21 @@ const filteredCustomers = computed(() => {
           :style="{ width: '25rem' }"
         >
           <div class="flex items-center gap-4 mb-4">
-            <label for="price" class="font-semibold w-24">Price {{ selectedPrice || "dd" }}</label>
+            <label for="price" class="font-semibold w-24">Dealer {{ prices.dealer || "dd" }}</label>
             <InputText
               id="price"
-              v-model="selectedPrice"
+              v-model="prices.dealer"
               class="w-full md:w-56"
               placeholder="Input pricing"
             />
           </div>
-          <div class="flex items-center gap-4 mb-8">
-            <label for="area" class="font-semibold w-24">Type</label>
-            <Select
-              v-model="selectedType"
+          <div class="flex items-center gap-4 mb-4">
+            <label for="price" class="font-semibold w-24">Regular {{ prices.regular || "dd" }}</label>
+            <InputText
+              id="price"
+              v-model="prices.regular"
               class="w-full md:w-56"
-              optionLabel="label"
-              placeholder="Select a Type"
-              :options="typeOptions"
+              placeholder="Input pricing"
             />
           </div>
           <div class="flex justify-end gap-2">
