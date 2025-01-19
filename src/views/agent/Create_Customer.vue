@@ -10,6 +10,7 @@ const firstName = ref('');
 const lastName = ref('');
 const username = ref('');
 const email = ref('');
+const userType = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const passwordVisible = ref(false);
@@ -27,6 +28,8 @@ const togglePasswordVisibility = () => {
 const togglePasswordVisibility2 = () => {
   confirmPasswordVisible.value = !confirmPasswordVisible.value;
 };
+
+const user_data = JSON.parse(localStorage.getItem("user_data"));
 
 const fetchAreas = async () => {
     try {
@@ -62,7 +65,9 @@ const handleFormSubmit = async () => {
     lastname: lastName.value,
     username: username.value,
     email: email.value,
-    area_id: area.value.area_name,
+    area_id: parseInt(user_data.area_id),
+    // area_id: area.value.area_name,
+    type: userType.value,
     password: password.value, // Password can be stored, but consider hashing for security
   };
 
@@ -95,7 +100,8 @@ const handleFormSubmit = async () => {
       lastName.value = "";
       username.value = "";
       email.value = "";
-      area.value = "";
+      // area.value = "";
+      userType.value = "";
       password.value = "";
       confirmPassword.value = "";
 
@@ -144,12 +150,12 @@ onMounted(() => {
       </div>
 
       <!-- Area -->
-      <div class="mb-4">
+      <!-- <div class="mb-4">
         <label for="area" class="block text-gray-600 font-bold mb-2">Area</label>
         <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
                   optionValue="id" placeholder="Select an Area" />
         <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
-      </div>
+      </div> -->
 
       <!-- Password -->
       <div class="mb-4 relative">
@@ -171,6 +177,16 @@ onMounted(() => {
         <span class="absolute inset-y-0 right-3 flex items-center cursor-pointer" @click="togglePasswordVisibility2">
           <i :class="confirmPasswordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-gray-500"></i>
         </span>
+      </div>
+
+      <!-- Type -->
+      <div class="mb-4">
+        <label for="area" class="block text-gray-600 font-bold mb-2">User Type</label>
+        <Select v-model="userType" id="type" :options="[
+              { label: 'Dealer', value: 'Dealer' },
+              { label: 'Regular', value: 'Regular' }
+            ]" optionLabel="label" placeholder="Select a Type" class="w-full border rounded" required />
+        <small v-if="submitted && !userType" class="text-red-500">Area is required.</small>
       </div>
 
       <!-- Username -->

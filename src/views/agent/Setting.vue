@@ -6,6 +6,8 @@ const dropdownItem = ref(null);
 const profileImage = ref(null);
 const imagePreviewUrl = ref("https://via.placeholder.com/150"); // Default profile image URL
 
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -86,11 +88,11 @@ const setActiveTab = (tab) => {
             <!-- Container for the inputs -->
             <div class="flex flex-col gap-2">
               <label for="name1">First Name</label>
-              <InputText id="name1" type="text" />
+              <InputText id="name1" type="text" :value="userData.firstname" />
             </div>
             <div class="flex flex-col gap-2">
               <label for="name2">Last Name</label>
-              <InputText id="name2" type="text" />
+              <InputText id="name2" type="text" :value="userData.lastname" />
             </div>
             <button
               class="flex-1 py-2 text-center"

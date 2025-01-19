@@ -1,32 +1,25 @@
 <script setup>
-import { onBeforeMount, ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { WATER_API } from '../../config';
+import axios from 'axios';
 
-const customers2 = ref([]);
 const dateFrozen = ref(false);
+const orders = ref([]);
 
-// Mock data to simulate manual process
-onBeforeMount(() => {
-  customers2.value = [
-    {
-      representative: { name: 'John Doe' },
-      gallonsCollected: 50,
-      amountCollected: '₱ 200',
-      date: '2024-10-14'
-    },
-    {
-      representative: { name: 'Jane Smith' },
-      gallonsCollected: 20,
-      amountCollected: '₱ 100',
-      date: '2024-10-13'
-    },
-    {
-      representative: { name: 'Michael Johnson' },
-      gallonsCollected: 30,
-      amountCollected: '₱ 80',
-      date: '2024-10-12'
-    }
-  ];
-});
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get(`${WATER_API}/api/get_order?area_id=${userData.area_id}&status=Completed`);
+    orders.value = response.data;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+  }
+};
+
+onMounted(() => {
+  fetchOrders();
+})
 
 function formatCurrency(value) {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'PHP' });
@@ -44,9 +37,10 @@ function formatCurrency(value) {
   <div class="card shadow-md">
     <ToggleButton v-model="dateFrozen" onIcon="pi pi-lock" offIcon="pi pi-lock-open" onLabel="Date" offLabel="Date" />
 
-    <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
-      <Column field="gallonsCollected" header="Gallons Collected" style="min-width: 200px"></Column>
-      <Column field="amountCollected" header="Amount Collected" :body="formatCurrency" style="min-width: 200px"></Column>
+    <DataTable :value="orders" scrollable scrollHeight="400px" class="mt-6">
+      <Column field="customer_fullname" header="Fullname" style="min-width: 200px"></Column>
+      <Column field="num_gallons_order" header="Gallons Collected" style="min-width: 200px"></Column>
+      <Column field="payment" header="Amount Collected" :body="formatCurrency" style="min-width: 200px"></Column>
       <Column field="date" header="Date" style="min-width: 200px" alignFrozen="right" :frozen="dateFrozen"></Column>
     </DataTable>
   </div>

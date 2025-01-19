@@ -1,50 +1,40 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { CustomerService } from '@/service/CustomerService';
+import axios from "axios";
+import { attempt } from "../../service/attemptservice";
+import { WATER_API } from '../../config';
 
-const customers = ref([]);
-const searchQuery = ref(''); // Search term
-const loading = ref(true);
+const searchQuery = ref('');
 const visible = ref(false);
+const customerRecords = ref([])
 
-const options = [
-    { label: 'Daily', value: 'Daily' },
-    { label: 'Weekly', value: 'Weekly' },
-    { label: 'Monthly', value: 'Monthly' },
-    { label: 'Yearly', value: 'Yearly' }
-];
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
+const fetchCustomerRecords = async () => {
+    const [customerCountResponse, customerCountError] = await attempt(
+    axios.get(`${WATER_API}/v2/api/get_client/all?area_id=${userData.area_id}`)
+  );
+  if (customerCountError) {
+    console.error("Error fetching total users:", error);
+  }
+
+  customerRecords.value = customerCountResponse.data.data;
+}
 
 onMounted(() => {
-    CustomerService.getCustomersMedium().then((data) => {
-        customers.value = getCustomers(data);
-        loading.value = false;
-    });
+    fetchCustomerRecords();
 });
 
-const getCustomers = (data) => {
-    return [...(data || [])].map((d) => {
-        d.date = new Date(d.date); // Convert to Date object
-        return d;
-    });
-};
-
-// Function to format date to MM/DD/YYYY
-const formatDate = (date) => {
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
-};
-
-// Computed property to filter customers based on the search query
 const filteredCustomers = computed(() => {
     if (!searchQuery.value) {
-        return customers.value; // No search query, return all customers
+        return customerRecords.value;
     }
     const query = searchQuery.value.toLowerCase();
-    return customers.value.filter((customer) => {
+    return customerRecords.value.filter((customer) => {
         return (
-            customer.representative.name.toLowerCase().includes(query) ||
+            (customer.firstname + " " + customer.lastname).toLowerCase().includes(query) ||
             customer.area.toLowerCase().includes(query) ||
-            customer.collected.toString().toLowerCase().includes(query)
+            customer.total_payable.toString().toLowerCase().includes(query)
         );
     });
 });
@@ -52,8 +42,7 @@ const filteredCustomers = computed(() => {
 
 <template>
     <div class="card shadow-md">
-        <DataTable :value="filteredCustomers" paginator :rows="10" dataKey="id" filterDisplay="row" :loading="loading">
-
+        <DataTable :value="filteredCustomers" paginator :rows="10" dataKey="client_id" filterDisplay="row">
             <template #header>
                 <div class="flex justify-end items-center space-x-4">
                     <!-- Search input -->
@@ -62,24 +51,23 @@ const filteredCustomers = computed(() => {
             </template>
 
             <template #empty> No customers found. </template>
-            <template #loading> Loading customers data. Please wait. </template>
 
             <Column header="Customer Name" filterField="representative" style="min-width: 14rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
-                        <span>{{ data.representative.name }}</span>
+                        <span>{{ data.firstname }} {{ data.lastname }}</span>
                     </div>
                 </template>
             </Column>
 
-            <Column field="collected" header="Total Amount Payable" style="min-width: 12rem">
+            <Column field="total_payable" header="Total Amount Payable" style="min-width: 12rem">
                 <template #body="{ data }">
-                    ₱ {{ data.collected }}
+                    ₱ {{ data.total_payable }}
                 </template>
             </Column>
 
             <Column header="Action" style="min-width: 12rem">
-                <template #body="{ data }">
+                <template #body="">
                     <i class="pi pi-eye cursor-pointer text-blue-500" @click="visible = true"></i>
                 </template>
             </Column>
@@ -94,6 +82,5 @@ const filteredCustomers = computed(() => {
                 <Column field="name" header="Due Date"></Column>
             </DataTable>
         </Dialog>
-
     </div>
 </template>

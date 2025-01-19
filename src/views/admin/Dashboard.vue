@@ -1,75 +1,126 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
-import DatePicker from "primevue/datepicker";
-import axios from "axios"; // Import Axios
-import { ref, onMounted, computed } from "vue";
+import axios from "axios";
+import { ref, onMounted, computed, watch } from "vue";
 import { WATER_API } from "../../config";
 import { useToast } from "primevue/usetoast";
-
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
+import { attempt } from "../../service/attemptservice";
 
 const products = ref();
 const totalCustomer = ref(0);
 const orders = ref([]);
 const visible = ref(false);
+const visible2 = ref(false);
 const customers = ref(false);
 const schedules = ref([]);
 const totalSales = ref({});
+const selectedArea = ref("");
+const selectedType = ref(null);
+const selectedPrice = ref("");
+const areas = ref([]);
+
+const pricing = ref([
+  {
+    price: "30",
+    type: "Regular",
+  },
+  {
+    price: "20",
+    type: "Dealer",
+  },
+]);
+
+const typeOptions = [
+  { label: "Dealer", value: "Dealer" },
+  { label: "Regular", value: "Regular" },
+];
+
+watch(selectedType, (newValue) => {
+  updatePrice(newValue);
+});
+
+function updatePrice(type) {
+  const selectedPricing = pricing.value.find((item) => item.type === type);
+  if (selectedPricing) {
+    selectedPrice.value = selectedPricing.price;
+  } else {
+    selectedPrice.value = ""; 
+  }
+}
 
 const toast = useToast();
 
 const orderCount = computed(() => orders.value.length);
 const customerCount = computed(() => totalCustomer.value.length);
 
-const fetchOrders = async () => {
-  try {
-    const response = await axios.get(`${WATER_API}/api/get_order`);
-    orders.value = response.data;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-  }
-};
-
 const fetchDashboardData = async () => {
-  const response = await axios.get(`${WATER_API}/api/admin/dashboard`);
-  totalSales.value = response.data;
-}
-
-const fetchTotalCustomer = async () => {
-  try {
-    const response = await axios.get(`${WATER_API}/v2/api/get_client/all`);
-    totalCustomer.value = response.data.data;
-  } catch (error) {
-    console.error("Error fetching total users:", error);
+  const [totalResponse, totalError] = await attempt(
+    axios.get(`${WATER_API}/api/admin/dashboard`)
+  );
+  if (totalError) {
+    console.error("Error fecthing total", totalError);
   }
-};
 
-const fetchSchedules = async () => {
-  try {
-    const response = await axios.get(`${WATER_API}/api/admin/get_schedule`);
-    schedules.value = response.data.days;
-  } catch (error) {
-    console.error("Error fetching schedules:", error);
+  const [orderResponse, orderError] = await attempt(
+    axios.get(`${WATER_API}/api/get_order`)
+  );
+  if (orderError) {
+    console.error("Error fetching orders:", orderError);
   }
-};
 
+  const [customerCountResponse, customerCountError] = await attempt(
+    axios.get(`${WATER_API}/v2/api/get_client/all`)
+  );
+  if (customerCountError) {
+    console.error("Error fetching total users:", customerCountError);
+  }
+
+  const [scheduleResponse, scheduleError] = await attempt(
+    axios.get(`${WATER_API}/api/admin/get_schedule`)
+  );
+  if (scheduleError) {
+    console.error("Error fetching schedules:", scheduleError);
+  }
+
+  const [areaResponse, areaError] = await attempt(
+    axios.get(`${WATER_API}/area`)
+  );
+  if (areaError) {
+    console.error("Error fecthing area", areaError)
+  }
+
+  totalSales.value = totalResponse.data;
+  orders.value = orderResponse.data;
+  totalCustomer.value = customerCountResponse.data.data;
+  schedules.value = scheduleResponse.data.days;
+
+  const areaData = areaResponse.data;
+  areas.value = areaData.map((area) => {
+    return {
+      label: area.area,
+      value: area.id
+    }
+  });
+};
 
 const saveSchedule = async () => {
   try {
     const payload = {};
 
-    schedules.value.forEach(day => {
+    schedules.value.forEach((day) => {
       payload[day.day.toLowerCase()] = day.type;
     });
 
-    const response = await axios.put(`${WATER_API}/api/admin/update_schedule`, payload);
-    if(response.data.success) {
+    const response = await axios.put(
+      `${WATER_API}/api/admin/update_schedule`,
+      payload
+    );
+    if (response.data.success) {
       toast.add({
-      severity: "success",
-      summary: "Successful",
-      detail: response.data.message,
-      life: 3000,
-    });
+        severity: "success",
+        summary: "Successful",
+        detail: response.data.message,
+        life: 3000,
+      });
     }
   } catch (error) {
     console.error("Error updating schedule:", error);
@@ -86,15 +137,9 @@ onMounted(() => {
       profileImage: "/demo/images/user.jpg",
     },
   ];
-  fetchTotalCustomer();
-  fetchOrders();
-  fetchSchedules();
 
   fetchDashboardData();
 });
-
-const selectedDay = ref(null);
-const selectedArea = ref("");
 
 const disableSchedule = (index) => {
   if (schedules.value[index]) {
@@ -106,68 +151,108 @@ const enableSchedule = (index) => {
   if (schedules.value[index]) {
     schedules.value[index].type = true;
   }
-}
-
-const formatCurrency = (value) => {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 };
+
+const filteredCustomers = computed(() => {
+  if (!selectedArea.value) {
+    return totalCustomer.value;
+  }
+  return totalCustomer.value.filter(customer => customer.area === selectedArea.value.label);
+})
+
 </script>
 
 <template>
   <div class="grid grid-cols-12 gap-8">
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="customers = true">
+    <div
+      class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer"
+      @click="customers = true"
+    >
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4">TOTAL CUSTOMERS</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              {{ customerCount }}
+            <span class="block text-muted-color font-medium mb-4"
+              >TOTAL CUSTOMERS</span
+            >
+            <div
+              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
+            >
+              {{ customerCount || 0 }}
             </div>
           </div>
-          <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
-            style="width: 5rem; height: 5rem">
+          <div
+            class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
+            style="width: 5rem; height: 5rem"
+          >
             <i class="pi pi-users text-orange-500 !text-4xl"></i>
           </div>
         </div>
       </div>
-      <Dialog v-model:visible="customers" modal header="Total Customer's" :style="{ width: '50rem' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-
+      <Dialog
+        v-model:visible="customers"
+        modal
+        header="Total Customer's"
+        :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      >
         <div class="flex justify-end mb-4">
           <div class="flex items-center gap-2 w-auto">
             <label for="areaFilter" class="font-semibold">Filter Area:</label>
-            <Dropdown id="areaFilter" v-model="selectedArea" :options="areaOptions" optionLabel="label"
-              placeholder="Select an area" style="width: 12rem;" />
+            <Dropdown
+              id="areaFilter"
+              v-model="selectedArea"
+              :options="areas"
+              optionLabel="label"
+              placeholder="Select an area"
+              style="width: 12rem"
+            />
           </div>
         </div>
 
-        <DataTable :value="totalCustomer" showGridlines tableStyle="min-width: 40rem">
+        <DataTable
+          :value="filteredCustomers"
+          showGridlines
+          tableStyle="min-width: 40rem"
+        >
           <Column field="firstname" header="Firstname"></Column>
           <Column field="lastname" header="Lastame"></Column>
           <Column field="area" header="Area"></Column>
           <Column field="total_containers_on_loan" header="COL"></Column>
         </DataTable>
       </Dialog>
-
     </div>
 
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
+    <div
+      class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer"
+      @click="visible = true"
+    >
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4">DELIVERY</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+            <span class="block text-muted-color font-medium mb-4"
+              >DELIVERY</span
+            >
+            <div
+              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
+            >
               {{ orderCount }}
             </div>
           </div>
-          <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
-            style="width: 5rem; height: 5rem">
+          <div
+            class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
+            style="width: 5rem; height: 5rem"
+          >
             <i class="pi pi-users text-cyan-500 !text-4xl"></i>
           </div>
         </div>
       </div>
-      <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+      <Dialog
+        v-model:visible="visible"
+        modal
+        header="Customer's Order"
+        :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+      >
         <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
           <Column field="customer_fullname" header="Fullame"></Column>
           <Column field="num_gallons_order" header="Quantity"></Column>
@@ -177,17 +262,26 @@ const formatCurrency = (value) => {
       </Dialog>
     </div>
 
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4">
+    <div
+      class="col-span-12 lg:col-span-6 xl:col-span-4"
+      @click="visible2 = true"
+    >
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4">MONTHLY SALES</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+            <span class="block text-muted-color font-medium mb-4"
+              >MONTHLY SALES</span
+            >
+            <div
+              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
+            >
               ₱{{ totalSales.total_sales || 0 }}
             </div>
           </div>
-          <div class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
-            style="width: 5rem; height: 5rem">
+          <div
+            class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
+            style="width: 5rem; height: 5rem"
+          >
             <i class="pi pi-paypal text-purple-500 !text-4xl"></i>
           </div>
         </div>
@@ -200,13 +294,22 @@ const formatCurrency = (value) => {
         <!-- Add a wrapper for scrollable table -->
         <div style="max-height: 400px; overflow-y: auto">
           <!-- Set your desired height here -->
-          <DataTable :value="products" resizableColumns columnResizeMode="fit" showGridlines
-            tableStyle="min-width: 50rem" class="mt-4">
+          <DataTable
+            :value="products"
+            resizableColumns
+            columnResizeMode="fit"
+            showGridlines
+            tableStyle="min-width: 50rem"
+            class="mt-4"
+          >
             <Column header="Name">
               <template #body="slotProps">
                 <div class="flex items-center">
-                  <img :src="slotProps.data.profileImage" alt="Profile"
-                    class="w-8 h-8 object-cover rounded-full mr-2" />
+                  <img
+                    :src="slotProps.data.profileImage"
+                    alt="Profile"
+                    class="w-8 h-8 object-cover rounded-full mr-2"
+                  />
                   {{ slotProps.data.name }}
                 </div>
               </template>
@@ -214,14 +317,16 @@ const formatCurrency = (value) => {
             <Column field="area" header="Area"></Column>
             <Column header="Status">
               <template #body="slotProps">
-                <span :class="{
-                  'bg-green-500 text-white font-semibold rounded py-1 px-2':
-                    slotProps.data.status === 'complete',
-                  'bg-yellow-500 text-white font-semibold rounded py-1 px-2':
-                    slotProps.data.status === 'delayed',
-                  'bg-blue-500 text-white font-semibold rounded py-1 px-2':
-                    slotProps.data.status === 'ongoing',
-                }">
+                <span
+                  :class="{
+                    'bg-green-500 text-white font-semibold rounded py-1 px-2':
+                      slotProps.data.status === 'complete',
+                    'bg-yellow-500 text-white font-semibold rounded py-1 px-2':
+                      slotProps.data.status === 'delayed',
+                    'bg-blue-500 text-white font-semibold rounded py-1 px-2':
+                      slotProps.data.status === 'ongoing',
+                  }"
+                >
                   {{
                     slotProps.data.status === "complete"
                       ? "Complete"
@@ -243,48 +348,82 @@ const formatCurrency = (value) => {
           <div class="flex items-center justify-between mb-6">
             <div class="font-semibold text-xl">SCHEDULES</div>
             <div>
-              <Button label="Save Schedule" icon="pi pi-fw pi-save" @click="saveSchedule" />
+              <Button
+                label="Save Schedule"
+                icon="pi pi-fw pi-save"
+                @click="saveSchedule"
+              />
             </div>
           </div>
 
           <ul class="p-0 mx-0 mt-0 mb-6 list-none">
-            <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
-              <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="(schedule.color,
-              {
-                'bg-green-300': schedule.type === true,
-                'bg-gray-300': schedule.type === false,
-              })
-                ">
+            <li
+              v-for="(schedule, index) in schedules"
+              :key="index"
+              class="flex items-center justify-between py-2"
+            >
+              <span
+                class="leading-normal p-2 rounded w-full text-xl font-medium"
+                :class="
+                  (schedule.color,
+                  {
+                    'bg-green-300': schedule.type === true,
+                    'bg-gray-300': schedule.type === false,
+                  })
+                "
+              >
                 {{ schedule.day }} ({{ schedule.date }})
               </span>
               <i
                 v-if="schedule.type === true"
                 class="pi pi-eye text-green-500 cursor-pointer ml-4"
-                @click="disableSchedule(index)"></i>
+                @click="disableSchedule(index)"
+              ></i>
               <i
                 v-if="schedule.type === false"
                 class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4"
-                @click="enableSchedule(index)"></i>
+                @click="enableSchedule(index)"
+              ></i>
             </li>
           </ul>
         </div>
 
         <!-- Modal -->
-        <!-- <Dialog v-model:visible="schedule" modal header="Add Schedule" :style="{ width: '25rem' }">
+        <Dialog
+          v-model:visible="visible2"
+          modal
+          header="Gallons Price"
+          :style="{ width: '25rem' }"
+        >
           <div class="flex items-center gap-4 mb-4">
-            <label for="day" class="font-semibold w-24">Day</label>
-            <DatePicker id="day" v-model="selectedDay" class="flex-auto" dateFormat="dd/mm/yy"
-              placeholder="Select a date" />
+            <label for="price" class="font-semibold w-24">Price {{ selectedPrice || "dd" }}</label>
+            <InputText
+              id="price"
+              v-model="selectedPrice"
+              class="w-full md:w-56"
+              placeholder="Input pricing"
+            />
           </div>
           <div class="flex items-center gap-4 mb-8">
-            <label for="area" class="font-semibold w-24">Area</label>
-            <Select v-model="selectedCity1" placeholder="Select Area" class="w-full md:w-56" />
+            <label for="area" class="font-semibold w-24">Type</label>
+            <Select
+              v-model="selectedType"
+              class="w-full md:w-56"
+              optionLabel="label"
+              placeholder="Select a Type"
+              :options="typeOptions"
+            />
           </div>
           <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancel" severity="secondary" @click="schedule = false"></Button>
+            <Button
+              type="button"
+              label="Cancel"
+              severity="secondary"
+              @click="visible2 = false"
+            ></Button>
             <Button type="button" label="Save" @click="saveSchedule"></Button>
           </div>
-        </Dialog> -->
+        </Dialog>
       </div>
     </div>
   </div>

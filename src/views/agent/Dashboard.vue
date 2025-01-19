@@ -1,8 +1,8 @@
 <script setup>
 import axios from "axios"; // Make sure to import axios
-
 import { ref, onMounted, computed } from "vue";
 import { WATER_API } from "../../config";
+import { formatCurrency } from "../../service/formatcurrency";
 
 const orders = ref([]);
 const visible = ref(false);
@@ -12,7 +12,7 @@ const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const fetchOrders = async () => {
   try {
-    const response = await axios.get(`${WATER_API}/api/get_order`);
+    const response = await axios.get(`${WATER_API}/api/get_order?area_id=${userData.area_id}&status=Pending`);
     orders.value = response.data;
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -35,9 +35,6 @@ onMounted(() => {
 
 const orderCount = computed(() => orders.value.length);
 
-const formatCurrency = (value) => {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
-};
 </script>
 
 <template>
@@ -101,7 +98,7 @@ const formatCurrency = (value) => {
           <div>
             <span class="block text-muted-color font-medium mb-4">AMOUNT COLLECTED</span>
             <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
-              ₱{{ dashData.collected_ammount || 0 }}
+              {{ formatCurrency(dashData.collected_ammount || 0) }}
             </div>
           </div>
           <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-border"

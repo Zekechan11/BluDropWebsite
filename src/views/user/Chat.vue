@@ -13,9 +13,9 @@ const fullName = computed(() => {
   return `${userData.firstname} ${userData.lastname}`;
 });
 
-const conversations = ref([
-    { name: 'Agent', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
-]);
+// const conversations = ref([
+//     { name: 'Agent', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
+// ]);
 
 // WebSocket reference
 let socket = null;
@@ -26,7 +26,7 @@ const truncateMessage = (message, maxLength = 40) => {
 
 const getAgent = async () => {
   try {
-    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
+    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${userData.area_id}`);
     agentName.value = response.data.data;
   } catch (error) {
     console.error("Error fetching schedule:", error);

@@ -86,7 +86,7 @@ const router = createRouter({
         {
           path: '/agent/record',
           name: 'record',
-          component: () => import('@/views/agent/Customer_record.vue')
+          component: () => import('@/views/agent/Customer_Record.vue')
         }
       ]
     },

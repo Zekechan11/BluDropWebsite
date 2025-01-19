@@ -26,7 +26,7 @@ function getConversations() {
         conversations.value = data.messages.map((msg) => ({
             name: msg.fullname,
             lastMessage: msg.content,
-            img: 'https://i.pravatar.cc/100?u=ricky',
+            img: `https://eu.ui-avatars.com/api/?name=${msg.fullname}`,
             cus: msg.customer,
             time: new Date(msg.timestamp).toLocaleTimeString(),
         }));
