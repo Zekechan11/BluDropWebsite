@@ -1,5 +1,5 @@
 <script setup>
-import { LogoutService } from "../service/logoutservice";
+import { LogoutService } from "../service/LogoutService";
 import AppMenu from './AppMenu.vue';
 import { useRouter } from 'vue-router';
 

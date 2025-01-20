@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from "vue-router";
-import { LogoutService } from "../../service/logoutservice";
+import { LogoutService } from "../../service/LogoutService";
 import Menu from "./Menu.vue";
 
 const router = useRouter();
