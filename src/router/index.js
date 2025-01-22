@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import AgentLayout from '@/layout/Agent/AgentLayout.vue';
 import AppLayout from '@/layout/AppLayout.vue';
 import Layout from '@/layout/User/Layout.vue';
-import AgentLayout from '@/layout/Agent/AgentLayout.vue';
-import Landing from '@/views/pages/Landing.vue';
 import QrGenerator from '@/views/admin/NewCustomer.vue';
+import Landing from '@/views/pages/Landing.vue';
 import QrDisplay from '@/views/user/Dashboard.vue';
+import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -145,11 +145,6 @@ const router = createRouter({
           path: '/admin/message',
           name: 'message',
           component: () => import('@/views/admin/Chat.vue')
-        },
-        {
-          path: '/admin/reports',
-          name: 'reports',
-          component: () => import('@/views/admin/Reports.vue')
         },
         {
           path: '/admin/area',
