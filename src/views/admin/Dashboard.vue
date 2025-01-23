@@ -217,6 +217,7 @@ const filteredCustomers = computed(() => {
         <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
           <Column field="customer_fullname" header="Fullame"></Column>
           <Column field="num_gallons_order" header="Quantity"></Column>
+          <Column field="agentName" header="Agent"></Column>
           <Column field="total_price" header="Payables"></Column>
           <Column field="date" header="Date"></Column>
         </DataTable>
