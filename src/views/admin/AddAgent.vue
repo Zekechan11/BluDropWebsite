@@ -4,6 +4,7 @@ import axios from "axios";
 import { useToast } from "primevue/usetoast";
 import { onMounted, ref} from "vue";
 import { WATER_API } from "../../config";
+import { attempt } from "../../service/attemptservice";
 
 const toast = useToast();
 const dt = ref();
@@ -14,19 +15,11 @@ const agentDialog = ref(false);
 const deleteAgentDialog = ref(false);
 const deleteAgentsDialog = ref(false);
 const selectedAgents = ref();
+const selectedArea = ref();
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
-
-const items = [
-    {
-        label: 'Nailon, Bogo City, Cebu'
-    },
-    {
-        label: 'Guadalupe, Bogo City, Cebu'
-    }
-];
 
 const openNew = () => {
   agent.value = {};
@@ -240,6 +233,43 @@ const deleteSelectedAgents = async () => {
   }
 };
 
+const updateRoute = async (id) => {
+  if (!id || !id.staff_id) {
+    console.error("Invalid id object passed:", id);
+    return;
+  }
+
+  // console.log(id.staff_id);
+
+  const payload = {
+    area_id: selectedArea.value,
+  };
+
+  const [response, error] = await attempt(
+    axios.put(`${WATER_API}/v2/api/update_staff/area/${id.staff_id}`, payload)
+  );
+
+  if (error) {
+    console.error("API error:", error);
+    return;
+  }
+
+  await fetchAreas();
+  await fetchAgents();
+
+  // const index = agents.value.findIndex((a) => a.staff_id === id.staff_id);
+
+  // if (index !== -1) {
+  //   agents.value[index] = {
+  //     ...agents.value[index],
+  //     area_name: areas.value.find((a) => a.id === selectedArea.value)?.area,
+  //     area_id: selectedArea.value,
+  //   };
+  // } else {
+  //   console.warn("Agent not found for staff_id:", id.staff_id);
+  // }
+};
+
 const findIndexById = (id) => {
   return agents.value.findIndex((agent) => agent.staff_id === id);
 };
@@ -290,8 +320,14 @@ const findIndexById = (id) => {
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
               @click="confirmDeleteAgent(slotProps.data)" />
               
-            <SplitButton icon="pi pi-map-marker" outlined severity="info" label="Route" :model="items"
-              @click="updateRoute(slotProps.data)"/>
+            <Select
+              v-model="selectedCity"
+              :options="areas" v-model.trim="selectedArea"
+              optionLabel="area"
+              optionValue="id"
+              @change="updateRoute(slotProps.data)"
+              placeholder="Select a City"
+              class="w-full md:w-56" />
           </template>
         </Column>
       </DataTable>

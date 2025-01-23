@@ -4,6 +4,7 @@ import axios from "axios";
 import QrcodeVue from "qrcode.vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
 import { WATER_API } from "../../config";
+import { attempt } from "../../service/attemptservice";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
@@ -15,7 +16,7 @@ const ingredient = ref("");
 const latestOrder = ref(null);
 const userData = ref(null);
 const days = ref({});
-const pricePerGallon = ref(5.00);
+const pricePerGallon = ref(0.00);
 const gallons = ref(0);
 const agentName = ref("");
 const dashboardData = ref("");
@@ -89,6 +90,15 @@ const getDashboardData = async () => {
   } catch (error) {
     console.error("Error fetching dahsboard data:", error);
   }
+
+  const [priceResponse, priceError] = await attempt(
+    axios.get(`${WATER_API}/api/price/${user_data.type}`)
+  )
+  if(priceError) {
+    console.error("Field at ", priceError);
+  }
+
+  pricePerGallon.value = priceResponse.data;
 }
 
 const placeOrder = async () => {
@@ -98,6 +108,7 @@ const placeOrder = async () => {
       num_gallons_order: parseInt(gallons.value),
       date: ingredient.value,
       area_id: parseInt(user_data.area_id),
+      type: user_data.type,
     });
 
     console.log("Order saved:", response.data);

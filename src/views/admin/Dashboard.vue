@@ -14,9 +14,7 @@ const customers = ref(false);
 const schedules = ref([]);
 const totalSales = ref({});
 const selectedArea = ref("");
-const selectedPrice = ref("");
 const areas = ref([]);
-const prices = ref({});
 
 const toast = useToast();
 
@@ -98,8 +96,34 @@ const saveSchedule = async () => {
   }
 };
 
-const savePrice = async () => {
+
+const savePrice = async (reg, dea) => {
+  const payload = {
+    dealer: parseFloat(dea),
+    regular: parseFloat(reg),
+  }
   
+  const [, error] = await attempt(
+    axios.put(`${WATER_API}/api/price/update`, payload)
+  );
+
+  if(error) {
+    visible2.value = false;
+    toast.add({
+        severity: "error",
+        summary: "Successful",
+        detail: error,
+        life: 3000,
+      });
+  } else {
+    visible2.value = false;
+    toast.add({
+        severity: "success",
+        summary: "Successful",
+        detail: "response.data.message",
+        life: 3000,
+      });
+  }
 }
 
 
@@ -139,56 +163,32 @@ const filteredCustomers = computed(() => {
 
 <template>
   <div class="grid grid-cols-12 gap-8">
-    <div
-      class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer"
-      @click="customers = true"
-    >
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="customers = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4"
-              >TOTAL CUSTOMERS</span
-            >
-            <div
-              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
-            >
+            <span class="block text-muted-color font-medium mb-4">TOTAL CUSTOMERS</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
               {{ customerCount || 0 }}
             </div>
           </div>
-          <div
-            class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
-            style="width: 5rem; height: 5rem"
-          >
+          <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
             <i class="pi pi-users text-orange-500 !text-4xl"></i>
           </div>
         </div>
       </div>
-      <Dialog
-        v-model:visible="customers"
-        modal
-        header="Total Customer's"
-        :style="{ width: '50rem' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      >
+      <Dialog v-model:visible="customers" modal header="Total Customer's" :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
         <div class="flex justify-end mb-4">
           <div class="flex items-center gap-2 w-auto">
             <label for="areaFilter" class="font-semibold">Filter Area:</label>
-            <Dropdown
-              id="areaFilter"
-              v-model="selectedArea"
-              :options="areas"
-              optionLabel="label"
-              placeholder="Select an area"
-              style="width: 12rem"
-            />
+            <Dropdown id="areaFilter" v-model="selectedArea" :options="areas" optionLabel="label"
+              placeholder="Select an area" style="width: 12rem" />
           </div>
         </div>
 
-        <DataTable
-          :value="filteredCustomers"
-          showGridlines
-          tableStyle="min-width: 40rem"
-        >
+        <DataTable :value="filteredCustomers" showGridlines tableStyle="min-width: 40rem">
           <Column field="firstname" header="Firstname"></Column>
           <Column field="lastname" header="Lastame"></Column>
           <Column field="area" header="Area"></Column>
@@ -197,37 +197,23 @@ const filteredCustomers = computed(() => {
       </Dialog>
     </div>
 
-    <div
-      class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer"
-      @click="visible = true"
-    >
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4"
-              >DELIVERY</span
-            >
-            <div
-              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
-            >
+            <span class="block text-muted-color font-medium mb-4">DELIVERY</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
               {{ orderCount }}
             </div>
           </div>
-          <div
-            class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
-            style="width: 5rem; height: 5rem"
-          >
+          <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
             <i class="pi pi-users text-cyan-500 !text-4xl"></i>
           </div>
         </div>
       </div>
-      <Dialog
-        v-model:visible="visible"
-        modal
-        header="Customer's Order"
-        :style="{ width: '50rem' }"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      >
+      <Dialog v-model:visible="visible" modal header="Customer's Order" :style="{ width: '50rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
         <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
           <Column field="customer_fullname" header="Fullame"></Column>
           <Column field="num_gallons_order" header="Quantity"></Column>
@@ -237,26 +223,17 @@ const filteredCustomers = computed(() => {
       </Dialog>
     </div>
 
-    <div
-      class="col-span-12 lg:col-span-6 xl:col-span-4"
-      @click="visible2 = true"
-    >
+    <div class="col-span-12 lg:col-span-6 xl:col-span-4" @click="visible2 = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
-            <span class="block text-muted-color font-medium mb-4"
-              >MONTHLY SALES</span
-            >
-            <div
-              class="text-surface-900 dark:text-surface-0 font-medium text-xl"
-            >
+            <span class="block text-muted-color font-medium mb-4">MONTHLY SALES</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
               ₱{{ totalSales.total_sales || 0 }}
             </div>
           </div>
-          <div
-            class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
-            style="width: 5rem; height: 5rem"
-          >
+          <div class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
+            style="width: 5rem; height: 5rem">
             <i class="pi pi-paypal text-purple-500 !text-4xl"></i>
           </div>
         </div>
@@ -269,22 +246,13 @@ const filteredCustomers = computed(() => {
         <!-- Add a wrapper for scrollable table -->
         <div style="max-height: 400px; overflow-y: auto">
           <!-- Set your desired height here -->
-          <DataTable
-            :value="products"
-            resizableColumns
-            columnResizeMode="fit"
-            showGridlines
-            tableStyle="min-width: 50rem"
-            class="mt-4"
-          >
+          <DataTable :value="products" resizableColumns columnResizeMode="fit" showGridlines
+            tableStyle="min-width: 50rem" class="mt-4">
             <Column header="Name">
               <template #body="slotProps">
                 <div class="flex items-center">
-                  <img
-                    :src="slotProps.data.profileImage"
-                    alt="Profile"
-                    class="w-8 h-8 object-cover rounded-full mr-2"
-                  />
+                  <img :src="slotProps.data.profileImage" alt="Profile"
+                    class="w-8 h-8 object-cover rounded-full mr-2" />
                   {{ slotProps.data.name }}
                 </div>
               </template>
@@ -292,22 +260,20 @@ const filteredCustomers = computed(() => {
             <Column field="area" header="Area"></Column>
             <Column header="Status">
               <template #body="slotProps">
-                <span
-                  :class="{
+                <span :class="{
                     'bg-green-500 text-white font-semibold rounded py-1 px-2':
                       slotProps.data.status === 'complete',
                     'bg-yellow-500 text-white font-semibold rounded py-1 px-2':
                       slotProps.data.status === 'delayed',
                     'bg-blue-500 text-white font-semibold rounded py-1 px-2':
                       slotProps.data.status === 'ongoing',
-                  }"
-                >
+                  }">
                   {{
-                    slotProps.data.status === "complete"
-                      ? "Complete"
-                      : slotProps.data.status === "delayed"
-                        ? "Delayed"
-                        : "Ongoing"
+                  slotProps.data.status === "complete"
+                  ? "Complete"
+                  : slotProps.data.status === "delayed"
+                  ? "Delayed"
+                  : "Ongoing"
                   }}
                 </span>
               </template>
@@ -323,79 +289,49 @@ const filteredCustomers = computed(() => {
           <div class="flex items-center justify-between mb-6">
             <div class="font-semibold text-xl">SCHEDULES</div>
             <div>
-              <Button
-                label="Save Schedule"
-                icon="pi pi-fw pi-save"
-                @click="saveSchedule"
-              />
+              <Button label="Save Schedule" icon="pi pi-fw pi-save" @click="saveSchedule" />
             </div>
           </div>
 
           <ul class="p-0 mx-0 mt-0 mb-6 list-none">
-            <li
-              v-for="(schedule, index) in schedules"
-              :key="index"
-              class="flex items-center justify-between py-2"
-            >
-              <span
-                class="leading-normal p-2 rounded w-full text-xl font-medium"
-                :class="
+            <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
+              <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="
                   (schedule.color,
                   {
                     'bg-green-300': schedule.type === true,
                     'bg-gray-300': schedule.type === false,
                   })
-                "
-              >
+                ">
                 {{ schedule.day }} ({{ schedule.date }})
               </span>
-              <i
-                v-if="schedule.type === true"
-                class="pi pi-eye text-green-500 cursor-pointer ml-4"
-                @click="disableSchedule(index)"
-              ></i>
-              <i
-                v-if="schedule.type === false"
-                class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4"
-                @click="enableSchedule(index)"
-              ></i>
+              <i v-if="schedule.type === true" class="pi pi-eye text-green-500 cursor-pointer ml-4"
+                @click="disableSchedule(index)"></i>
+              <i v-if="schedule.type === false" class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4"
+                @click="enableSchedule(index)"></i>
             </li>
           </ul>
         </div>
 
         <!-- Modal -->
-        <Dialog
-          v-model:visible="visible2"
-          modal
-          header="Gallons Price"
-          :style="{ width: '25rem' }"
-        >
+        <Dialog v-model:visible="visible2" modal header="Gallons Price" :style="{ width: '25rem' }">
           <div class="flex items-center gap-4 mb-4">
-            <label for="price" class="font-semibold w-24">Dealer {{ prices.dealer || "dd" }}</label>
-            <InputText
-              id="price"
-              v-model="prices.dealer"
-              class="w-full md:w-56"
-              placeholder="Input pricing"
-            />
+            <label for="price" class="font-semibold w-24">Dealer {{ totalSales.pricing.dealer || "dd" }}</label>
+            <InputText id="price" v-model="totalSales.pricing.dealer" class="w-full md:w-56" placeholder="Input pricing" />
           </div>
           <div class="flex items-center gap-4 mb-4">
-            <label for="price" class="font-semibold w-24">Regular {{ prices.regular || "dd" }}</label>
-            <InputText
-              id="price"
-              v-model="prices.regular"
-              class="w-full md:w-56"
-              placeholder="Input pricing"
-            />
+            <label for="price" class="font-semibold w-24">Regular {{ totalSales.pricing.regular || "dd" }}</label>
+            <InputText id="price" v-model="totalSales.pricing.regular" class="w-full md:w-56" placeholder="Input pricing" />
           </div>
           <div class="flex justify-end gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="visible2 = false"></Button>
             <Button
               type="button"
-              label="Cancel"
-              severity="secondary"
-              @click="visible2 = false"
-            ></Button>
-            <Button type="button" label="Save" @click="saveSchedule"></Button>
+              label="Save"
+              @click="savePrice(
+                totalSales.pricing.regular,
+                totalSales.pricing.dealer
+              )
+              "></Button>
           </div>
         </Dialog>
       </div>
