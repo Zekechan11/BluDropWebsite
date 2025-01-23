@@ -86,48 +86,45 @@ const editAgent = (prod) => {
         <h1 class="text-4xl font-semibold mb-6" style="color: #899499">Manage Agents FGS</h1>
     </div>
 
-    <div>
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+    <Card
+        v-for="(agent, index) in agents"
+        :key="index"
+        style="width: 25rem; overflow: hidden;"
+        class="shadow-lg">
+        <template #header>
+            <h4 class="m-2 pt-2 text-center w-full">{{ agent.area }}</h4>
+        </template>
 
+        <template #title">{{ agent.fullname }}</template>
 
-        <!-- Card Component -->
-        <Card
-            v-for="(agent, index) in agents"
-            :key="index"
-            style="width: 25rem; overflow: hidden"
-            class="shadow-lg">
-            <template #header>
-                <h4 class="m-2 pt-2 text-center w-full">{{ agent.area }}</h4>
-            </template>
+        <template #subtitle>
+            <p>FGS: {{ agent.count || 0 }}</p>
+        </template>
 
-            <template #title>{{ agent.fullname }}</template>
-
-            <template #subtitle>
-                <p>FGS: {{ agent.count || 0 }}</p>
-            </template>
-
-            <template #footer>
-                <div class="flex gap-4 mt-1">
-                    <Button label="Edit" severity="info" class="w-full" />
-                    <Button label="Add" class="w-full" @click="addFGS(agent)" />
-                </div>
-            </template>
-        </Card>
-
-        <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Stock" :modal="true">
-            <div class="flex flex-col gap-6">
-                <div>
-                    <label for="count" class="block font-semibold mb-3">FGS</label>
-                    <InputText id="count" v-model.trim="addFGSForm.count" required
-                        :invalid="submitted && !addFGSForm.count" fluid />
-                    <small v-if="submitted && !addFGSForm.count" class="text-red-500">Container on loan is required.</small>
-                </div>
+        <template #footer>
+            <div class="flex gap-4 mt-1">
+                <Button label="Edit" severity="info" class="w-full" @click="editAgent(agent)" />
+                <Button label="Add" class="w-full" @click="addFGS(agent)" />
             </div>
+        </template>
+    </Card>
 
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveAgent" />
-            </template>
-        </Dialog>
+    <Dialog v-model:visible="agentDialog" :style="{ width: '450px' }" header="Add Stock" :modal="true">
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="count" class="block font-semibold mb-3">FGS</label>
+                <InputText id="count" v-model.trim="addFGSForm.count" required
+                    :invalid="submitted && !addFGSForm.count" fluid />
+                <small v-if="submitted && !addFGSForm.count" class="text-red-500">Container on loan is required.</small>
+            </div>
+        </div>
 
-    </div>
+        <template #footer>
+            <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+            <Button label="Save" icon="pi pi-check" @click="saveAgent" />
+        </template>
+    </Dialog>
+</div>
+
 </template>
