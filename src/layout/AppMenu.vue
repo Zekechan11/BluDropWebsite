@@ -34,7 +34,7 @@ const model = ref([
                 ]
             },
             { label: 'Sales', icon: 'pi pi-money-bill', to: '/admin/sales' },
-            { label: 'Reports', icon: 'pi pi-file', to: '/admin/reports' },
+            // { label: 'Reports', icon: 'pi pi-file', to: '/admin/reports' },
             { label: 'Message', icon: 'pi pi-comment', to: '/admin/message' }
             
         ]
