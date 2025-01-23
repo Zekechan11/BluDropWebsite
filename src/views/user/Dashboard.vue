@@ -75,14 +75,14 @@ const resetOrderData = () => {
 
 const getDashboardData = async () => {
   try {
-    const countResponse  = await axios.get(`${WATER_API}/v2/api/dashboard/${user_data.uid}`);
-    dashboardData.value = countResponse.data;
-
     const agentResponse = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
     agentName.value = agentResponse.data.data;
 
     const dayResponse = await axios.get(`${WATER_API}/api/get_schedule`);
     days.value = dayResponse.data.days;
+
+    const countResponse  = await axios.get(`${WATER_API}/v2/api/dashboard/${user_data.uid}`);
+    dashboardData.value = countResponse.data;
 
     const transactionResponse = await axios.get(`${WATER_API}/v2/api/orders/${user_data.uid}`);
     customers2.value = transactionResponse.data;

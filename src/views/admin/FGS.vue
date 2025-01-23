@@ -96,7 +96,7 @@ const editAgent = (prod) => {
             <h4 class="m-2 pt-2 text-center w-full">{{ agent.area }}</h4>
         </template>
 
-        <template #title">{{ agent.fullname }}</template>
+        <template #title>{{ agent.fullname }}</template>
 
         <template #subtitle>
             <p>FGS: {{ agent.count || 0 }}</p>
