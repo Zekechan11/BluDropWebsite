@@ -6,17 +6,14 @@ import { attempt } from "../../service/attemptservice";
 
 // State
 const searchQuery = ref("");
-const visible = ref(false); // For customer detail modal
-const orderModalVisible = ref(false); // For order modal
-const selectedCustomer = ref(null); // Selected customer for the detail modal
+const visible = ref(false);
+const orderModalVisible = ref(false);
+const selectedCustomer = ref(null);
 const newOrder = ref({
-  orderId: null,
   customerId: null,
   name: "",
   area: "",
-  date: "",
-  dateCreated: "",
-  totalGallons: 0,
+  date: new Date().toISOString().split("T")[0],
   gallonsToOrder: 0,
   totalPrice: 0,
   payment: 0,
@@ -55,23 +52,18 @@ const filteredCustomers = computed(() => {
   });
 });
 
-// Open the customer details modal
 const openDetailsModal = (customer) => {
   selectedCustomer.value = customer;
   visible.value = true;
 };
 
-// Open the order modal with the selected customer's details
 const openOrderModal = (customer) => {
   selectedCustomer.value = customer;
   newOrder.value = {
-    orderId: Math.floor(Math.random() * 1000), // Example ID generation
     customerId: customer.client_id,
     name: `${customer.firstname} ${customer.lastname}`,
     area: customer.area,
     date: new Date().toISOString().split("T")[0],
-    dateCreated: new Date().toISOString(),
-    totalGallons: customer.gallons || 0,
     gallonsToOrder: 0,
     totalPrice: 0,
     payment: 0,
@@ -80,12 +72,10 @@ const openOrderModal = (customer) => {
   orderModalVisible.value = true;
 };
 
-// Calculate total price dynamically
 const calculateTotalPrice = () => {
-  newOrder.value.totalPrice = newOrder.value.gallonsToOrder * 20; // Example price per gallon
+  newOrder.value.totalPrice = newOrder.value.gallonsToOrder * 20;
 };
 
-// Submit the new order
 const submitOrder = async () => {
   const { customerId, gallonsToOrder, payment, gallonsToReturn } = newOrder.value;
 
@@ -100,23 +90,19 @@ const submitOrder = async () => {
   }
 
   try {
-    const response = await axios.post(`${WATER_API}/v2/api/process-manual-order`, {
+    const response = await axios.post(`${WATER_API}/api/process-manual-order`, {
       customerId,
       gallonsToOrder,
       payment,
       gallonsToReturn,
     });
     
-    // Use the response data if needed
     alert(response.data.message || "Order successfully processed!");
-    orderModalVisible.value = false; // Close modal after success
-    
-    // Optional: Refresh customer records
+    orderModalVisible.value = false;
     fetchCustomerRecords();
   } catch (error) {
     console.error("Error processing order:", error);
     
-    // More detailed error handling
     const errorMessage = error.response?.data?.error || "Failed to process order.";
     alert(errorMessage);
   }
