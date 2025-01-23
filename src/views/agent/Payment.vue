@@ -65,10 +65,10 @@ const submitPayment = async () => {
     return;
   }
 
-  if (customerData.value.amountPaid < customerData.value.totalPrice) {
-    error.value = "The amount paid is less than the total price";
-    return;
-  }
+  // if (customerData.value.amountPaid < customerData.value.totalPrice) {
+  //   error.value = "The amount paid is less than the total price";
+  //   return;
+  // }
 
   if (customerData.value.gallonsReturned < 0) {
     error.value = "Gallons returned cannot be negative";
@@ -133,13 +133,13 @@ const formatCurrency = (value) => {
   <div class="card shadow-md flex flex-col justify-between" style="height: 565px">
     <!-- Customer Details -->
     <div class="flex-grow">
-      <ul class="list-none p-0 m-0 mt-12">
-        <li class="mb-4 text-base">
+      <ul class="list-none p-0 m-0 mt-4">
+        <!-- <li class="mb-4 text-base">
           <strong>Order ID:</strong> {{ customerData.orderId }}
         </li>
         <li class="mb-4 text-base">
           <strong>Customer ID:</strong> {{ customerData.customerId }}
-        </li>
+        </li> -->
         <li class="mb-4 text-base">
           <strong>Name:</strong> {{ customerData.customerFirstName }} {{ customerData.customerLastName }}
         </li>
@@ -149,9 +149,9 @@ const formatCurrency = (value) => {
         <li class="mb-4 text-base">
           <strong>Date:</strong> {{ customerData.date }}
         </li>
-        <li class="mb-4 text-base">
+        <!-- <li class="mb-4 text-base">
           <strong>Date Created:</strong> {{ customerData.dateCreated }}
-        </li>
+        </li> -->
         <li class="mb-4 text-base">
           <strong>Status:</strong> 
           <span :class="{
@@ -172,13 +172,21 @@ const formatCurrency = (value) => {
 
     <!-- Payment Details -->
     <div>
-      <ul class="list-none p-0 m-0 mt-12">
+      <ul class="list-none p-0 m-0 mt-8">
         <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Amount to Pay:</span>
           </div>
           <div class="mt-2 md:mt-0 flex items-center">
             <span class="ml-4 font-medium text-xl">{{ formatCurrency(customerData.totalPrice) }}</span>
+          </div>
+        </li>
+        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Amount Payables:</span>
+          </div>
+          <div class="mt-2 md:mt-0 flex items-center">
+            <span class="ml-4 font-medium text-xl">0</span>
           </div>
         </li>
         <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -196,6 +204,7 @@ const formatCurrency = (value) => {
             />
           </div>
         </li>
+
         <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Gallons to Return:</span>
