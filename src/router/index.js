@@ -81,12 +81,12 @@ const router = createRouter({
         {
           path: '/agent/create-customer',
           name: 'create-customer',
-          component: () => import('@/views/agent/Create_Customer.vue')
+          component: () => import('@/views/agent/CreateCustomer.vue')
         },
         {
           path: '/agent/record',
           name: 'record',
-          component: () => import('@/views/agent/Customer_record.vue')
+          component: () => import('@/views/agent/CustomerRecord.vue')
         }
       ]
     },

@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref, onMounted, computed, watch } from "vue";
 import { WATER_API } from "../../config";
 import { useToast } from "primevue/usetoast";
-import { attempt } from "../../service/attemptservice";
+import { attempt } from "../../service/attempt";
 
 const products = ref();
 const totalCustomer = ref(0);
@@ -27,6 +27,8 @@ const fetchDashboardData = async () => {
   );
   if (totalError) {
     console.error("Error fecthing total", totalError);
+  } else {
+    totalSales.value = totalResponse.data;
   }
 
   const [orderResponse, orderError] = await attempt(
@@ -34,6 +36,8 @@ const fetchDashboardData = async () => {
   );
   if (orderError) {
     console.error("Error fetching orders:", orderError);
+  } else {
+    orders.value = orderResponse.data;
   }
 
   const [customerCountResponse, customerCountError] = await attempt(
@@ -41,6 +45,8 @@ const fetchDashboardData = async () => {
   );
   if (customerCountError) {
     console.error("Error fetching total users:", customerCountError);
+  } else {
+    totalCustomer.value = customerCountResponse.data.data;
   }
 
   const [scheduleResponse, scheduleError] = await attempt(
@@ -48,6 +54,8 @@ const fetchDashboardData = async () => {
   );
   if (scheduleError) {
     console.error("Error fetching schedules:", scheduleError);
+  } else {
+    schedules.value = scheduleResponse.data.days;
   }
 
   const [areaResponse, areaError] = await attempt(
@@ -55,20 +63,15 @@ const fetchDashboardData = async () => {
   );
   if (areaError) {
     console.error("Error fecthing area", areaError)
+  } else {
+    const areaData = areaResponse.data;
+    areas.value = areaData.map((area) => {
+      return {
+        label: area.area,
+        value: area.id
+      }
+    });
   }
-
-  totalSales.value = totalResponse.data;
-  orders.value = orderResponse.data;
-  totalCustomer.value = customerCountResponse.data.data;
-  schedules.value = scheduleResponse.data.days;
-
-  const areaData = areaResponse.data;
-  areas.value = areaData.map((area) => {
-    return {
-      label: area.area,
-      value: area.id
-    }
-  });
 };
 
 const saveSchedule = async () => {
@@ -217,7 +220,7 @@ const filteredCustomers = computed(() => {
         <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
           <Column field="customer_fullname" header="Fullame"></Column>
           <Column field="num_gallons_order" header="Quantity"></Column>
-          <Column field="agentName" header="Agent"></Column>
+          <Column field="agent" header="Agent"></Column>
           <Column field="total_price" header="Payables"></Column>
           <Column field="date" header="Date"></Column>
         </DataTable>

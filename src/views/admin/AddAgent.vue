@@ -4,7 +4,7 @@ import axios from "axios";
 import { useToast } from "primevue/usetoast";
 import { onMounted, ref} from "vue";
 import { WATER_API } from "../../config";
-import { attempt } from "../../service/attemptservice";
+import { attempt } from "../../service/attempt";
 
 const toast = useToast();
 const dt = ref();

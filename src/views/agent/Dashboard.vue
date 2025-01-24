@@ -130,8 +130,8 @@ const orderCount = computed(() => orders.value.length);
       <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
         <Column field="customer_fullname" header="Fullname"></Column>
         <Column field="num_gallons_order" header="Quantity"></Column>
-        <Column field="total_containers_on_loan" header="COL"></Column>
-        <Column field="loan" header="Payables"></Column>
+        <Column field="col" header="COL"></Column>
+        <Column field="payable_amount" header="Payables"></Column>
         <Column field="total_price" header="Total Payment"></Column>
         <Column field="date" header="Date"></Column>
        

@@ -95,7 +95,7 @@ const createClient = async () => {
       password: product.value.password,
       area: areas.value.find((a) => a.value === product.value.area)?.area,
       area_id: product.value.area_name,
-      status: "S*x Active"
+      status: "Active"
     });
     toast.add({
       severity: "success",

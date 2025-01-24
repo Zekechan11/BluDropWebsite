@@ -4,7 +4,7 @@ import axios from "axios";
 import QrcodeVue from "qrcode.vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
 import { WATER_API } from "../../config";
-import { attempt } from "../../service/attemptservice";
+import { attempt } from "../../service/attempt";
 
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
@@ -74,21 +74,41 @@ const resetOrderData = () => {
 
 
 const getDashboardData = async () => {
-  try {
-    const agentResponse = await axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`);
+
+  const [agentResponse, agentError] = await attempt(
+    axios.get(`${WATER_API}/v2/api/agent/assigned/${user_data.area_id}`)
+  );
+  if(agentError) {
+    console.error("Field at ", agentError);
+  } else {
     agentName.value = agentResponse.data.data;
+  }
 
-    const dayResponse = await axios.get(`${WATER_API}/api/get_schedule`);
+  const [dayResponse, dayError] = await attempt(
+    axios.get(`${WATER_API}/api/get_schedule`)
+  );
+  if(dayError) {
+    console.error("Field at ", dayError);
+  } else {
     days.value = dayResponse.data.days;
+  }
 
-    const countResponse  = await axios.get(`${WATER_API}/v2/api/dashboard/${user_data.uid}`);
+  const [countResponse, countError] = await attempt(
+    axios.get(`${WATER_API}/v2/api/dashboard/${user_data.uid}`)
+  );
+  if(countError) {
+    console.error("Field at ", countError);
+  } else {
     dashboardData.value = countResponse.data;
+  }
 
-    const transactionResponse = await axios.get(`${WATER_API}/v2/api/orders/${user_data.uid}`);
+  const [transactionResponse, transactionError] = await attempt(
+    axios.get(`${WATER_API}/v2/api/orders/${user_data.uid}`)
+  );
+  if(transactionError) {
+    console.error("Field at ", transactionError);
+  } else {
     customers2.value = transactionResponse.data;
-
-  } catch (error) {
-    console.error("Error fetching dahsboard data:", error);
   }
 
   const [priceResponse, priceError] = await attempt(
@@ -96,9 +116,9 @@ const getDashboardData = async () => {
   )
   if(priceError) {
     console.error("Field at ", priceError);
+  } else {
+    pricePerGallon.value = priceResponse.data;
   }
-
-  pricePerGallon.value = priceResponse.data;
 }
 
 const placeOrder = async () => {

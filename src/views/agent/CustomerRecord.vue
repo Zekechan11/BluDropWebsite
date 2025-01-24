@@ -2,7 +2,7 @@
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import { WATER_API } from "../../config";
-import { attempt } from "../../service/attemptservice";
+import { attempt } from "../../service/attempt";
 
 // State
 const searchQuery = ref("");
@@ -64,6 +64,7 @@ const openOrderModal = (customer) => {
     name: `${customer.firstname} ${customer.lastname}`,
     area: customer.area,
     date: new Date().toISOString().split("T")[0],
+    col: customer.total_containers_on_loan,
     gallonsToOrder: 0,
     totalPrice: 0,
     payment: 0,
@@ -156,13 +157,14 @@ const submitOrder = async () => {
         <!-- Customer Details -->
         <div class="flex-grow">
           <ul class="list-none p-0 m-0 mt-12">
-            <li class="mb-4 text-base"><strong>Order ID:</strong> {{ newOrder.orderId }}</li>
+            <!-- <li class="mb-4 text-base"><strong>Order ID:</strong> {{ newOrder.orderId }}</li> -->
             <li class="mb-4 text-base"><strong>Customer ID:</strong> {{ newOrder.customerId }}</li>
             <li class="mb-4 text-base"><strong>Name:</strong> {{ newOrder.name }}</li>
             <li class="mb-4 text-base"><strong>Area:</strong> {{ newOrder.area }}</li>
             <li class="mb-4 text-base"><strong>Date:</strong> {{ newOrder.date }}</li>
-            <li class="mb-4 text-base"><strong>Date Created:</strong> {{ newOrder.dateCreated }}</li>
-            <li class="mb-4 text-base"><strong>Total Gallons:</strong> {{ newOrder.totalGallons }}</li>
+            <li class="mb-4 text-base"><strong>COL:</strong> {{ newOrder.col }}</li>
+            <!-- <li class="mb-4 text-base"><strong>Date Created:</strong> {{ newOrder.dateCreated }}</li> -->
+            <!-- <li class="mb-4 text-base"><strong>Total Gallons:</strong> {{ newOrder.totalGallons }}</li> -->
           </ul>
         </div>
 
