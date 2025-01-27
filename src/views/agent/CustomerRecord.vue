@@ -3,12 +3,14 @@ import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
+import { formatCurrency } from "../../service/formatcurrency";
 
 // State
 const searchQuery = ref("");
 const visible = ref(false);
 const orderModalVisible = ref(false);
 const selectedCustomer = ref(null);
+const pricePerGallon = ref(0);
 const newOrder = ref({
   customerId: null,
   name: "",
@@ -17,6 +19,7 @@ const newOrder = ref({
   gallonsToOrder: 0,
   totalPrice: 0,
   payment: 0,
+  payables: 0,
   gallonsToReturn: 0,
 });
 
@@ -28,9 +31,9 @@ const fetchCustomerRecords = async () => {
   );
   if (customerCountError) {
     console.error("Error fetching customer records:", customerCountError);
+  } else {
+    customerRecords.value = customerCountResponse.data.data;
   }
-
-  customerRecords.value = customerCountResponse.data.data;
 };
 
 const customerRecords = ref([]);
@@ -57,7 +60,17 @@ const openDetailsModal = (customer) => {
   visible.value = true;
 };
 
-const openOrderModal = (customer) => {
+const openOrderModal = async (customer) => {
+
+  const [priceResponse, priceError] = await attempt(
+    axios.get(`${WATER_API}/api/price/${customer.type}`)
+  )
+  if(priceError) {
+    console.error("Field at ", priceError);
+  } else {
+    pricePerGallon.value = priceResponse.data;
+  }
+
   selectedCustomer.value = customer;
   newOrder.value = {
     customerId: customer.client_id,
@@ -68,13 +81,14 @@ const openOrderModal = (customer) => {
     gallonsToOrder: 0,
     totalPrice: 0,
     payment: 0,
+    payables: customer.total_payable,
     gallonsToReturn: 0,
   };
   orderModalVisible.value = true;
 };
 
 const calculateTotalPrice = () => {
-  newOrder.value.totalPrice = newOrder.value.gallonsToOrder * 20;
+  newOrder.value.totalPrice = newOrder.value.gallonsToOrder * pricePerGallon.value;
 };
 
 const submitOrder = async () => {
@@ -163,6 +177,9 @@ const submitOrder = async () => {
             <li class="mb-4 text-base"><strong>Area:</strong> {{ newOrder.area }}</li>
             <li class="mb-4 text-base"><strong>Date:</strong> {{ newOrder.date }}</li>
             <li class="mb-4 text-base"><strong>COL:</strong> {{ newOrder.col }}</li>
+            <li class="mb-4 text-base"><strong>Payables: </strong>
+                <span class="text-green-700">{{ formatCurrency(newOrder.payables) }}</span>
+            </li>
             <!-- <li class="mb-4 text-base"><strong>Date Created:</strong> {{ newOrder.dateCreated }}</li> -->
             <!-- <li class="mb-4 text-base"><strong>Total Gallons:</strong> {{ newOrder.totalGallons }}</li> -->
           </ul>
