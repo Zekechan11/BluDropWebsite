@@ -121,6 +121,13 @@ const router = createRouter({
           name: 'addstaff',
           component: () => import('@/views/admin/AddStaff.vue')
         },
+
+        {
+          path: '/admin/add-remittance',
+          name: 'addRemittance',
+          component: () => import('@/views/admin/AddRemittance.vue')
+        },
+
         {
           path: '/admin/add-agent',
           name: 'addagent',

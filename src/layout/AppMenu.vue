@@ -16,6 +16,7 @@ const model = ref([
            
             { label: 'Agents', icon: 'pi pi-users', to: '/admin/add-agent' },
             { label: 'Staff', icon: 'pi pi-users', to: '/admin/add-staff' },
+            { label: 'Remittance', icon: 'pi pi-calendar', to: '/admin/add-remittance' },
             {
                 label: 'Manage',
                 icon: 'pi pi-stopwatch',
