@@ -57,31 +57,16 @@ const hideDialog = () => {
 const fetchRemittances = async () => {
     loading.value = true;
     try {
+        // Always use the main endpoint for all remittances - scrapping the Today's tab logic
         let endpoint = `${WATER_API}/v2/api/get_remittances`;
-        
-        if (activeTab.value === 'today') {
-            endpoint = `${WATER_API}/v2/api/get_todays_remittances`;
-        } else if (activeTab.value === 'pending') {
-            endpoint = `${WATER_API}/v2/api/get_remittances_by_status?status=pending`;
-        }
         
         console.log('Fetching from endpoint:', endpoint); // Debug log
         
         const response = await axios.get(endpoint);
         console.log('API Response:', response.data); // Debug log
         
-        remittances.value = response.data.map(item => ({
-            ...item,
-            // Ensure all required fields are present
-            gallons_loaded: item.gallons_loaded || 0,
-            gallons_sold: item.gallons_sold || 0,
-            gallons_credited: item.gallons_credited || 0,
-            empty_returns: item.empty_returns || 0,
-            loan_payments: item.loan_payments || 0,
-            new_loans: item.new_loans || 0,
-            amount_collected: item.amount_collected || 0,
-            expected_amount: item.expected_amount || 0
-        }));
+        // Process the data directly without remapping values to avoid losing data
+        remittances.value = response.data;
         
         console.log('Processed remittances:', remittances.value); // Debug log
     } catch (error) {
@@ -286,7 +271,7 @@ const getFilteredRemittances = () => {
     // Apply status filter
     if (selectedStatus.value.code !== 'all') {
         filtered = filtered.filter(rem => 
-            rem.status.toLowerCase() === selectedStatus.value.code.toLowerCase()
+            rem.status && rem.status.toLowerCase() === selectedStatus.value.code.toLowerCase()
         );
     }
     
@@ -412,22 +397,10 @@ onMounted(() => {
         <div class="flex justify-between items-center mb-6">
             <div class="flex">
                 <Button 
-                    :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'today'}"
-                    label="Today's Remittances" 
+                    label="All Remittances" 
                     text 
-                    @click="activeTab = 'today'; fetchRemittances()" 
-                />
-                <Button 
-                    :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'pending'}"
-                    label="Pending Validations" 
-                    text 
-                    @click="activeTab = 'pending'; fetchRemittances()" 
-                />
-                <Button 
-                    :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'history'}"
-                    label="History" 
-                    text 
-                    @click="activeTab = 'history'; fetchRemittances()" 
+                    class="text-blue-500 border-blue-500 border-b-2"
+                    @click="fetchRemittances()" 
                 />
             </div>
             <Button label="New Remittance Entry" icon="pi pi-plus" severity="info" @click="openNew" />
@@ -484,7 +457,7 @@ onMounted(() => {
                 </template>
             </Column>
             <Column field="agent_name" header="Agent" sortable></Column>
-            <Column field="area_name" header="Area" sortable></Column>
+            <Column field="area" header="Area" sortable></Column>
             <Column field="gallons_loaded" header="Gallons Loaded" sortable></Column>
             <Column field="gallons_sold" header="Gallons Sold" sortable></Column>
             <Column field="gallons_credited" header="Gallons Credited" sortable></Column>
