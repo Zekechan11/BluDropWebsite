@@ -307,45 +307,62 @@ const getFilteredRemittances = () => {
     return filtered;
 };
 
+// const generateReport = async () => {
+//     loading.value = true;
+//     try {
+//         const startDate = formatDateForAPI(dateRange.value.fromDate);
+//         const endDate = formatDateForAPI(dateRange.value.toDate);
+        
+//         console.log('Requesting report from:', startDate, 'to', endDate);
+        
+//         const response = await axios.get(`${WATER_API}/v2/api/get_remittances_by_date`, {
+//             params: {
+//                 start_date: startDate,
+//                 end_date: endDate
+//             }
+//         });
+        
+//         console.log('Report data received:', response.data);
+//         remittances.value = response.data;
+        
+//         toast.add({ 
+//             severity: 'success', 
+//             summary: 'Report Generated', 
+//             detail: `Fetched ${response.data.length} records for report`, 
+//             life: 3000 
+//         });
+//     } catch (error) {
+//         console.error("Full error:", error);
+//         console.error("Error response:", error.response);
+//         // ... rest of error handling
+//     }
+// };
+
 const generateReport = async () => {
     loading.value = true;
     try {
-        // Format dates for API
-        const startDate = formatDateForAPI(dateRange.value.fromDate);
-        const endDate = formatDateForAPI(dateRange.value.toDate);
+        const startDate = new Date(dateRange.value.fromDate);
+        const endDate = new Date(dateRange.value.toDate);
         
-        // Validate dates
-        if (!startDate || !endDate) {
-            throw new Error('Please select valid date range');
+        // If we haven't fetched all remittances yet, do that first
+        if (remittances.value.length === 0) {
+            await fetchRemittances();
         }
         
-        // Log the date range for debugging
-        console.log(`Generating report from ${startDate} to ${endDate}`);
-        
-        const response = await axios.get(`${WATER_API}/v2/api/get_remittances_by_date`, {
-            params: {
-                start_date: startDate,
-                end_date: endDate
-            }
+        // Filter locally
+        remittances.value = remittances.value.filter(rem => {
+            const remDate = new Date(rem.date);
+            return remDate >= startDate && remDate <= endDate;
         });
-        
-        // Update the remittances with the filtered data
-        remittances.value = response.data;
         
         toast.add({ 
             severity: 'success', 
             summary: 'Report Generated', 
-            detail: `Fetched ${response.data.length} records for report`, 
+            detail: `Showing ${remittances.value.length} records for selected date range`, 
             life: 3000 
         });
     } catch (error) {
-        console.error("Error generating report:", error);
-        toast.add({ 
-            severity: 'error', 
-            summary: 'Error', 
-            detail: error.response?.data?.error || error.message || 'Failed to generate report', 
-            life: 3000 
-        });
+        // ... error handling
     } finally {
         loading.value = false;
     }
