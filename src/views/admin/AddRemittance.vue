@@ -36,6 +36,12 @@ const agentOptions = ref([
 ]);
 const selectedAgent = ref(agentOptions.value[0]);
 
+// Area options - NEW
+const areaOptions = ref([
+    { name: 'All Areas', code: 'all' }
+]);
+const selectedArea = ref(areaOptions.value[0]);
+
 const filters = ref({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
@@ -57,7 +63,7 @@ const hideDialog = () => {
 const fetchRemittances = async () => {
     loading.value = true;
     try {
-        // Always use the main endpoint for all remittances - scrapping the Today's tab logic
+        // Always use the main endpoint for all remittances
         let endpoint = `${WATER_API}/v2/api/get_remittances`;
         
         console.log('Fetching from endpoint:', endpoint); // Debug log
@@ -114,6 +120,15 @@ const fetchAreas = async () => {
         const response = await axios.get(`${WATER_API}/area`);
         console.log('Areas response:', response.data); // Debug log
         areas.value = response.data;
+        
+        // Populate area options dropdown - NEW
+        areaOptions.value = [
+            { name: 'All Areas', code: 'all' },
+            ...areas.value.map(area => ({
+                name: area.area,
+                code: area.id
+            }))
+        ];
     } catch (error) {
         console.error("Error fetching areas:", error);
         toast.add({ 
@@ -282,17 +297,40 @@ const getFilteredRemittances = () => {
         );
     }
     
+    // Apply area filter - NEW
+    if (selectedArea.value.code !== 'all') {
+        filtered = filtered.filter(rem => 
+            rem.area_id == selectedArea.value.code
+        );
+    }
+    
     return filtered;
 };
 
 const generateReport = async () => {
+    loading.value = true;
     try {
+        // Format dates for API
+        const startDate = formatDateForAPI(dateRange.value.fromDate);
+        const endDate = formatDateForAPI(dateRange.value.toDate);
+        
+        // Validate dates
+        if (!startDate || !endDate) {
+            throw new Error('Please select valid date range');
+        }
+        
+        // Log the date range for debugging
+        console.log(`Generating report from ${startDate} to ${endDate}`);
+        
         const response = await axios.get(`${WATER_API}/v2/api/get_remittances_by_date`, {
             params: {
-                start_date: formatDateForAPI(dateRange.value.fromDate),
-                end_date: formatDateForAPI(dateRange.value.toDate)
+                start_date: startDate,
+                end_date: endDate
             }
         });
+        
+        // Update the remittances with the filtered data
+        remittances.value = response.data;
         
         toast.add({ 
             severity: 'success', 
@@ -300,17 +338,16 @@ const generateReport = async () => {
             detail: `Fetched ${response.data.length} records for report`, 
             life: 3000 
         });
-        
-        // Update the remittances with the filtered data
-        remittances.value = response.data;
     } catch (error) {
         console.error("Error generating report:", error);
         toast.add({ 
             severity: 'error', 
             summary: 'Error', 
-            detail: error.response?.data?.error || 'Failed to generate report', 
+            detail: error.response?.data?.error || error.message || 'Failed to generate report', 
             life: 3000 
         });
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -414,6 +451,15 @@ onMounted(() => {
                     :options="agentOptions" 
                     optionLabel="name" 
                     placeholder="All Agents" 
+                    class="w-40"
+                />
+                
+                <label class="font-medium ml-4">Area:</label>
+                <Dropdown 
+                    v-model="selectedArea" 
+                    :options="areaOptions" 
+                    optionLabel="name" 
+                    placeholder="All Areas" 
                     class="w-40"
                 />
                 
@@ -527,8 +573,41 @@ onMounted(() => {
                 <Calendar v-model="dateRange.toDate" dateFormat="mm/dd/yy" />
             </div>
             <div class="flex gap-2">
-                <Button label="Generate Report" icon="pi pi-file" severity="info" @click="generateReport" />
-                <Button label="Export to Excel" icon="pi pi-file-excel" severity="success" @click="exportToExcel" />
+                <Button 
+                    label="Generate Report" 
+                    icon="pi pi-file" 
+                    severity="info" 
+                    @click="generateReport" 
+                    :loading="loading" 
+                />
+                <Button 
+                    label="Export to Excel" 
+                    icon="pi pi-file-excel" 
+                    severity="success" 
+                    @click="exportToExcel" 
+                    :disabled="remittances.length === 0" 
+                />
+            </div>
+        </div>
+        
+        <div v-if="remittances.length === 0 && !loading" class="text-center text-gray-500 py-4">
+            No remittance data available. Please generate a report.
+        </div>
+        
+        <div v-if="remittances.length > 0" class="mt-4">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-blue-700 mb-2">Total Gallons Sold</h3>
+                    <p class="text-2xl">{{ remittances.reduce((sum, rem) => sum + (rem.gallons_sold || 0), 0) }}</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-green-700 mb-2">Total Amount Collected</h3>
+                    <p class="text-2xl">₱{{ remittances.reduce((sum, rem) => sum + (rem.amount_collected || 0), 0).toFixed(2) }}</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold text-purple-700 mb-2">Total Expected Amount</h3>
+                    <p class="text-2xl">₱{{ remittances.reduce((sum, rem) => sum + (rem.expected_amount || 0), 0).toFixed(2) }}</p>
+                </div>
             </div>
         </div>
     </div>
