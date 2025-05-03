@@ -16,7 +16,8 @@
         "qrcode.vue": "^3.6.0",
         "vue": "^3.4.34",
         "vue-router": "^4.4.0",
-        "vue3-qrcode-reader": "^0.0.1"
+        "vue3-qrcode-reader": "^0.0.1",
+        "xlsx": "^0.18.5"
     },
     "devDependencies": {
         "@eslint/js": "^9.17.0",

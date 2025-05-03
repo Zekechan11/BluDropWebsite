@@ -1,8 +1,10 @@
 <script setup>
 import { FilterMatchMode } from '@primevue/core/api';
+import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 
+const WATER_API = 'http://localhost:9090';
 const toast = useToast();
 const dt = ref();
 const remittances = ref([]);
@@ -11,15 +13,14 @@ const deleteRemittanceDialog = ref(false);
 const deleteRemittancesDialog = ref(false);
 const remittance = ref({});
 const selectedRemittances = ref();
-const agent = ref({});
 const agents = ref([]);
-const area = ref({});
 const areas = ref([]);
 const activeTab = ref('today');
 const dateRange = ref({
-    fromDate: '03/01/2025',
-    toDate: '03/24/2025'
+    fromDate: new Date(),
+    toDate: new Date()
 });
+const loading = ref(false);
 
 // Status options
 const statuses = ref([
@@ -40,73 +41,9 @@ const filters = ref({
 });
 const submitted = ref(false);
 
-// Dummy data for remittances
-const dummyRemittances = [
-    {
-        id: 1,
-        date: '03/24/2025',
-        agent_name: 'Carlos Reyes',
-        area: 'North District',
-        gallons_loaded: 50,
-        gallons_sold: 42,
-        gallons_credited: 3,
-        empty_returns: 38,
-        loan_payments: 500.00,
-        new_loans: 0.00,
-        amount_collected: 10500.00,
-        expected_amount: 10500.00,
-        status: 'INTACT'
-    },
-    {
-        id: 2,
-        date: '03/24/2025',
-        agent_name: 'Mark Santos',
-        area: 'East District',
-        gallons_loaded: 45,
-        gallons_sold: 38,
-        gallons_credited: 5,
-        empty_returns: 32,
-        loan_payments: 250.00,
-        new_loans: 500.00,
-        amount_collected: 9250.00,
-        expected_amount: 9500.00,
-        status: 'SHORT'
-    },
-    {
-        id: 3,
-        date: '03/24/2025',
-        agent_name: 'Jenny Garcia',
-        area: 'South District',
-        gallons_loaded: 40,
-        gallons_sold: 35,
-        gallons_credited: 2,
-        empty_returns: 33,
-        loan_payments: 300.00,
-        new_loans: 200.00,
-        amount_collected: 8750.00,
-        expected_amount: 8750.00,
-        status: 'INTACT'
-    }
-];
-
-// Dummy data for agents
-const dummyAgents = [
-    { id: 1, name: 'Carlos Reyes', area_id: 1 },
-    { id: 2, name: 'Mark Santos', area_id: 2 },
-    { id: 3, name: 'Jenny Garcia', area_id: 3 }
-];
-
-// Dummy data for areas
-const dummyAreas = [
-    { id: 1, area: 'North District' },
-    { id: 2, area: 'East District' },
-    { id: 3, area: 'South District' },
-    { id: 4, area: 'West District' }
-];
-
 const openNew = () => {
     remittance.value = {
-        date: new Date().toLocaleDateString('en-US')
+        date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     };
     submitted.value = false;
     remittanceDialog.value = true;
@@ -118,69 +55,98 @@ const hideDialog = () => {
 };
 
 const fetchRemittances = async () => {
+    loading.value = true;
     try {
-        // In a real application, this would be an API call
-        // const response = await axios.get(`${WATER_API}/v2/api/get_remittances`);
-        // const data = response.data;
+        let endpoint = `${WATER_API}/v2/api/get_remittances`;
         
-        // Using dummy data instead
-        remittances.value = dummyRemittances.map((remittance) => {
-            return {
-                ...remittance,
-            };
-        });
+        if (activeTab.value === 'today') {
+            endpoint = `${WATER_API}/v2/api/get_todays_remittances`;
+        } else if (activeTab.value === 'pending') {
+            endpoint = `${WATER_API}/v2/api/get_remittances_by_status?status=pending`;
+        }
+        
+        console.log('Fetching from endpoint:', endpoint); // Debug log
+        
+        const response = await axios.get(endpoint);
+        console.log('API Response:', response.data); // Debug log
+        
+        remittances.value = response.data.map(item => ({
+            ...item,
+            // Ensure all required fields are present
+            gallons_loaded: item.gallons_loaded || 0,
+            gallons_sold: item.gallons_sold || 0,
+            gallons_credited: item.gallons_credited || 0,
+            empty_returns: item.empty_returns || 0,
+            loan_payments: item.loan_payments || 0,
+            new_loans: item.new_loans || 0,
+            amount_collected: item.amount_collected || 0,
+            expected_amount: item.expected_amount || 0
+        }));
+        
+        console.log('Processed remittances:', remittances.value); // Debug log
     } catch (error) {
         console.error("Error fetching remittances:", error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: error.response?.data?.error || 'Failed to fetch remittances', 
+            life: 3000 
+        });
+    } finally {
+        loading.value = false;
     }
 };
 
 const fetchAgents = async () => {
     try {
-        // In a real application, this would be an API call
-        // const response = await axios.get(`${WATER_API}/v2/api/get_agents`);
-        // const data = response.data;
+        const response = await axios.get(`${WATER_API}/v2/api/get_staff/all/Agent`);
+        agents.value = response.data.map(agent => ({
+            id: agent.staff_id,  // Use staff_id instead of id
+            name: `${agent.firstname} ${agent.lastname}`,
+            area_id: agent.area_id
+        }));
         
-        // Using dummy data instead
-        agents.value = dummyAgents.map((agent) => {
-            return {
-                ...agent,
-            };
-        });
-        
-        // Populate agent options
         agentOptions.value = [
             { name: 'All Agents', code: 'all' },
-            ...agents.value.map(agent => ({ name: agent.name, code: agent.id }))
+            ...agents.value.map(agent => ({ 
+                name: agent.name, 
+                code: agent.id 
+            }))
         ];
     } catch (error) {
         console.error("Error fetching agents:", error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: error.response?.data?.error || 'Failed to fetch agents', 
+            life: 3000 
+        });
     }
 };
 
 const fetchAreas = async () => {
     try {
-        // In a real application, this would be an API call
-        // const response = await axios.get(`${WATER_API}/area`);
-        // const data = response.data;
-        
-        // Using dummy data instead
-        areas.value = dummyAreas.map((area) => {
-            return {
-                ...area,
-            };
-        });
+        const response = await axios.get(`${WATER_API}/area`);
+        console.log('Areas response:', response.data); // Debug log
+        areas.value = response.data;
     } catch (error) {
         console.error("Error fetching areas:", error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: error.response?.data?.error || 'Failed to fetch areas', 
+            life: 3000 
+        });
     }
 };
 
 const saveRemittance = async () => {
     submitted.value = true;
 
-    if (remittance.value.agent_name && remittance.value.date) {
+    if (remittance.value.agent_id && remittance.value.date) {
         try {
-            // Calculate expected amount (simple example)
-            const gallonPrice = 250; // Example price per gallon
+            // Calculate expected amount based on your business logic
+            const gallonPrice = await getGallonPrice();
             const expectedAmount = (remittance.value.gallons_sold * gallonPrice) - 
                                   (remittance.value.new_loans || 0) + 
                                   (remittance.value.loan_payments || 0);
@@ -192,46 +158,59 @@ const saveRemittance = async () => {
                 date: remittance.value.date,
                 agent_id: remittance.value.agent_id,
                 area_id: remittance.value.area_id,
-                gallons_loaded: remittance.value.gallons_loaded,
-                gallons_sold: remittance.value.gallons_sold,
-                gallons_credited: remittance.value.gallons_credited,
-                empty_returns: remittance.value.empty_returns,
-                loan_payments: remittance.value.loan_payments,
-                new_loans: remittance.value.new_loans,
-                amount_collected: remittance.value.amount_collected,
+                gallons_loaded: remittance.value.gallons_loaded || 0,
+                gallons_sold: remittance.value.gallons_sold || 0,
+                gallons_credited: remittance.value.gallons_credited || 0,
+                empty_returns: remittance.value.empty_returns || 0,
+                loan_payments: remittance.value.loan_payments || 0,
+                new_loans: remittance.value.new_loans || 0,
+                amount_collected: remittance.value.amount_collected || 0,
                 expected_amount: expectedAmount,
                 status: status
             };
 
+            console.log('Saving remittance payload:', payload); // Debug log
+
             if (remittance.value.id) {
-                // In a real application, this would be an API call
-                // await axios.put(`${WATER_API}/v2/api/update_remittance/${remittance.value.id}`, payload);
-                
-                // Update in local array
-                const index = findIndexById(remittance.value.id);
-                remittances.value[index] = { ...remittance.value, ...payload };
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Remittance Updated', life: 3000 });
+                await axios.put(`${WATER_API}/v2/api/update_remittance/${remittance.value.id}`, payload);
+                toast.add({ 
+                    severity: 'success', 
+                    summary: 'Successful', 
+                    detail: 'Remittance Updated', 
+                    life: 3000 
+                });
             } else {
-                // In a real application, this would be an API call
-                // const response = await axios.post(`${WATER_API}/v2/api/create_remittance`, payload);
-                
-                // Add to local array
-                const newRemittance = {
-                    ...payload,
-                    id: remittances.value.length + 1,
-                    agent_name: agents.value.find(a => a.id === remittance.value.agent_id)?.name,
-                    area: areas.value.find(a => a.id === remittance.value.area_id)?.area
-                };
-                remittances.value.push(newRemittance);
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Remittance Created', life: 3000 });
+                await axios.post(`${WATER_API}/v2/api/create_remittance`, payload);
+                toast.add({ 
+                    severity: 'success', 
+                    summary: 'Successful', 
+                    detail: 'Remittance Created', 
+                    life: 3000 
+                });
             }
             
             remittanceDialog.value = false;
             remittance.value = {};
+            fetchRemittances();
         } catch (error) {
             console.error("Failed to save remittance:", error);
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save remittance', life: 3000 });
+            toast.add({ 
+                severity: 'error', 
+                summary: 'Error', 
+                detail: error.response?.data?.error || 'Failed to save remittance', 
+                life: 3000 
+            });
         }
+    }
+};
+
+const getGallonPrice = async () => {
+    try {
+        const response = await axios.get(`${WATER_API}/inventory_available`);
+        return response.data[0]?.price || 250; // Default to 250 if price not found
+    } catch (error) {
+        console.error("Error fetching gallon price:", error);
+        return 250; // Default price if API fails
     }
 };
 
@@ -247,17 +226,25 @@ const confirmDeleteRemittance = (rem) => {
 
 const deleteRemittance = async () => {
     try {
-        // In a real application, this would be an API call
-        // await axios.delete(`${WATER_API}/v2/api/delete_remittance/${remittance.value.id}`);
-        
-        // Remove from local array
-        remittances.value = remittances.value.filter(val => val.id !== remittance.value.id);
+        await axios.delete(`${WATER_API}/v2/api/delete_remittance/${remittance.value.id}`);
         deleteRemittanceDialog.value = false;
-        remittance.value = {};
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Remittance Deleted', life: 3000 });
+        toast.add({ 
+            severity: 'success', 
+            summary: 'Successful', 
+            detail: 'Remittance Deleted', 
+            life: 3000 
+        });
+        fetchRemittances();
     } catch (error) {
         console.error("Failed to delete remittance:", error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete remittance', life: 3000 });
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: error.response?.data?.error || 'Failed to delete remittance', 
+            life: 3000 
+        });
+    } finally {
+        remittance.value = {};
     }
 };
 
@@ -267,42 +254,30 @@ const confirmDeleteSelected = () => {
 
 const deleteSelectedRemittances = async () => {
     try {
-        // In a real application, this would iterate through and delete each via API
-        // for (const selected of selectedRemittances.value) {
-        //     await axios.delete(`${WATER_API}/v2/api/delete_remittance/${selected.id}`);
-        // }
+        const deletePromises = selectedRemittances.value.map(remittance => 
+            axios.delete(`${WATER_API}/v2/api/delete_remittance/${remittance.id}`)
+        );
         
-        // Remove from local array
-        remittances.value = remittances.value.filter(val => !selectedRemittances.value.includes(val));
+        await Promise.all(deletePromises);
         deleteRemittancesDialog.value = false;
-        selectedRemittances.value = null;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Selected Remittances Deleted', life: 3000 });
+        toast.add({ 
+            severity: 'success', 
+            summary: 'Successful', 
+            detail: 'Selected Remittances Deleted', 
+            life: 3000 
+        });
+        fetchRemittances();
     } catch (error) {
         console.error("Failed to delete selected remittances:", error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete selected remittances', life: 3000 });
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: 'Failed to delete selected remittances', 
+            life: 3000 
+        });
+    } finally {
+        selectedRemittances.value = null;
     }
-};
-
-const findIndexById = (id) => {
-    return remittances.value.findIndex(rem => rem.id === id);
-};
-
-const filterByStatus = () => {
-    if (selectedStatus.value.code === 'all') {
-        return remittances.value;
-    }
-    return remittances.value.filter(rem => 
-        rem.status.toLowerCase() === selectedStatus.value.code.toLowerCase()
-    );
-};
-
-const filterByAgent = () => {
-    if (selectedAgent.value.code === 'all') {
-        return remittances.value;
-    }
-    return remittances.value.filter(rem => 
-        rem.agent_id === selectedAgent.value.code || rem.agent_name === selectedAgent.value.name
-    );
 };
 
 const getFilteredRemittances = () => {
@@ -318,31 +293,105 @@ const getFilteredRemittances = () => {
     // Apply agent filter
     if (selectedAgent.value.code !== 'all') {
         filtered = filtered.filter(rem => 
-            rem.agent_id === selectedAgent.value.code || rem.agent_name === selectedAgent.value.name
+            rem.agent_id == selectedAgent.value.code
         );
     }
     
     return filtered;
 };
 
-const generateReport = () => {
-    // Logic to generate report based on date range
-    toast.add({ severity: 'info', summary: 'Report', detail: 'Generating report...', life: 3000 });
+const generateReport = async () => {
+    try {
+        const response = await axios.get(`${WATER_API}/v2/api/get_remittances_by_date`, {
+            params: {
+                start_date: formatDateForAPI(dateRange.value.fromDate),
+                end_date: formatDateForAPI(dateRange.value.toDate)
+            }
+        });
+        
+        toast.add({ 
+            severity: 'success', 
+            summary: 'Report Generated', 
+            detail: `Fetched ${response.data.length} records for report`, 
+            life: 3000 
+        });
+        
+        // Update the remittances with the filtered data
+        remittances.value = response.data;
+    } catch (error) {
+        console.error("Error generating report:", error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: error.response?.data?.error || 'Failed to generate report', 
+            life: 3000 
+        });
+    }
 };
 
-const exportToExcel = () => {
-    // Logic to export data to Excel
-    toast.add({ severity: 'info', summary: 'Export', detail: 'Exporting to Excel...', life: 3000 });
+const formatDateForAPI = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD format
 };
 
-const viewDetails = (remittance) => {
-    // Logic to view remittance details
-    toast.add({ severity: 'info', summary: 'View', detail: `Viewing details for ${remittance.agent_name}`, life: 3000 });
-};
+const exportToExcel = async () => {
+    try {
+        // Show loading toast
+        toast.add({ 
+            severity: 'info', 
+            summary: 'Export', 
+            detail: 'Preparing Excel export...', 
+            life: 3000 
+        });
 
-const editRecord = (remittance) => {
-    // Logic to edit remittance record
-    editRemittance(remittance);
+        // Dynamically import xlsx library
+        const xlsx = await import('xlsx');
+        
+        // Prepare data for export
+        const dataToExport = remittances.value.map(remittance => ({
+            Date: new Date(remittance.date).toLocaleDateString(),
+            Agent: remittance.agent_name,
+            Area: remittance.area,
+            'Gallons Loaded': remittance.gallons_loaded,
+            'Gallons Sold': remittance.gallons_sold,
+            'Gallons Credited': remittance.gallons_credited,
+            'Empty Returns': remittance.empty_returns,
+            'Loan Payments': remittance.loan_payments,
+            'New Loans': remittance.new_loans,
+            'Amount Collected': remittance.amount_collected,
+            'Expected Amount': remittance.expected_amount,
+            Status: remittance.status
+        }));
+
+        // Create worksheet and workbook
+        const worksheet = xlsx.utils.json_to_sheet(dataToExport);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Remittances');
+
+        // Generate file name with current date
+        const today = new Date();
+        const fileName = `Remittances_${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}.xlsx`;
+
+        // Export to Excel
+        xlsx.writeFile(workbook, fileName);
+
+        // Show success toast
+        toast.add({ 
+            severity: 'success', 
+            summary: 'Export Successful', 
+            detail: 'Excel file downloaded', 
+            life: 3000 
+        });
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Export Failed', 
+            detail: 'Failed to generate Excel file', 
+            life: 3000 
+        });
+    }
 };
 
 onMounted(() => {
@@ -366,19 +415,19 @@ onMounted(() => {
                     :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'today'}"
                     label="Today's Remittances" 
                     text 
-                    @click="activeTab = 'today'" 
+                    @click="activeTab = 'today'; fetchRemittances()" 
                 />
                 <Button 
                     :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'pending'}"
                     label="Pending Validations" 
                     text 
-                    @click="activeTab = 'pending'" 
+                    @click="activeTab = 'pending'; fetchRemittances()" 
                 />
                 <Button 
                     :class="{'text-blue-500 border-blue-500 border-b-2': activeTab === 'history'}"
                     label="History" 
                     text 
-                    @click="activeTab = 'history'" 
+                    @click="activeTab = 'history'; fetchRemittances()" 
                 />
             </div>
             <Button label="New Remittance Entry" icon="pi pi-plus" severity="info" @click="openNew" />
@@ -405,70 +454,85 @@ onMounted(() => {
                 />
             </div>
             
-            <!-- <div>
-                <span class="p-input-icon-left">
-                    <i class="pi pi-search" />
-                    <InputText v-model="filters['global'].value" placeholder="Search..." />
-                </span>
-            </div> -->
+            <div v-if="selectedRemittances && selectedRemittances.length > 0">
+                <Button 
+                    label="Delete Selected" 
+                    icon="pi pi-trash" 
+                    severity="danger" 
+                    @click="confirmDeleteSelected" 
+                />
+            </div>
         </div>
 
         <DataTable
             ref="dt"
+            v-model:selection="selectedRemittances"
             :value="getFilteredRemittances()"
             dataKey="id"
             :paginator="true"
             :rows="10"
             :filters="filters"
+            :loading="loading"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             :rowsPerPageOptions="[5, 10, 25]"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} remittances"
         >
-            <!-- Removed the checkbox column -->
-            <Column field="date" header="Date"></Column>
-            <Column field="agent_name" header="Agent"></Column>
-            <Column field="area" header="Area"></Column>
-            <Column field="gallons_loaded" header="Gallons Loaded"></Column>
-            <Column field="gallons_sold" header="Gallons Sold"></Column>
-            <Column field="gallons_credited" header="Gallons Credited"></Column>
-            <Column field="empty_returns" header="Empty Returns"></Column>
-            <Column field="loan_payments" header="Loan Payments">
-                <template #body="slotProps">
-                    ₱{{ slotProps.data.loan_payments.toFixed(2) }}
+            <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+            <Column field="date" header="Date" sortable>
+                <template #body="{data}">
+                    {{ new Date(data.date).toLocaleDateString() }}
                 </template>
             </Column>
-            <Column field="new_loans" header="New Loans">
-                <template #body="slotProps">
-                    ₱{{ slotProps.data.new_loans.toFixed(2) }}
+            <Column field="agent_name" header="Agent" sortable></Column>
+            <Column field="area_name" header="Area" sortable></Column>
+            <Column field="gallons_loaded" header="Gallons Loaded" sortable></Column>
+            <Column field="gallons_sold" header="Gallons Sold" sortable></Column>
+            <Column field="gallons_credited" header="Gallons Credited" sortable></Column>
+            <Column field="empty_returns" header="Empty Returns" sortable></Column>
+            <Column field="loan_payments" header="Loan Payments" sortable>
+                <template #body="{data}">
+                    ₱{{ data.loan_payments?.toFixed(2) || '0.00' }}
                 </template>
             </Column>
-            <Column field="amount_collected" header="Amount Collected">
-                <template #body="slotProps">
-                    ₱{{ slotProps.data.amount_collected.toFixed(2) }}
+            <Column field="new_loans" header="New Loans" sortable>
+                <template #body="{data}">
+                    ₱{{ data.new_loans?.toFixed(2) || '0.00' }}
                 </template>
             </Column>
-            <Column field="expected_amount" header="Expected Amount">
-                <template #body="slotProps">
-                    ₱{{ slotProps.data.expected_amount.toFixed(2) }}
+            <Column field="amount_collected" header="Amount Collected" sortable>
+                <template #body="{data}">
+                    ₱{{ data.amount_collected?.toFixed(2) || '0.00' }}
                 </template>
             </Column>
-            <Column field="status" header="Status">
-                <template #body="slotProps">
-                    <span :class="{'bg-green-100 text-green-800 px-2 py-1 rounded': slotProps.data.status === 'INTACT', 
-                                  'bg-red-100 text-red-800 px-2 py-1 rounded': slotProps.data.status === 'SHORT'}">
-                        {{ slotProps.data.status }}
+            <Column field="expected_amount" header="Expected Amount" sortable>
+                <template #body="{data}">
+                    ₱{{ data.expected_amount?.toFixed(2) || '0.00' }}
+                </template>
+            </Column>
+            <Column field="status" header="Status" sortable>
+                <template #body="{data}">
+                    <span :class="{
+                        'bg-green-100 text-green-800 px-2 py-1 rounded': data.status === 'INTACT', 
+                        'bg-red-100 text-red-800 px-2 py-1 rounded': data.status === 'SHORT',
+                        'bg-yellow-100 text-yellow-800 px-2 py-1 rounded': data.status === 'PENDING'
+                    }">
+                        {{ data.status }}
                     </span>
                 </template>
             </Column>
-            <Column header="Actions" :exportable="false" style="min-width: 10rem;">
+            <Column header="Actions" :exportable="false" style="min-width: 12rem">
                 <template #body="slotProps">
-                    <div class="flex">
-                        <Button icon="pi pi-eye" v-tooltip.bottom="'View'" 
-                            class="p-button-rounded p-button-info mr-2" 
-                            @click="viewDetails(slotProps.data)" />
-                        <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" 
-                            class="p-button-rounded p-button-warning" 
-                            @click="editRecord(slotProps.data)" />
+                    <div class="flex gap-2">
+                        <Button icon="pi pi-pencil" 
+                            class="p-button-rounded p-button-warning p-button-sm" 
+                            @click="editRemittance(slotProps.data)" 
+                            v-tooltip.top="'Edit'"
+                        />
+                        <Button icon="pi pi-trash" 
+                            class="p-button-rounded p-button-danger p-button-sm" 
+                            @click="confirmDeleteRemittance(slotProps.data)" 
+                            v-tooltip.top="'Delete'"
+                        />
                     </div>
                 </template>
             </Column>
@@ -501,7 +565,7 @@ onMounted(() => {
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label for="date" class="block font-semibold mb-2">Date</label>
-                <Calendar id="date" v-model="remittance.date" dateFormat="mm/dd/yy" class="w-full" />
+                <Calendar id="date" v-model="remittance.date" dateFormat="yy-mm-dd" class="w-full" />
             </div>
             <div>
                 <label for="agent" class="block font-semibold mb-2">Agent</label>
@@ -576,3 +640,9 @@ onMounted(() => {
         </template>
     </Dialog>
 </template>
+
+<style scoped>
+.space {
+    margin-bottom: 1.5rem;
+}
+</style>
