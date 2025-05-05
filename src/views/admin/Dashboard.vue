@@ -162,6 +162,8 @@ const filteredCustomers = computed(() => {
   return totalCustomer.value.filter(customer => customer.area === selectedArea.value.label);
 })
 
+const filteredOrders = computed(() => orders.value.slice(0 ,5))
+
 </script>
 
 <template>
@@ -250,14 +252,14 @@ const filteredCustomers = computed(() => {
         <!-- Add a wrapper for scrollable table -->
         <div style="max-height: 400px; overflow-y: auto">
           <!-- Set your desired height here -->
-          <DataTable :value="products" resizableColumns columnResizeMode="fit" showGridlines
+          <DataTable :value="filteredOrders" resizableColumns columnResizeMode="fit" showGridlines
             tableStyle="min-width: 50rem" class="mt-4">
             <Column header="Name">
               <template #body="slotProps">
                 <div class="flex items-center">
                   <img :src="slotProps.data.profileImage" alt="Profile"
                     class="w-8 h-8 object-cover rounded-full mr-2" />
-                  {{ slotProps.data.name }}
+                  {{ slotProps.data.agent }}
                 </div>
               </template>
             </Column>
@@ -266,22 +268,23 @@ const filteredCustomers = computed(() => {
               <template #body="slotProps">
                 <span :class="{
                     'bg-green-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'complete',
+                      slotProps.data.status === 'Completed',
                     'bg-yellow-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'delayed',
+                      slotProps.data.status === 'Delayed',
                     'bg-blue-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'ongoing',
+                      slotProps.data.status === 'Pending',
                   }">
                   {{
-                  slotProps.data.status === "complete"
+                  slotProps.data.status === "Completed"
                   ? "Complete"
-                  : slotProps.data.status === "delayed"
+                  : slotProps.data.status === "Delayed"
                   ? "Delayed"
-                  : "Ongoing"
+                  : "Pending"
                   }}
                 </span>
               </template>
             </Column>
+            <Column field="date" header="Date"></Column>
           </DataTable>
         </div>
       </div>
