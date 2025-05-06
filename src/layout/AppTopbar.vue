@@ -1,44 +1,47 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
+import { attempt } from "../service/attempt";
+import { WATER_API } from "../config";
+import axios from "axios";
 
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+const { onMenuToggle } = useLayout();
 const topbarMenuActive = ref(false);
 const notificationsVisible = ref(false);
+const chatNotification = ref([]);
 const router = useRouter();
+
+const getChatNotif = async () => {
+  const [chatNotifResponse, chatNotifError] = await attempt(
+    axios.get(`${WATER_API}/chat/list/admin`)
+  );
+  if (chatNotifError) {
+    console.error("Error fecthing chat notif", chatNotifError);
+  } else {
+    chatNotification.value = chatNotifResponse.data.messages;
+  }
+};
 
 const onSettingsClick = () => {
   topbarMenuActive.value = false;
   router.push("/admin/settings"); a
 };
 
-const notifications = ref([
-  { id: 1, message: "Message you", addLine: true },
-  { id: 2, message: "Message you", addLine: true },
-  { id: 3, message: "Message you", addLine: true },
-  { id: 1, message: "Message you", addLine: true },
-  { id: 2, message: "Message you", addLine: true },
-  { id: 3, message: "Message you", addLine: true },
-  { id: 1, message: "Message you", addLine: true },
-  { id: 2, message: "Message you", addLine: true },
-  { id: 3, message: "Message you", addLine: true },
-  { id: 1, message: "Message you", addLine: true },
-  { id: 2, message: "Message you", addLine: true },
-  { id: 3, message: "Message you", addLine: true },
-
-]);
-
 
 const toggleNotifications = () => {
   notificationsVisible.value = !notificationsVisible.value;
 };
 
-const handleNotificationClick = (notification) => {
-  alert(`Notification clicked: ${notification.message}`);
-  // Replace with your desired action, such as routing:
-  // router.push(`/notifications/${notification.id}`);
+const handleNotificationClick = () => {
+  router.push("/admin/message");
 };
+
+const notificationsCount = computed(() => chatNotification.value.length);
+
+onMounted(() => {
+  getChatNotif();
+});
 
 </script>
 
@@ -79,20 +82,20 @@ const handleNotificationClick = (notification) => {
               <i class="pi pi-bell" v-tooltip.bottom="'Notification'"></i>
               <span class="font-semibold">Notification</span>
             </button>
-            <span class="notification-badge">3</span>
+            <span class="notification-badge">{{ notificationsCount }}</span>
 
             <div v-if="notificationsVisible" class="notification-dropdown">
               <div class="notification-dropdown-content">
                 <h4 class="font-semibold">Notifications</h4>
                 <ul>
-                  <li v-for="notification in notifications" :key="notification.id">
+                  <li v-for="notification in chatNotification" :key="notification.message_id">
                     <button
                   class="notification-item"
-                  @click="handleNotificationClick(notification)"
+                  @click="handleNotificationClick()"
                 >
-                  {{ notification.message }}
+                  {{ notification.fullname }} message you
                 </button>
-                    <span v-if="notification.addLine" class="line"></span>
+                    <span v-if="notification.length > 0" class="line"></span>
                   </li>
                 </ul>
               </div>

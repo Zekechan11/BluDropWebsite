@@ -257,7 +257,7 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
             <Column header="Name">
               <template #body="slotProps">
                 <div class="flex items-center">
-                  <img :src="slotProps.data.profileImage" alt="Profile"
+                  <img :src="'https://eu.ui-avatars.com/api/?name=' + slotProps.data.agent" alt="Profile"
                     class="w-8 h-8 object-cover rounded-full mr-2" />
                   {{ slotProps.data.agent }}
                 </div>
