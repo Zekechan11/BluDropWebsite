@@ -1,28 +1,45 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
+import { attempt } from "../../service/attempt";
+import { WATER_API } from "../../config";
+import axios from "axios";
 
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 const topbarMenuActive = ref(false);
 const notificationsVisible = ref(false);
+const chatNotification = ref([]);
 const router = useRouter();
+
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
+const getChatNotif = async () => {
+  const [chatNotifResponse, chatNotifError] = await attempt(
+    axios.get(`${WATER_API}/chat/list/agent/${userData.area_id}`)
+  );
+  if (chatNotifError) {
+    console.error("Error fecthing chat notif", chatNotifError);
+  } else {
+    chatNotification.value = chatNotifResponse.data.messages;
+  }
+};
 
 const onSettingsClick = () => {
   topbarMenuActive.value = false;
   router.push("/agent/settings");
 };
 
-const notifications = ref([
-  { id: 1, message: "Admin message you", addLine: true },
-  { id: 2, message: "Delivery Delayed", addLine: true },
-  { id: 3, message: "Schedule move to 2024-10-20 ", addLine: true },
-]);
-
 
 const toggleNotifications = () => {
   notificationsVisible.value = !notificationsVisible.value;
 };
+
+const notificationsCount = computed(() => chatNotification.value.length);
+
+onMounted(() => {
+  getChatNotif();
+});
 </script>
 
 <template>
@@ -76,18 +93,18 @@ const toggleNotifications = () => {
               v-tooltip.bottom="'Notification'"></i>
               <span class="font-semibold">Notification</span>
             </button>
-            <span class="notification-badge">3</span>
+            <span class="notification-badge">{{ notificationsCount }}</span>
 
             <div v-if="notificationsVisible" class="notification-dropdown">
               <div class="notification-dropdown-content">
                 <h4 class="font-semibold">Notifications</h4>
                 <ul>
                   <li
-                    v-for="notification in notifications"
-                    :key="notification.id"
+                    v-for="notification in chatNotification"
+                    :key="notification.message_id"
                   >
-                    {{ notification.message }}
-                    <span v-if="notification.addLine" class="line"></span>
+                    {{ notification.fullname }} message you
+                    <span v-if="notification.content?.length > 0" class="line"></span>
                   </li>
                 </ul>
               </div>

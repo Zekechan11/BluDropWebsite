@@ -95,7 +95,7 @@ onMounted(() => {
                 >
                   {{ notification.fullname }} message you
                 </button>
-                    <span v-if="notification.length > 0" class="line"></span>
+                    <span v-if="notification.content?.length > 0" class="line"></span>
                   </li>
                 </ul>
               </div>
