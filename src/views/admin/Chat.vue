@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { WATER_API } from '../../config';
+import { WATER_API, WATER_CHAT_API } from '../../config';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -37,7 +37,7 @@ function getConversations() {
 };
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:9090/chat');
+    socket = new WebSocket(`${WATER_CHAT_API}/chat`);
 
     socket.onopen = () => {
         console.log('WebSocket connected');

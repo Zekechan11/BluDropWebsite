@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { WATER_API } from '../../config';
+import { WATER_API, WATER_CHAT_API } from '../../config';
+import axios from 'axios';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -34,7 +35,7 @@ const getAgent = async () => {
 }
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:9090/chat');
+    socket = new WebSocket(`${WATER_CHAT_API}/chat`);
 
     socket.onopen = () => {
         console.log('WebSocket connected');
