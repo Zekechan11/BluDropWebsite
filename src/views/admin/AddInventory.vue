@@ -2,8 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
-
-const INVENTORY_URL = 'http://localhost:9090';
+import { WATER_API } from "../../config";
 
 const toast = useToast();
 const dt = ref();
@@ -28,7 +27,7 @@ const hideDialog = () => {
 
 const fetchInventory = async () => {
     try {
-        const response = await axios.get(`${INVENTORY_URL}/api/get_inventory`);
+        const response = await axios.get(`${WATER_API}/api/get_inventory`);
         const data = response.data;
 
         inventorys.value = data.map((inventory) => {
@@ -43,7 +42,7 @@ const fetchInventory = async () => {
 
 const createInventory = async () => {
     try {
-        const response = await axios.post(`${INVENTORY_URL}/api/save_inventory`, inventory.value);
+        const response = await axios.post(`${WATER_API}/api/save_inventory`, inventory.value);
         inventorys.value.push({ ...inventory.value, inventory_id: response.data.inventory_id });
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Created', life: 3000 });
     } catch (error) {
@@ -54,7 +53,7 @@ const createInventory = async () => {
 
 const updateInventory = async () => {
     try {
-        await axios.put(`${INVENTORY_URL}/api/update_inventory/${inventory.value.inventory_id}`, inventory.value);
+        await axios.put(`${WATER_API}/api/update_inventory/${inventory.value.inventory_id}`, inventory.value);
         inventorys.value[findIndexById(inventory.value.inventory_id)] = inventory.value;
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Updated', life: 3000 });
     } catch (error) {
@@ -92,7 +91,7 @@ const confirmDeleteInventory = (prod) => {
 
 const deleteInventory = async () => {
     try {
-        await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${inventory.value.inventory_id}`);
+        await axios.delete(`${WATER_API}/api/delete_inventory/${inventory.value.inventory_id}`);
         inventorys.value = inventorys.value.filter(val => val.inventory_id !== inventory.value.inventory_id);
         deleteInventoryDialog.value = false;
         inventory.value = {};
@@ -112,7 +111,7 @@ const confirmDeleteSelected = () => {
 const deleteSelectedInventorys = async () => {
     try {
         for (const selected of selectedInventorys.value) {
-            await axios.delete(`${INVENTORY_URL}/api/delete_inventory/${selected.inventory_id}`);
+            await axios.delete(`${WATER_API}/api/delete_inventory/${selected.inventory_id}`);
         }
         inventorys.value = inventorys.value.filter(val => !selectedInventorys.value.includes(val));
         deleteInventorysDialog.value = false;

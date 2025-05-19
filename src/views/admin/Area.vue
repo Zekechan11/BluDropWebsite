@@ -3,9 +3,7 @@ import { ref, onMounted } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
-
-// Define the base URL for your API
-const BASE_URL = 'http://localhost:9090'; // Replace with your actual API base URL
+import { WATER_API } from '../../config';
 
 const toast = useToast();
 const dt = ref();
@@ -33,7 +31,7 @@ const hideDialog = () => {
 
 const fetchAreas = async () => {
     try {
-        const response = await axios.get(`${BASE_URL}/area`); // Use the BASE_URL
+        const response = await axios.get(`${WATER_API}/area`); // Use the WATER_API
         console.log('API Response:', response.data);
 
         if (Array.isArray(response.data)) {
@@ -54,12 +52,12 @@ const saveArea = async () => {
         try {
             if (area.value.id) {
                 // Update existing area
-                await axios.put(`${BASE_URL}/area/${area.value.id}`, area.value); // Use the BASE_URL
+                await axios.put(`${WATER_API}/area/${area.value.id}`, area.value); // Use the WATER_API
                 areas.value[findIndexById(area.value.id)] = area.value; // Update the local state
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Area Updated', life: 3000 });
             } else {
                 // Create new area
-                const response = await axios.post(`${BASE_URL}/area`, area.value); // Use the BASE_URL
+                const response = await axios.post(`${WATER_API}/area`, area.value); // Use the WATER_API
                 areas.value.push({ ...area.value, id: response.data.id }); // Add new area to the local state
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Area Created', life: 3000 });
             }
@@ -85,7 +83,7 @@ const confirmDeleteArea = (selectedArea) => {
 
 const deleteArea = async () => {
     try {
-        await axios.delete(`${BASE_URL}/area/${area.value.id}`); // Use the BASE_URL
+        await axios.delete(`${WATER_API}/area/${area.value.id}`); // Use the WATER_API
         areas.value = areas.value.filter(val => val.id !== area.value.id);
         deleteAreaDialog.value = false;
         area.value = {};
@@ -102,7 +100,7 @@ const confirmDeleteSelected = () => {
 
 const deleteSelectedAreas = async () => {
     try {
-        const deletePromises = selectedAreas.value.map(selected => axios.delete(`${BASE_URL}/area/${selected.id}`)); // Use the BASE_URL
+        const deletePromises = selectedAreas.value.map(selected => axios.delete(`${WATER_API}/area/${selected.id}`)); // Use the WATER_API
         await Promise.all(deletePromises);
         areas.value = areas.value.filter(val => !selectedAreas.value.includes(val));
         deleteAreasDialog.value = false;

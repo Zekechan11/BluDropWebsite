@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import QrcodeVue from 'qrcode.vue';
+import { WATER_API } from "../../config";
 
 // Define reactive variables
 const firstName = ref('');
@@ -25,7 +26,6 @@ const togglePasswordVisibility2 = () => {
 
 // Combined form submission
 const handleFormSubmit = async () => {
-  const url = "http://localhost:9090/accounts"; // Corrected API URL
 
   if (!firstName.value || !lastName.value || !username.value || !email.value || !area.value || !password.value || !confirmPassword.value) {
     alert('All fields are required!');
@@ -51,7 +51,7 @@ const handleFormSubmit = async () => {
   localStorage.setItem('userData', JSON.stringify(userData));
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(WATER_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

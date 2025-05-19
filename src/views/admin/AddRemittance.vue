@@ -3,8 +3,8 @@ import { FilterMatchMode } from '@primevue/core/api';
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
+import { WATER_API } from "../../config";
 
-const WATER_API = 'http://localhost:9090';
 const toast = useToast();
 const dt = ref();
 const remittances = ref([]);
