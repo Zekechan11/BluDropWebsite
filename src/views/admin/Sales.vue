@@ -2,8 +2,8 @@
 import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
+import { WATER_API } from "../../config";
 
-const SALES_URL = 'http://localhost:9090';
 const toast = useToast();
 
 const salesData = ref({ area_reports: [], totals: null });
@@ -36,7 +36,7 @@ const fetchSalesData = async () => {
         const formattedStartDate = formatDateForAPI(startDate.value);
         const formattedEndDate = formatDateForAPI(endDate.value);
 
-        const response = await axios.get(`${SALES_URL}/api/get_sales_by_area`, {
+        const response = await axios.get(`${WATER_API}/api/get_sales_by_area`, {
             params: {
                 start_date: formattedStartDate,
                 end_date: formattedEndDate

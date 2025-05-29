@@ -3,8 +3,8 @@ import { useLayout } from "@/layout/composables/layout";
 import axios from 'axios';
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { WATER_API } from '../../config';
 
-const ORDER_URL = "http://localhost:9090";
 const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
 // State to hold parsed customer data
@@ -78,7 +78,7 @@ const submitPayment = async () => {
   isLoading.value = true;
 
   try {
-    const response = await axios.post(`${ORDER_URL}/api/process-payment`, {
+    const response = await axios.post(`${WATER_API}/api/process-payment`, {
       orderId: customerData.value.orderId,
       customerId: customerData.value.customerId,
       amountPaid: customerData.value.amountPaid,
