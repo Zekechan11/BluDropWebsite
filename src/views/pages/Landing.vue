@@ -174,7 +174,7 @@ function smoothScroll(id) {
             <Button label="Login" as="router-link" to="/auth/login" severity="success" />
 
             <!-- Scanner Icon Button -->
-            <Button icon="pi pi-qrcode" class="p-button-rounded p-button-success" aria-label="Scanner" />
+            <!-- <Button icon="pi pi-qrcode" class="p-button-rounded p-button-success" aria-label="Scanner" /> -->
           </div>
         </div>
       </div>

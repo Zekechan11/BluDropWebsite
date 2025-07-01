@@ -8,14 +8,17 @@ const router = useRouter();
 const email = ref("");
 const password = ref("");
 const checked = ref(false);
-const passwordVisible = ref(false); // State to control password visibility
+const passwordVisible = ref(false);
+const isLoading = ref(false);
+const errorMessage = ref("");
 
-// Function to toggle password visibility
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;
 };
 
 const handelLogin = async () => {
+  errorMessage.value = "";
+  isLoading.value = true;
 
   const loginData = {
     email: email.value,
@@ -31,21 +34,17 @@ const handelLogin = async () => {
       body: JSON.stringify(loginData),
     });
 
-    const responseData = await request.json(); // Extract response data
+    const responseData = await request.json();
 
     if (!request.ok) {
-      // Handle error case
-      console.error("Error during login:", responseData);
-      alert("Login failed: " + (responseData.error || "Unknown error"));
+      errorMessage.value = responseData.error || "Invalid credentials.";
     } else {
-      // Validate that all fields are present
       const { token, user_info } = responseData;
 
       if (token && user_info) {
         localStorage.setItem("token", token);
         localStorage.setItem("user_data", JSON.stringify(user_info));
 
-        // Redirect based on role
         switch (user_info.role) {
           case "Agent":
             router.push("/agent/dashboard");
@@ -57,131 +56,81 @@ const handelLogin = async () => {
             router.push("/views/dashboard");
             break;
           default:
-            console.error("Unknown role:", user_info.role);
-            alert("Login failed: Unknown role.");
-            break;
+            errorMessage.value = "Unknown user role.";
         }
       } else {
-        console.error("Missing data in the response:", responseData);
-        alert("Login failed: Missing data in response from the server.");
+        errorMessage.value = "Missing data in response.";
       }
     }
   } catch (error) {
-    // Handle fetch errors
-    console.error("Fetch error:", error);
-    alert("An error occurred: " + error.message);
+    errorMessage.value = "Network error: " + error.message;
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
 
 <template>
-  <div
-    class="flex min-w-[100vw] min-h-screen overflow-hidden justify-center items-center"
-    style="background-color: #d6eaf8"
-  >
-    <div
-      style="
-        border-radius: 20px;
-        padding: 0.3rem;
-        background: linear-gradient(
-          180deg,
-          #87cefa 10%,
-          rgba(135, 206, 250, 0) 60%
-        );
-      "
-    >
-      <div class="flex flex-col md:flex-row w-full max-w-4xl">
-        <div class="flex-1 flex items-center justify-center">
-          <img
-            src="/demo/images/bg.jpg"
-            alt="Welcome"
-            class="w-full h-full object-cover rounded-l-[20px] shadow-md"
-          />
+  <div class="flex min-w-[100vw] min-h-screen justify-center items-center bg-[#d6eaf8]">
+    <div class="absolute top-6 left-6">
+      <router-link to="/">
+        <button class="flex items-center text-blue-600 hover:text-blue-800 font-medium transition">
+          <i class="pi pi-arrow-left mr-2"></i> Back
+        </button>
+      </router-link>
+    </div>
+    <div class="rounded-[20px] p-1 bg-gradient-to-b from-sky-400 to-transparent w-full max-w-4xl">
+      <div class="flex flex-col md:flex-row">
+        <div class="flex-1">
+          <img src="/demo/images/bg.jpg" alt="Welcome" class="w-full h-full object-cover rounded-l-[20px] shadow-md" />
         </div>
         <div class="flex-1 flex items-center justify-center">
-          <div
-            class="card1 w-full bg-surface-0 dark:bg-surface-900 py-10 px-8 sm:px-12 shadow-md"
-            style="border-radius: 0 20px 20px 0"
-          >
+          <div class="bg-white dark:bg-gray-900 p-10 sm:p-12 rounded-r-[20px] shadow-md w-full">
             <div class="text-center mb-6">
               <router-link to="/" class="layout-topbar-logo">
-                <img
-                  src="/demo/images/logo.png"
-                  class="mb-6 w-16 shrink-0 mx-auto"
-                />
+                <img src="/demo/images/logo.png" class="mb-6 w-16 mx-auto" />
               </router-link>
-              <div
-                class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4"
-              >
-                Welcome to Blu Drop!
-              </div>
-              <span class="text-muted-color font-medium"
-                >Sign in to continue</span
-              >
+              <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Welcome to Blu Drop!</h1>
+              <p class="text-gray-600 dark:text-gray-300">Sign in to continue</p>
             </div>
 
-            <div>
-              <label
-                for="email1"
-                class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"
-                >User Name</label
-              >
-              <InputText
-                id="email1"
-                type="text"
-                placeholder="User Name"
-                class="w-full md:w-[30rem] mb-6"
-                v-model="email"
-              />
+            <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+              {{ errorMessage }}
+            </div>
 
-              <label
-                for="password1"
-                class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2"
-                >Password</label
-              >
+            <div class="mb-4">
+              <label class="block text-xl font-medium mb-1">User Name</label>
+              <InputText type="text" placeholder="User Name" class="w-full mb-4" v-model="email" />
 
-              <!-- Password input with eye icon -->
-              <div class="relative w-full md:w-[30rem] mb-4">
-                <input
-                  :type="passwordVisible ? 'text' : 'password'"
-                  id="password"
-                  v-model="password"
+              <label class="block text-xl font-medium mb-1">Password</label>
+              <div class="relative w-full mb-4">
+                <input :type="passwordVisible ? 'text' : 'password'" v-model="password"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  placeholder="Enter your password"
-                  required
-                />
-                <span
-                  class="absolute inset-y-0 right-3 flex items-center cursor-pointer"
-                  @click="togglePasswordVisibility"
-                >
-                  <i
-                    :class="passwordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                    class="text-gray-500"
-                  ></i>
+                  placeholder="Enter your password" />
+                <span class="absolute right-3 top-2/4 transform -translate-y-2/4 cursor-pointer"
+                  @click="togglePasswordVisibility">
+                  <i :class="passwordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-gray-500"></i>
                 </span>
               </div>
 
-              <div class="flex items-center justify-between mt-2 mb-6 gap-8">
-                <div class="flex items-center">
-                  <Checkbox
-                    v-model="checked"
-                    id="rememberme1"
-                    binary
-                    class="mr-2"
-                  ></Checkbox>
-                  <label for="rememberme1">Remember me</label>
-                </div>
-                <span
-                  class="font-medium no-underline ml-2 text-right cursor-pointer text-primary"
-                  >Forgot password?</span
-                >
+              <div class="flex items-center justify-between mb-6">
+                <label class="flex items-center">
+                  <Checkbox v-model="checked" binary class="mr-2" />
+                  Remember me
+                </label>
+                <span class="text-blue-600 hover:underline cursor-pointer">Forgot password?</span>
               </div>
-              <Button
-                label="Sign In"
-                severity="info"
-                class="w-full"
-                @click="handelLogin"
-              ></Button>
+
+              <Button severity="info" class="w-full flex items-center justify-center gap-2" :disabled="isLoading"
+                @click="handelLogin">
+                <template #default>
+                  <span v-if="isLoading">
+                    <i class="pi pi-spin pi-spinner text-white text-xl"></i>
+                  </span>
+                  <span v-else>Sign In</span>
+                </template>
+              </Button>
+
             </div>
           </div>
         </div>
@@ -189,6 +138,7 @@ const handelLogin = async () => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .flex {
@@ -206,6 +156,6 @@ const handelLogin = async () => {
 .pi-eye,
 .pi-eye-slash {
   font-size: 1.5rem;
-  color: #007bff; /* Customize icon color */
+  color: #007bff;
 }
 </style>
