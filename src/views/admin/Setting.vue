@@ -1,23 +1,7 @@
 <script setup>
 import { ref } from "vue";
 
-const dropdownItem = ref(null);
-
-const profileImage = ref(null);
-const imagePreviewUrl = ref("https://via.placeholder.com/150"); // Default profile image URL
-
 const userData = JSON.parse(localStorage.getItem("user_data"));
-
-const handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    // Create a URL for the selected file and set it to imagePreviewUrl
-    imagePreviewUrl.value = URL.createObjectURL(file);
-    profileImage.value = file;
-  }
-};
-
-// Tab management
 const activeTab = ref("profileImage");
 
 const setActiveTab = (tab) => {
@@ -42,7 +26,7 @@ const setActiveTab = (tab) => {
           @click="setActiveTab('profileImage')"
           style="color: white; font-weight: bold; border-radius: 10px"
         >
-          Profile Image
+          Admin Details
         </button>
         <div class="mx-2"></div>
         <!-- Add space here -->
@@ -54,7 +38,7 @@ const setActiveTab = (tab) => {
           @click="setActiveTab('userDetails')"
           style="color: white; font-weight: bold; border-radius: 10px"
         >
-          Admin Details
+          Account Security
         </button>
       </div>
 
@@ -66,34 +50,6 @@ const setActiveTab = (tab) => {
         "
       >
         <div class="card flex gap-8">
-          <!-- Use flex for horizontal layout -->
-          <div class="flex flex-col items-center">
-            <!-- Container for the image -->
-            <div class="relative">
-              <img
-                src=""
-                alt=""
-                class="w-32 h-32 object-cover rounded-full border border-gray-300"
-                style="border: 2px solid #aed6f1; background-color: #d6eaf8"
-              />
-              <i
-                class="pi pi-user absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400 text-3xl"
-                style="color: #aed6f1; font-size: 80px"
-              ></i>
-            </div>
-            <div class="flex flex-col gap-2 mt-2 items-center">
-              <!-- Image upload input -->
-              <label for="profileImageUpload">Upload Profile Image</label>
-              <input
-                class="w-2/3"
-                type="file"
-                id="profileImageUpload"
-                accept="image/*"
-                @change="handleImageUpload"
-                style="color: darkblue; background-color: #007fff; color: white"
-              />
-            </div>
-          </div>
 
           <div class="flex flex-col gap-4 flex-1">
             <!-- Container for the inputs -->

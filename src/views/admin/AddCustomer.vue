@@ -33,6 +33,7 @@ const hideDialog = () => {
 };
 
 const getCustomers = async (status) => {
+  customers.value = [];
   clientStatus.value = status;
   const response = await axios.get(`${WATER_API}/v2/api/get_client/all/${clientStatus.value}`);
   customers.value = response.data.data;
@@ -58,7 +59,25 @@ const fetchAreas = async () => {
 const saveProduct = async () => {
   submitted.value = true;
 
-  if (product.value.staff_id) {
+  if (
+    !product.value.firstname ||
+    !product.value.lastname ||
+    !product.value.email ||
+    !product.value.username ||
+    !product.value.password ||
+    !product.value.type ||
+    !product.value.area
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Incomplete Form',
+      detail: 'Please fill in all required fields.',
+      life: 3000,
+    });
+    return;
+  }
+
+  if (product.value.client_id) {
     await updateClient();
   } else {
     await createClient();
@@ -123,15 +142,15 @@ const updateClient = async () => {
       email: product.value.email,
       username: product.value.username,
       password: product.value.password,
-      area_id: product.value.area,
+      area_id: product.value.area_name,
       type: product.value.type.label,
     };
 
     await axios.put(
-      `${WATER_API}/v2/api/update_staff/${product.value.staff_id}`,
+      `${WATER_API}/v2/api/update_client/${product.value.client_id}`,
       payload
     );
-    const index = customers.value.findIndex((a) => a.staff_id === product.value.staff_id);
+    const index = customers.value.findIndex((a) => a.staff_id === product.value.client_id);
     if (index !== -1) {
       customers.value[index] = {
         ...customers.value[index],
@@ -217,15 +236,9 @@ onMounted(() => {
   <div>
     <Tabs value="0" class="shadow-lg">
       <TabList>
-        <Tab
-          value="0"
-          @click="getCustomers('Active')"
-        >Manage Customer
-      </Tab>
-        <Tab
-        value="1"
-        @click="getCustomers('Inactive')"
-        >Inactive
+        <Tab value="0" @click="getCustomers('Active')">Manage Customer
+        </Tab>
+        <Tab value="1" @click="getCustomers('Inactive')">Inactive
         </Tab>
       </TabList>
 
@@ -281,6 +294,18 @@ onMounted(() => {
                   @click="confirmDeleteProduct(slotProps.data)" />
               </template>
             </Column>
+            <template #loading>
+              <div class="flex justify-center items-center py-4 text-blue-500">
+                <i class="pi pi-spin pi-spinner mr-2"></i>
+                Loading customers...
+              </div>
+            </template>
+            <template #empty>
+              <div class="text-center text-gray-500 py-4">
+                <i class="pi pi-info-circle mr-2" />
+                No customers found.
+              </div>
+            </template>
           </DataTable>
 
         </TabPanel>
@@ -327,6 +352,12 @@ onMounted(() => {
                   @click="confirmDeleteProduct(slotProps.data)" />
               </template>
             </Column>
+            <template #empty>
+              <div class="text-center text-gray-500 py-4">
+                <i class="pi pi-info-circle mr-2" />
+                No inactive customers found.
+              </div>
+            </template>
           </DataTable>
         </TabPanel>
       </TabPanels>
@@ -398,15 +429,8 @@ onMounted(() => {
           <!-- Area Dropdown -->
           <div class="w-full md:w-56">
             <label for="area" class="block font-semibold mb-3">Address</label>
-            <Select
-              v-model="product.area"
-              id="area"
-              :options="areas"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select Area"
-              class="w-full border rounded"
-              required />
+            <Select v-model="product.area" id="area" :options="areas" optionLabel="label" optionValue="value"
+              placeholder="Select Area" class="w-full border rounded" required />
             <small v-if="submitted && !product.area" class="text-red-500">Area is required.</small>
           </div>
         </div>
