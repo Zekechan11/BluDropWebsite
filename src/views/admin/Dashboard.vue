@@ -4,6 +4,8 @@ import { ref, onMounted, computed, watch } from "vue";
 import { WATER_API } from "../../config";
 import { useToast } from "primevue/usetoast";
 import { attempt } from "../../service/attempt";
+import ErrorMessage from "../../components/ErrorMessage.vue"
+import EmptyTableState from "../../components/EmptyTableState.vue"
 
 const products = ref();
 const totalCustomer = ref(0);
@@ -105,27 +107,27 @@ const savePrice = async (reg, dea) => {
     dealer: parseFloat(dea),
     regular: parseFloat(reg),
   }
-  
+
   const [, error] = await attempt(
     axios.put(`${WATER_API}/api/price/update`, payload)
   );
 
-  if(error) {
+  if (error) {
     visible2.value = false;
     toast.add({
-        severity: "error",
-        summary: "Successful",
-        detail: error,
-        life: 3000,
-      });
+      severity: "error",
+      summary: "Successful",
+      detail: error,
+      life: 3000,
+    });
   } else {
     visible2.value = false;
     toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "response.data.message",
-        life: 3000,
-      });
+      severity: "success",
+      summary: "Successful",
+      detail: "response.data.message",
+      life: 3000,
+    });
   }
 }
 
@@ -162,13 +164,23 @@ const filteredCustomers = computed(() => {
   return totalCustomer.value.filter(customer => customer.area === selectedArea.value.label);
 })
 
-const filteredOrders = computed(() => orders.value.slice(0 ,5))
+const filteredOrders = computed(() => orders.value.slice(0, 5))
 
 </script>
 
 <template>
   <div class="grid grid-cols-12 gap-8">
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="customers = true">
+    <div v-tooltip.bottom="{
+      value: 'View Total Customers',
+      pt: {
+        arrow: {
+          style: {
+            borderBottomColor: 'var(--p-primary-color)'
+          }
+        },
+        text: '!bg-primary !text-primary-contrast !font-medium'
+      }
+    }" class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="customers = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
@@ -198,11 +210,25 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
           <Column field="lastname" header="Lastame"></Column>
           <Column field="area" header="Area"></Column>
           <Column field="total_containers_on_loan" header="COL"></Column>
+          <template #empty>
+            <EmptyTableState title="No recent customers found."
+              description="Try refreshing your browser or check back later." />
+          </template>
         </DataTable>
       </Dialog>
     </div>
 
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
+    <div v-tooltip.bottom="{
+      value: 'View Customers Order',
+      pt: {
+        arrow: {
+          style: {
+            borderBottomColor: 'var(--p-primary-color)'
+          }
+        },
+        text: '!bg-primary !text-primary-contrast !font-medium'
+      }
+    }" class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
@@ -213,7 +239,7 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
           </div>
           <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-border"
             style="width: 5rem; height: 5rem">
-            <i class="pi pi-users text-cyan-500 !text-4xl"></i>
+            <i class="pi pi-truck text-cyan-500 !text-4xl"></i>
           </div>
         </div>
       </div>
@@ -225,11 +251,25 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
           <Column field="agent" header="Agent"></Column>
           <Column field="total_price" header="Payables"></Column>
           <Column field="date" header="Date"></Column>
+          <template #empty>
+            <EmptyTableState title="No recent delivery found."
+              description="Try refreshing your browser or check back later." />
+          </template>
         </DataTable>
       </Dialog>
     </div>
 
-    <div class="col-span-12 lg:col-span-6 xl:col-span-4" @click="visible2 = true">
+    <div v-tooltip.bottom="{
+      value: 'Edit Gallon Price',
+      pt: {
+        arrow: {
+          style: {
+            borderBottomColor: 'var(--p-primary-color)'
+          }
+        },
+        text: '!bg-primary !text-primary-contrast !font-medium'
+      }
+    }" class="col-span-12 lg:col-span-6 xl:col-span-4 cursor-pointer" @click="visible2 = true">
       <div class="card mb-0 shadow-md">
         <div class="flex justify-between mb-4">
           <div>
@@ -240,51 +280,71 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
           </div>
           <div class="flex items-center justify-center bg-green-100 dark:bg-purple-400/10 rounded-border"
             style="width: 5rem; height: 5rem">
-            <i class="pi pi-paypal text-purple-500 !text-4xl"></i>
+            <i class="pi pi-chart-line text-purple-500 !text-4xl"></i>
           </div>
         </div>
       </div>
     </div>
 
     <div class="col-span-12 xl:col-span-8">
-      <div class="card shadow-md" style="background-color: #fbfcfc">
-        <div class="font-semibold text-xl">AGENTS</div>
-        <!-- Add a wrapper for scrollable table -->
-        <div style="max-height: 400px; overflow-y: auto">
-          <!-- Set your desired height here -->
+      <div class="card shadow-md rounded-lg" style="background-color: #fbfcfc; border: 1px solid #e2e8f0;">
+        <div class="font-semibold text-xl text-muted-color p-4">
+          RECENT TRANSACTIONS
+        </div>
+
+        <div style="max-height: 400px; overflow-y: auto" class="px-4 pb-4">
           <DataTable :value="filteredOrders" resizableColumns columnResizeMode="fit" showGridlines
-            tableStyle="min-width: 50rem" class="mt-4">
-            <Column header="Name">
+            tableStyle="min-width: 50rem" class="mt-4" stripedRows rowHover emptyMessage="">
+            <Column header="Name" :style="{ minWidth: '180px' }">
               <template #body="slotProps">
-                <div class="flex items-center">
+                <div class="flex items-center space-x-3">
                   <img :src="'https://eu.ui-avatars.com/api/?name=' + slotProps.data.agent" alt="Profile"
-                    class="w-8 h-8 object-cover rounded-full mr-2" />
-                  {{ slotProps.data.agent }}
+                    class="w-10 h-10 object-cover rounded-full shadow" />
+                  <span class="font-medium text-gray-900">
+                    {{ slotProps.data.agent }}
+                  </span>
                 </div>
               </template>
             </Column>
-            <Column field="area" header="Area"></Column>
-            <Column header="Status">
+
+            <Column field="area" header="Area" :style="{ minWidth: '120px' }">
+              <template #body="slotProps">
+                <span class="text-gray-700 font-normal">{{ slotProps.data.area }}</span>
+              </template>
+            </Column>
+
+            <Column header="Status" :style="{ minWidth: '140px' }">
               <template #body="slotProps">
                 <span :class="{
-                    'bg-green-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'Completed',
-                    'bg-yellow-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'Delayed',
-                    'bg-blue-500 text-white font-semibold rounded py-1 px-2':
-                      slotProps.data.status === 'Pending',
-                  }">
+                  'bg-green-500 text-white font-semibold rounded-full py-1 px-3':
+                    slotProps.data.status === 'Completed',
+                  'bg-yellow-400 text-white font-semibold rounded-full py-1 px-3':
+                    slotProps.data.status === 'Delayed',
+                  'bg-blue-500 text-white font-semibold rounded-full py-1 px-3':
+                    slotProps.data.status === 'Pending',
+                }" class="uppercase tracking-wide text-xs">
                   {{
-                  slotProps.data.status === "Completed"
-                  ? "Complete"
-                  : slotProps.data.status === "Delayed"
-                  ? "Delayed"
-                  : "Pending"
+                  slotProps.data.status === 'Completed'
+                  ? 'Complete'
+                  : slotProps.data.status === 'Delayed'
+                  ? 'Delayed'
+                  : 'Pending'
                   }}
                 </span>
               </template>
             </Column>
-            <Column field="date" header="Date"></Column>
+
+            <Column field="date" header="Date" :style="{ minWidth: '130px' }">
+              <template #body="slotProps">
+                <span class="text-gray-600 text-sm">
+                  {{ new Date(slotProps.data.date).toLocaleDateString() }}
+                </span>
+              </template>
+            </Column>
+            <template #empty>
+              <EmptyTableState title="No recent transactions found."
+                description="Try adjusting your filters or check back later." />
+            </template>
           </DataTable>
         </div>
       </div>
@@ -292,54 +352,59 @@ const filteredOrders = computed(() => orders.value.slice(0 ,5))
 
     <div class="col-span-12 lg:col-span-6 xl:col-span-4">
       <div class="col-span-12 xl:col-span-4">
-        <div class="card shadow-md" style="background-color: #fbfcfc">
+        <div class="card shadow-md rounded-lg bg-[#fbfcfc] p-6">
           <div class="flex items-center justify-between mb-6">
-            <div class="font-semibold text-xl">SCHEDULES</div>
+            <div class="font-semibold text-xl text-muted-color">SCHEDULES</div>
             <div>
               <Button label="Save Schedule" icon="pi pi-fw pi-save" @click="saveSchedule" />
             </div>
           </div>
 
-          <ul class="p-0 mx-0 mt-0 mb-6 list-none">
+          <ul v-if="schedules.length > 0" class="list-none p-0 m-0 mb-4 space-y-2">
             <li v-for="(schedule, index) in schedules" :key="index" class="flex items-center justify-between py-2">
-              <span class="leading-normal p-2 rounded w-full text-xl font-medium" :class="
-                  (schedule.color,
-                  {
-                    'bg-green-300': schedule.type === true,
-                    'bg-gray-300': schedule.type === false,
-                  })
-                ">
+              <span class="leading-normal p-3 rounded w-full text-xl font-medium" :class="[
+                schedule.color,
+                schedule.type === true ? 'bg-green-300' : 'bg-gray-300'
+              ]">
                 {{ schedule.day }} ({{ schedule.date }})
               </span>
-              <i v-if="schedule.type === true" class="pi pi-eye text-green-500 cursor-pointer ml-4"
-                @click="disableSchedule(index)"></i>
-              <i v-if="schedule.type === false" class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4"
-                @click="enableSchedule(index)"></i>
+
+              <i v-if="schedule.type === true"
+                class="pi pi-eye text-green-600 cursor-pointer ml-4 hover:text-green-700 transition-colors duration-200"
+                @click="disableSchedule(index)" title="Disable Schedule"></i>
+              <i v-else
+                class="pi pi-eye-slash text-gray-500 cursor-pointer ml-4 hover:text-gray-700 transition-colors duration-200"
+                @click="enableSchedule(index)" title="Enable Schedule"></i>
             </li>
           </ul>
+          <ErrorMessage v-else message="Failed to load schedules."
+            subMessage="Please try refreshing or check your internet connection." />
         </div>
 
         <!-- Modal -->
         <Dialog v-model:visible="visible2" modal header="Gallons Price" :style="{ width: '25rem' }">
-          <div class="flex items-center gap-4 mb-4">
-            <label for="price" class="font-semibold w-24">Dealer {{ totalSales.pricing.dealer || "dd" }}</label>
-            <InputText id="price" v-model="totalSales.pricing.dealer" class="w-full md:w-56" placeholder="Input pricing" />
-          </div>
-          <div class="flex items-center gap-4 mb-4">
-            <label for="price" class="font-semibold w-24">Regular {{ totalSales.pricing.regular || "dd" }}</label>
-            <InputText id="price" v-model="totalSales.pricing.regular" class="w-full md:w-56" placeholder="Input pricing" />
-          </div>
-          <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancel" severity="secondary" @click="visible2 = false"></Button>
-            <Button
-              type="button"
-              label="Save"
-              @click="savePrice(
+          <div v-if="totalSales.pricing">
+            <div class="flex items-center gap-4 mb-4">
+              <label for="price" class="font-semibold w-24">Dealer {{ totalSales.pricing.dealer || "dd" }}</label>
+              <InputText id="price" v-model="totalSales.pricing.dealer" class="w-full md:w-56"
+                placeholder="Input pricing" />
+            </div>
+            <div class="flex items-center gap-4 mb-4">
+              <label for="price" class="font-semibold w-24">Regular {{ totalSales.pricing.regular || "dd" }}</label>
+              <InputText id="price" v-model="totalSales.pricing.regular" class="w-full md:w-56"
+                placeholder="Input pricing" />
+            </div>
+            <div class="flex justify-end gap-2">
+              <Button type="button" label="Cancel" severity="secondary" @click="visible2 = false"></Button>
+              <Button type="button" label="Save" @click="savePrice(
                 totalSales.pricing.regular,
                 totalSales.pricing.dealer
               )
-              "></Button>
+                "></Button>
+            </div>
           </div>
+          <ErrorMessage v-else message="Something went wrong."
+            subMessage="Please try refreshing or check your internet connection." />
         </Dialog>
       </div>
     </div>
