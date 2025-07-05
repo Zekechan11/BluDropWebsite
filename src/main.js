@@ -7,6 +7,7 @@ import SplitButton from 'primevue/splitbutton';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip';
 
 import './assets/tailwind.css';
 
@@ -27,5 +28,6 @@ app.use(PrimeVue, {
 app.component('SplitButton', SplitButton);
 app.use(ToastService);
 app.use(ConfirmationService);
+app.directive('tooltip', Tooltip);
 
 app.mount('#app');
