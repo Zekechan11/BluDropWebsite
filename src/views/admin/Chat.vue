@@ -5,7 +5,8 @@ import { WATER_API, WATER_CHAT_API } from '../../config';
 const messages = ref([]);
 const newMessage = ref('');
 const selectedConversation = ref(null);
-const searchQuery = ref(''); // New reactive property for search query
+const searchQuery = ref('');
+const showMobileChat = ref(false);
 
 const conversations = ref([]);
 
@@ -15,25 +16,25 @@ let socket = null;
 
 function getConversations() {
     fetch(`${WATER_API}/chat/list/admin`)
-    .then((res) => {
-        if (!res.ok) {
-            throw new Error('Failed to fetch convo');
-        }
-        return res.json();
-    })
-    .then((data) => {
-        console.log(data);
-        conversations.value = data.messages.map((msg) => ({
-            name: msg.fullname,
-            lastMessage: msg.content,
-            img: `https://eu.ui-avatars.com/api/?name=${msg.fullname}`,
-            cus: msg.customer,
-            time: new Date(msg.timestamp).toLocaleTimeString(),
-        }));
-    })
-    .catch((err) => {
-        console.error('Error fetching convo:', err);
-    });
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to fetch convo');
+            }
+            return res.json();
+        })
+        .then((data) => {
+            console.log(data);
+            conversations.value = data.messages.map((msg) => ({
+                name: msg.fullname,
+                lastMessage: msg.content,
+                img: `https://eu.ui-avatars.com/api/?name=${msg.fullname}`,
+                cus: msg.customer,
+                time: new Date(msg.timestamp).toLocaleTimeString(),
+            }));
+        })
+        .catch((err) => {
+            console.error('Error fetching convo:', err);
+        });
 };
 
 function connectWebSocket() {
@@ -64,35 +65,40 @@ function connectWebSocket() {
 
 function selectConversation(conversation) {
     selectedConversation.value = conversation;
+    showMobileChat.value = true;
     const conversationId = conversation.cus;
 
     fetch(`${WATER_API}/chat/customer/${conversationId}`)
-    .then((res) => {
-        if (!res.ok) {
-            throw new Error('Failed to fetch messages');
-        }
-        return res.json();
-    })
-    .then((data) => {
-        messages.value = data.messages.map((msg) => ({
-            content: msg.content,
-            sender_id: msg.sender_id,
-            timestamp: new Date(msg.timestamp).toLocaleTimeString(),
-        }));
-    })
-    .catch((err) => {
-        console.error('Error fetching messages:', err);
-    });
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to fetch messages');
+            }
+            return res.json();
+        })
+        .then((data) => {
+            messages.value = data.messages.map((msg) => ({
+                content: msg.content,
+                sender_id: msg.sender_id,
+                timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+            }));
+        })
+        .catch((err) => {
+            console.error('Error fetching messages:', err);
+        });
 };
+
+function goBackToList() {
+    showMobileChat.value = false;
+    selectedConversation.value = null;
+}
 
 const filteredConversations = computed(() => {
     if (!searchQuery.value) return conversations.value;
-    return conversations.value.filter(conversation =>
+    return conversations.value.filter((conversation) =>
         conversation.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     );
 });
 
-// Limit the length of last messages to 40 characters
 const truncateMessage = (message, maxLength = 40) => {
     return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
 };
@@ -111,12 +117,10 @@ function sendMessage(customer) {
 }
 
 onMounted(() => {
-    if (conversations.value.length > 0) {
-        selectedConversation.value = conversations.value[0];
-    }
     getConversations();
     connectWebSocket();
 });
+
 onUnmounted(() => {
     if (socket) {
         socket.close();
@@ -125,60 +129,133 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="flex flex-col md:flex-row gap-8">
-        <!-- Conversation List (Scrollable) -->
-        <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Chat</div>
-            <div class="p-4 bg-white">
-                <input
-                    type="text"
-                    v-model="searchQuery" 
-                    placeholder="Search Messenger"
-                    class="w-full p-2 rounded-lg border border-gray-300"
-                />
+    <div class="flex flex-col md:flex-row gap-4 md:gap-8 h-full">
+        <div :class="[
+            'w-full h-[88vh] md:w-1/2 flex flex-col border border-gray-300 rounded-lg shadow-md min-h-0',
+            showMobileChat ? 'hidden md:flex' : 'flex'
+        ]">
+            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg flex-shrink-0">Chat</div>
+            <div class="p-4 bg-white flex-shrink-0">
+                <div class="relative">
+                    <input type="text" v-model="searchQuery" placeholder="Search Messenger"
+                        class="w-full p-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <button v-if="searchQuery" @click="searchQuery = ''"
+                        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <!-- Scrollable conversation list -->
-            <div class="overflow-y-auto flex-grow max-h-[520px]">
-                <div
-                    v-for="(conversation, index) in filteredConversations"
-                    :key="index"
-                    @click="selectConversation(conversation)"
-                    :class="['p-4 border-b cursor-pointer', 
-                             selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']"
-                >
-                    <div class="flex items-center gap-4">
-                        <!-- Profile Image -->
-                        <img :src="conversation.img" alt="Profile image" class="w-10 h-10 rounded-full bg-gray-300" />
-                        <div>
-                            <p class="font-semibold">{{ conversation.name }}</p>
-                            <p class="text-sm text-gray-500">{{ truncateMessage(conversation.lastMessage) }}</p>
+            <div class="overflow-y-auto flex-grow min-h-0">
+                <div v-if="filteredConversations.length === 0 && searchQuery"
+                    class="flex flex-col items-center justify-center h-full p-8 text-gray-500">
+                    <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <p class="text-lg font-medium mb-2">No conversations found</p>
+                    <p class="text-sm text-center">Try adjusting your search or check back later</p>
+                    <button @click="searchQuery = ''"
+                        class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        Clear Search
+                    </button>
+                </div>
+                <div v-else-if="conversations.length === 0"
+                    class="flex flex-col items-center justify-center h-full p-8 text-gray-500">
+                    <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
+                    <p class="text-lg font-medium mb-2">No conversations yet</p>
+                    <p class="text-sm text-center">Conversations will appear here when customers start chatting</p>
+                </div>
+                <div v-else>
+                    <div v-for="(conversation, index) in filteredConversations" :key="index"
+                        @click="selectConversation(conversation)" :class="['p-4 border-b cursor-pointer transition-colors',
+                            selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']">
+                        <div class="flex items-center gap-4">
+                            <img :src="conversation.img" alt="Profile image"
+                                class="w-10 h-10 rounded-full bg-gray-300" />
+                            <div class="flex-grow min-w-0">
+                                <p class="font-semibold truncate">{{ conversation.name }}</p>
+                                <p class="text-sm text-gray-500 truncate">{{ truncateMessage(conversation.lastMessage)
+                                }}</p>
+                            </div>
+                            <div class="text-sm text-gray-500 flex-shrink-0">{{ conversation.time }}</div>
                         </div>
-                        <div class="ml-auto text-sm text-gray-500">{{ conversation.time }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Chat Window - Only displayed if a conversation is selected -->
-        <div v-if="selectedConversation" class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">{{ selectedConversation.name }}</div>
-            <div class="flex-grow p-4 overflow-y-auto space-y-4">
-                <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-                    <div v-if="msg.sender_id === userData.uid.toString()" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
-                        <p>{{ msg.content }}</p>
-                        <span class="text-xs text-right block">{{ msg.timestamp }}</span>
-                    </div>
-                    <div v-else class="self-start bg-gray-300 p-2 rounded-lg max-w-xs">
-                        <p>{{ msg.content }}</p>
-                        <span class="text-xs text-right block">{{ msg.timestamp }}</span>
+        <div v-if="selectedConversation" :class="[
+            'w-full h-[88vh] flex flex-col border border-gray-300 rounded-lg shadow-md min-h-0',
+            showMobileChat ? 'flex' : 'hidden md:flex'
+        ]">
+            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg flex items-center flex-shrink-0">
+                <button @click="goBackToList" class="md:hidden mr-3 text-white hover:text-gray-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
+                </button>
+                <span class="truncate">{{ selectedConversation.name }}</span>
+            </div>
+
+            <div class="flex-grow p-4 overflow-y-auto space-y-4 min-h-0">
+                <div v-if="messages.length === 0"
+                    class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
+                    <p class="text-lg font-medium mb-2">No messages yet</p>
+                    <p class="text-sm text-center">Start the conversation by sending a message below</p>
+                </div>
+
+                <div v-else>
+                    <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
+                        <div v-if="msg.sender_id === userData.uid.toString()"
+                            class="self-end bg-blue-500 text-white p-3 rounded-lg max-w-xs break-words">
+                            <p>{{ msg.content }}</p>
+                            <span class="text-xs text-right block mt-1 opacity-75">{{ msg.timestamp }}</span>
+                        </div>
+                        <div v-else class="self-start bg-gray-300 p-3 rounded-lg max-w-xs break-words">
+                            <p>{{ msg.content }}</p>
+                            <span class="text-xs text-right block mt-1 opacity-75">{{ msg.timestamp }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Message Input -->
-            <div class="p-4 border-t border-gray-200 flex items-center gap-4">
-                <InputText v-model="newMessage" placeholder="Type a message" class="flex-grow" />
-                <Button label="Send" @click="sendMessage(selectedConversation.cus)" :disabled="newMessage === ''" class="bg-blue-500 text-white" />
+            <div class="p-4 border-t border-gray-200 flex items-center gap-4 flex-shrink-0">
+                <InputText v-model="newMessage" placeholder="Type a message" class="flex-grow"
+                    @keyup.enter="sendMessage(selectedConversation.cus)" />
+                <Button label="Send" @click="sendMessage(selectedConversation.cus)" :disabled="newMessage.trim() === ''"
+                    class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    severity="primary" />
+            </div>
+        </div>
+
+        <div v-if="!selectedConversation"
+            class="hidden md:flex w-full items-center justify-center border border-gray-300 rounded-lg shadow-md bg-gray-50">
+            <div class="text-center text-gray-500">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                    </path>
+                </svg>
+                <p class="text-lg font-medium">Select a conversation to start chatting</p>
+                <p class="text-sm">Choose a conversation from the list to view messages</p>
             </div>
         </div>
     </div>
