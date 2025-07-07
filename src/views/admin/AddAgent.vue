@@ -2,7 +2,7 @@
 import { FilterMatchMode } from "@primevue/core/api";
 import axios from "axios";
 import { useToast } from "primevue/usetoast";
-import { onMounted, ref} from "vue";
+import { onMounted, ref } from "vue";
 import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
 
@@ -157,9 +157,21 @@ const updateAgent = async () => {
 const saveAgent = async () => {
   submitted.value = true;
 
-  // if (!agent.value.agent_name || !area.value.area_name) {
-  //     return;
-  // }
+  if (
+    !agent.value.firstname ||
+    !agent.value.lastname ||
+    !agent.value.email ||
+    !agent.value.password ||
+    !agent.value.area_id
+  ) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Incomplete Form',
+      detail: 'Please fill in all required fields.',
+      life: 3000,
+    });
+    return;
+  }
 
   if (agent.value.staff_id) {
     await updateAgent();
@@ -319,17 +331,18 @@ const findIndexById = (id) => {
               @click="editAgent(slotProps.data)" />
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
               @click="confirmDeleteAgent(slotProps.data)" />
-              
-            <Select
-              v-model="selectedCity"
-              :options="areas" v-model.trim="selectedArea"
-              optionLabel="area"
-              optionValue="id"
-              @change="updateRoute(slotProps.data)"
-              placeholder="Select a City"
+
+            <Select v-model="selectedCity" :options="areas" v-model.trim="selectedArea" optionLabel="area"
+              optionValue="id" @change="updateRoute(slotProps.data)" placeholder="Select a City"
               class="w-full md:w-56" />
           </template>
         </Column>
+        <template #empty>
+          <div class="text-center text-gray-500 py-4">
+            <i class="pi pi-info-circle mr-2" />
+            No agent 47 found.
+          </div>
+        </template>
       </DataTable>
     </div>
 
@@ -354,10 +367,12 @@ const findIndexById = (id) => {
           <small v-if="submitted && !agent.email" class="text-red-500">Email is required.</small>
         </div>
         <div>
-          <label for="area" class="block font-semibold mb-3">Area</label>
-          <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area" optionValue="id"
-            placeholder="Select an Area" />
-          <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
+          <label for="area" class="block mb-2 font-semibold text-gray-700">Area</label>
+          <Dropdown id="area" v-model="agent.area" :options="areas" optionLabel="area" optionValue="id"
+            placeholder="Select an Area" class="w-full" />
+          <small v-if="submitted && !agent.area" class="text-red-600 text-xs mt-1 block">
+            Area is required.
+          </small>
         </div>
         <div>
           <label for="password" class="block font-semibold mb-3">Password</label>
