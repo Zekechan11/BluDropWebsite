@@ -64,6 +64,20 @@ const fetchAreas = async () => {
 };
 
 const saveStaff = async () => {
+    if (
+        !staff.value.firstname ||
+        !staff.value.lastname ||
+        !area.value.area_name
+    ) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Incomplete Form',
+            detail: 'Please fill in all required fields.',
+            life: 3000,
+        });
+        return;
+    }
+    
     submitted.value = true;
 
     if (!staff.value.staff || !staff.value.address)  {
@@ -161,22 +175,16 @@ onMounted(() => {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew" />
-                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedStaffs || !selectedStaffs.length" />
+                    <Button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected"
+                        :disabled="!selectedStaffs || !selectedStaffs.length" />
                 </template>
             </Toolbar>
 
-            <DataTable
-                ref="dt"
-                v-model:selection="selectedStaffs"
-                :value="staffs"
-                dataKey="id"
-                :paginator="true"
-                :rows="10"
-                :filters="filters"
+            <DataTable ref="dt" v-model:selection="selectedStaffs" :value="staffs" dataKey="id" :paginator="true"
+                :rows="10" :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} staffs"
-            >
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} staffs">
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
                         <h4 class="m-0 font-semibold">Manage Staff</h4>
@@ -189,17 +197,25 @@ onMounted(() => {
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>  
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="firstname" header="First Name" sortable style="min-width: 12rem"></Column>
                 <Column field="lastname" header="Last Name" sortable style="min-width: 12rem"></Column>
                 <Column field="area" header="Address" sortable style="min-width: 16rem"></Column>
-  
+
                 <Column :exportable="false" header="Actions" style="min-width: 12rem;">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2" @click="editStaff(slotProps.data)" />
-                        <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger" @click="confirmDeleteStaff(slotProps.data)" />
+                        <Button icon="pi pi-pencil" v-tooltip.bottom="'Edit'" outlined rounded class="mr-2"
+                            @click="editStaff(slotProps.data)" />
+                        <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded severity="danger"
+                            @click="confirmDeleteStaff(slotProps.data)" />
                     </template>
                 </Column>
+                <template #empty>
+                    <div class="text-center text-gray-500 py-4">
+                        <i class="pi pi-info-circle mr-2" />
+                        No staff found.
+                    </div>
+                </template>
             </DataTable>
         </div>
 
@@ -207,19 +223,27 @@ onMounted(() => {
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="firstname" class="block font-semibold mb-3">First Name</label>
-                    <InputText id="firstname" v-model.trim="staff.firstname" required="true" autofocus :invalid="submitted && !staff.firstname" fluid />
+                    <InputText id="firstname" v-model.trim="staff.firstname" required="true" autofocus
+                        :invalid="submitted && !staff.firstname" fluid />
                     <small v-if="submitted && !staff.firstname" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
                     <label for="lastname" class="block font-semibold mb-3">Last Name</label>
-                    <InputText id="lastname" v-model.trim="staff.lastname" required="true" autofocus :invalid="submitted && !staff.lastname" fluid />
+                    <InputText id="lastname" v-model.trim="staff.lastname" required="true" autofocus
+                        :invalid="submitted && !staff.lastname" fluid />
                     <small v-if="submitted && !staff.lastname" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
-                    <label for="area" class="block font-semibold mb-3">Address</label>
+                    <!-- <label for="area" class="block font-semibold mb-3">Address</label>
                     <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
                         optionValue="id" placeholder="Select an Area" />
-                    <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
+                    <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small> -->
+                    <label for="area" class="block mb-2 font-semibold text-gray-700">Address</label>
+                    <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
+                        optionValue="id" placeholder="Select an Area" class="w-full" />
+                    <small v-if="submitted && !agent.area_name" class="text-red-600 text-xs mt-1 block">
+                        Area is required.
+                    </small>
                 </div>
 
             </div>
@@ -233,10 +257,7 @@ onMounted(() => {
         <Dialog v-model:visible="deleteStafftDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="staff"
-                    >Are you sure you want to delete <b>{{ staff.staff_name }}</b
-                    >?</span
-                >
+                <span v-if="staff">Are you sure you want to delete <b>{{ staff.staff_name }}</b>?</span>
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteStafftDialog = false" />
@@ -254,6 +275,6 @@ onMounted(() => {
                 <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedStaffs" />
             </template>
         </Dialog>
-	</div>
+    </div>
 </template>
 
