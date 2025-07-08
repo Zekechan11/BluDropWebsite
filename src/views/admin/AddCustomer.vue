@@ -7,7 +7,6 @@ import { WATER_API } from "../../config";
 
 const toast = useToast();
 const dt = ref();
-const products = ref();
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
@@ -57,16 +56,15 @@ const fetchAreas = async () => {
 
 
 const saveProduct = async () => {
-  submitted.value = true;
 
-  if (
+   if (
     !product.value.firstname ||
     !product.value.lastname ||
     !product.value.email ||
     !product.value.username ||
     !product.value.password ||
     !product.value.type ||
-    !product.value.area
+    !product.value.area_id
   ) {
     toast.add({
       severity: 'warn',
@@ -76,6 +74,8 @@ const saveProduct = async () => {
     });
     return;
   }
+  
+  submitted.value = true;
 
   if (product.value.client_id) {
     await updateClient();
@@ -97,7 +97,7 @@ const createClient = async () => {
       email: product.value.email,
       username: product.value.username,
       password: product.value.password,
-      area_id: product.value.area,
+      area_id: Number(product.value.area_id),
       type: product.value.type.label,
     };
 
@@ -112,7 +112,7 @@ const createClient = async () => {
       email: product.value.email,
       username: product.value.username,
       password: product.value.password,
-      area: areas.value.find((a) => a.value === product.value.area)?.area,
+      area: areas.value.find((a) => a.value === product.value.area_id)?.area,
       area_id: product.value.area_name,
       status: "Active"
     });
@@ -142,7 +142,7 @@ const updateClient = async () => {
       email: product.value.email,
       username: product.value.username,
       password: product.value.password,
-      area_id: product.value.area_name,
+      area_id: Number(product.value.area_id),
       type: product.value.type.label,
     };
 
@@ -150,7 +150,7 @@ const updateClient = async () => {
       `${WATER_API}/v2/api/update_client/${product.value.client_id}`,
       payload
     );
-    const index = customers.value.findIndex((a) => a.staff_id === product.value.client_id);
+    const index = customers.value.findIndex((a) => a.client_id === product.value.client_id);
     if (index !== -1) {
       customers.value[index] = {
         ...customers.value[index],
@@ -158,7 +158,7 @@ const updateClient = async () => {
         lastname: product.value.lastname,
         email: product.value.email,
         password: product.value.password,
-        area_name: product.value.find((a) => a.id === area.value.area_name)?.area,
+        area: areas.value.find((a) => a.id === product.value.area_id)?.area,
         area_id: product.value.area_name,
       };
     }
@@ -180,8 +180,16 @@ const updateClient = async () => {
 };
 
 
-const editProduct = (prod) => {
-  product.value = { ...prod };
+const editProduct = async (prod) => {
+  if (!areas.value.length) {
+    await fetchAreas();
+  }
+  product.value = {
+    ...prod,
+    area_id: Number(prod.area_id),
+    type: { label: prod.type, value: prod.type },
+  };
+
   productDialog.value = true;
 };
 const confirmDeleteProduct = (prod) => {
@@ -294,12 +302,6 @@ onMounted(() => {
                   @click="confirmDeleteProduct(slotProps.data)" />
               </template>
             </Column>
-            <template #loading>
-              <div class="flex justify-center items-center py-4 text-blue-500">
-                <i class="pi pi-spin pi-spinner mr-2"></i>
-                Loading customers...
-              </div>
-            </template>
             <template #empty>
               <div class="text-center text-gray-500 py-4">
                 <i class="pi pi-info-circle mr-2" />
@@ -429,7 +431,7 @@ onMounted(() => {
           <!-- Area Dropdown -->
           <div class="w-full md:w-56">
             <label for="area" class="block font-semibold mb-3">Address</label>
-            <Select v-model="product.area" id="area" :options="areas" optionLabel="label" optionValue="value"
+            <Select v-model="product.area_id" id="area" :options="areas" optionLabel="label" optionValue="value"
               placeholder="Select Area" class="w-full border rounded" required />
             <small v-if="submitted && !product.area" class="text-red-500">Area is required.</small>
           </div>
