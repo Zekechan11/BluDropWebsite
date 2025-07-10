@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { WATER_API, WATER_CHAT_API } from '../../config';
+import { ChatContainer } from '../../components/ui/chat';
+import { chatServices } from '../../service/chat';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -90,18 +92,23 @@ function selectConversation(conversation) {
 function goBackToList() {
     showMobileChat.value = false;
     selectedConversation.value = null;
-}
+};
+
+function clearSearch() {
+  searchQuery.value = '';
+};
 
 const filteredConversations = computed(() => {
-    if (!searchQuery.value) return conversations.value;
-    return conversations.value.filter((conversation) =>
-        conversation.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+    console.log('Filter running:', searchQuery.value, conversations.value.length);
+    return conversations.value.filter((conversation) => {
+        const name = conversation.name ?? '';
+        return name.toLowerCase().includes(searchQuery.value.toLowerCase());
+    });
 });
 
-const truncateMessage = (message, maxLength = 40) => {
-    return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
-};
+// const truncateMessage = (message, maxLength = 40) => {
+//     return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
+// };
 
 function sendMessage(customer) {
     if (newMessage.value.trim() !== '') {
@@ -116,8 +123,9 @@ function sendMessage(customer) {
     }
 }
 
-onMounted(() => {
-    getConversations();
+onMounted(async () => {
+    conversations.value = await chatServices.getConversations(`${WATER_API}/chat/list/admin`)
+    // getConversations();
     connectWebSocket();
 });
 
@@ -130,71 +138,17 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col md:flex-row gap-4 md:gap-8 h-full">
-        <div :class="[
-            'w-full h-[88vh] md:w-1/2 flex flex-col border border-gray-300 rounded-lg shadow-md min-h-0',
-            showMobileChat ? 'hidden md:flex' : 'flex'
-        ]">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg flex-shrink-0">Chat</div>
-            <div class="p-4 bg-white flex-shrink-0">
-                <div class="relative">
-                    <input type="text" v-model="searchQuery" placeholder="Search Messenger"
-                        class="w-full p-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <button v-if="searchQuery" @click="searchQuery = ''"
-                        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="overflow-y-auto flex-grow min-h-0">
-                <div v-if="filteredConversations.length === 0 && searchQuery"
-                    class="flex flex-col items-center justify-center h-full p-8 text-gray-500">
-                    <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <p class="text-lg font-medium mb-2">No conversations found</p>
-                    <p class="text-sm text-center">Try adjusting your search or check back later</p>
-                    <button @click="searchQuery = ''"
-                        class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                        Clear Search
-                    </button>
-                </div>
-                <div v-else-if="conversations.length === 0"
-                    class="flex flex-col items-center justify-center h-full p-8 text-gray-500">
-                    <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
-                        </path>
-                    </svg>
-                    <p class="text-lg font-medium mb-2">No conversations yet</p>
-                    <p class="text-sm text-center">Conversations will appear here when customers start chatting</p>
-                </div>
-                <div v-else>
-                    <div v-for="(conversation, index) in filteredConversations" :key="index"
-                        @click="selectConversation(conversation)" :class="['p-4 border-b cursor-pointer transition-colors',
-                            selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']">
-                        <div class="flex items-center gap-4">
-                            <img :src="conversation.img" alt="Profile image"
-                                class="w-10 h-10 rounded-full bg-gray-300" />
-                            <div class="flex-grow min-w-0">
-                                <p class="font-semibold truncate">{{ conversation.name }}</p>
-                                <p class="text-sm text-gray-500 truncate">{{ truncateMessage(conversation.lastMessage)
-                                }}</p>
-                            </div>
-                            <div class="text-sm text-gray-500 flex-shrink-0">{{ conversation.time }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ChatContainer :showMobileChat="showMobileChat">
+            <ChatSearch v-model="searchQuery"/>
+            <ConversationList
+                :conversations="conversations"
+                :filteredConversations="filteredConversations"
+                :searchQuery="searchQuery"
+                :selectedConversation="selectedConversation"
+                @selectConversation="selectConversation"
+                @clearSearch="clearSearch"
+            />
+        </ChatContainer>
 
         <div v-if="selectedConversation" :class="[
             'w-full h-[88vh] flex flex-col border border-gray-300 rounded-lg shadow-md min-h-0',
