@@ -8,7 +8,7 @@ const model = ref([
         items: [
         
         { 
-            label: 'Container on Loan', 
+            label: 'Dashboard', 
             icon: 'pi pi-fw pi-home', 
             to: '/agent/dashboard' 
         },
@@ -36,7 +36,7 @@ const model = ref([
         },
         { 
             label: 'Customer Record', 
-            icon: 'pi pi-list', 
+            icon: 'pi pi-users', 
             to: '/agent/record' 
         }
         
