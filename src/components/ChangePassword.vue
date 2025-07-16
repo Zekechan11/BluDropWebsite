@@ -4,14 +4,18 @@ import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { WATER_API } from "../config";
 
+const props = defineProps({
+    type: String,
+    user: Object
+});
+
 const oldPassword = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
 
 const toast = useToast();
-const userData = JSON.parse(localStorage.getItem("user_data"));
 
-async function changePassword() {
+const changePassword = async () => {
 
     if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
         toast.add({ severity: 'error', summary: 'Error', detail: "All password fields are required.", life: 3000 });
@@ -30,9 +34,9 @@ async function changePassword() {
 
     try {
         const res = await axios.post(
-            `${WATER_API}/api/profile/change-password/management`,
+            `${WATER_API}/api/profile/change-password/${props.type}`,
             {
-                id: userData.uid,
+                id: props.user.uid,
                 current_password: oldPassword.value,
                 password: newPassword.value,
             }

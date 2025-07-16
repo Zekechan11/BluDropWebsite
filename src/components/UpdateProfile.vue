@@ -4,15 +4,19 @@ import axios from 'axios';
 import { useToast } from 'primevue/usetoast';
 import { WATER_API } from "../config";
 
-const userData = JSON.parse(localStorage.getItem("user_data"));
 
-const firstname = ref(userData.firstname || "");
-const lastname = ref(userData.lastname || "");
-const email = ref(userData.email || "");
+const props = defineProps({
+    type: String,
+    user: Object
+});
+
+
+const firstname = ref(props.user.firstname || '');
+const lastname = ref(props.user.lastname || '');
+const email = ref(props.user.email || '');
 
 const toast = useToast();
-
-async function updateProfile() {
+const updateProfile = async () => {
     if (!firstname.value || !lastname.value || !email.value) {
         toast.add({ severity: 'error', summary: 'Error', detail: "All fields are required.", life: 3000 });
         return;
@@ -20,9 +24,9 @@ async function updateProfile() {
 
     try {
         const res = await axios.post(
-            `${WATER_API}/api/profile/edit/management`,
+            `${WATER_API}/api/profile/edit/${props.type}`,
             {
-                id: userData.uid,
+                id: props.user.uid,
                 firstname: firstname.value,
                 lastname: lastname.value,
                 email: email.value,
@@ -31,10 +35,10 @@ async function updateProfile() {
 
         toast.add({ severity: 'success', summary: 'Successfuck', detail: res.data.message || "Profile updated successfully.", life: 3000 });
 
-        userData.firstname = firstname.value;
-        userData.lastname = lastname.value;
-        userData.email = email.value;
-        localStorage.setItem("user_data", JSON.stringify(userData));
+        props.user.firstname = firstname.value;
+        props.user.lastname = lastname.value;
+        props.user.email = email.value;
+        localStorage.setItem("user_data", JSON.stringify(props.user));
 
     } catch (error) {
         const message =
