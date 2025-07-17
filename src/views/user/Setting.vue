@@ -1,51 +1,49 @@
 <script setup>
 import { ref } from "vue";
+import UpdateProfile from "../../components/UpdateProfile.vue";
+import ChangePassword from "../../components/ChangePassword.vue";
 
 const user_data = JSON.parse(localStorage.getItem("user_data"));
 
+const activeTab = ref("profileImage");
+
+const setActiveTab = (tab) => {
+  activeTab.value = tab;
+};
 </script>
 
 <template>
   <Fluid>
-    <div class="space">
-      <h1 class="text-4xl font-semibold mb-4" style="color: #899499">Profile</h1>
+    <div class="space mb-6">
+      <h1 class="text-4xl font-semibold text-gray-700 flex items-center gap-3">
+        <i class="pi pi-user text-blue-500 !text-4xl"></i>
+        My Profile
+      </h1>
     </div>
 
-    <div class="flex flex-col">
-      <!-- <div class="flex mb-4">
-        <p class="flex-1 py-2 text-center bg-blue-600 : bg-blue-400"
-          style="color: white; font-weight: bold; border-radius: 10px">
-          Profile Image
-        </p>
-        <div class="mx-2"></div>
-      </div> -->
+    <div class="flex justify-start mb-6 space-x-4">
+      <button :class="[
+        'px-6 py-2 rounded-full font-semibold transition-all duration-300',
+        activeTab === 'profileImage'
+          ? 'bg-blue-600 text-white shadow-md'
+          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+      ]" @click="setActiveTab('profileImage')">
+        Profile
+      </button>
+      <button :class="[
+        'px-6 py-2 rounded-full font-semibold transition-all duration-300',
+        activeTab === 'password'
+          ? 'bg-blue-600 text-white shadow-md'
+          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+      ]" @click="setActiveTab('password')">
+        Password
+      </button>
+    </div>
 
-      <div style="
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);border-radius: 10px;
-        ">
-        <div class="card flex gap-8">
-
-          <div class="flex flex-col gap-4 flex-1">
-            <div class="flex flex-col gap-2">
-              <label for="name1">First Name</label>
-              <InputText v-model="user_data.firstname" id="name1" type="text" />
-            </div>
-            <div class="flex flex-col gap-2">
-              <label for="name2">Last Name</label>
-              <InputText v-model="user_data.lastname" id="name2" type="text" />
-            </div>
-            <button class="flex-1 py-2 text-center" style="
-                color: darkblue;
-                background-color: #007fff;
-                font-weight: bold;
-                color: white;
-                border-radius: 10px;
-              ">
-              Save Changes
-            </button>
-          </div>
-        </div>
-      </div>
+    <!-- Tab Content -->
+    <div class="bg-white rounded-xl shadow-lg p-6 transition-all duration-300">
+      <UpdateProfile v-if="activeTab === 'profileImage'" :user="user_data" type="customer" />
+      <ChangePassword v-if="activeTab === 'password'" :user="user_data" type="customer" />
     </div>
   </Fluid>
 </template>
