@@ -1,11 +1,8 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
 import axios from 'axios';
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { WATER_API } from '../../config';
-
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
 
 // State to hold parsed customer data
 const customerData = ref({
@@ -53,7 +50,7 @@ onMounted(() => {
 const submitPayment = async () => {
   error.value = "";
   successMessage.value = "";
-  
+
   // Input validation
   if (!customerData.value.orderId || !customerData.value.customerId) {
     error.value = "Missing order or customer information";
@@ -89,7 +86,7 @@ const submitPayment = async () => {
     if (response.data) {
       successMessage.value = response.data.message || "Payment processed successfully!";
       customerData.value.status = response.data.status || "Completed";
-      
+
       // Redirect after successful payment
       setTimeout(() => {
         router.push("/agent/dashboard");
@@ -97,7 +94,7 @@ const submitPayment = async () => {
     }
   } catch (error) {
     console.error("Payment submission failed:", error);
-    
+
     // Handle different types of errors
     if (error.response) {
       // Server responded with an error
@@ -121,120 +118,90 @@ const formatCurrency = (value) => {
 </script>
 
 <template>
-  <div class="space">
-    <div v-if="error" class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">{{ error }}</div>
-    <div v-if="successMessage" class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">{{ successMessage }}</div>
-
-    <h1 class="text-2xl font-semibold mb-6">
-      {{ customerData.customerFirstName }} {{ customerData.customerLastName }}'s Payment
-    </h1>
-  </div>
-
-  <div class="card shadow-md flex flex-col justify-between" style="height: 565px">
-    <!-- Customer Details -->
-    <div class="flex-grow">
-      <ul class="list-none p-0 m-0 mt-4">
-        <!-- <li class="mb-4 text-base">
-          <strong>Order ID:</strong> {{ customerData.orderId }}
-        </li>
-        <li class="mb-4 text-base">
-          <strong>Customer ID:</strong> {{ customerData.customerId }}
-        </li> -->
-        <li class="mb-4 text-base">
-          <strong>Name:</strong> {{ customerData.customerFirstName }} {{ customerData.customerLastName }}
-        </li>
-        <li class="mb-4 text-base">
-          <strong>Area:</strong> {{ customerData.customerArea }}
-        </li>
-        <li class="mb-4 text-base">
-          <strong>Date:</strong> {{ customerData.date }}
-        </li>
-        <!-- <li class="mb-4 text-base">
-          <strong>Date Created:</strong> {{ customerData.dateCreated }}
-        </li> -->
-        <li class="mb-4 text-base">
-          <strong>Status:</strong> 
-          <span :class="{
-            'text-yellow-600': customerData.status === 'Pending',
-            'text-green-600': customerData.status === 'Completed'
-          }">
-            {{ customerData.status }}
-          </span>
-        </li>
-        <li class="mb-4 text-base">
-          <strong>Total Gallons:</strong> {{ customerData.gallons }}
-        </li>
-        <li class="mb-4 text-base">
-          <strong>Total Price:</strong> {{ formatCurrency(customerData.totalPrice) }}
-        </li>
-      </ul>
+  <div class="space-y-6">
+    <!-- Alerts -->
+    <div v-if="error" class="p-4 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-300">
+      {{ error }}
+    </div>
+    <div v-if="successMessage"
+      class="p-4 rounded-md text-sm font-medium bg-green-100 text-green-800 border border-green-300">
+      {{ successMessage }}
     </div>
 
-    <!-- Payment Details -->
-    <div>
-      <ul class="list-none p-0 m-0 mt-8">
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Amount to Pay:</span>
-          </div>
-          <div class="mt-2 md:mt-0 flex items-center">
-            <span class="ml-4 font-medium text-xl">{{ formatCurrency(customerData.totalPrice) }}</span>
-          </div>
-        </li>
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Amount Payables:</span>
-          </div>
-          <div class="mt-2 md:mt-0 flex items-center">
-            <span class="ml-4 font-medium text-xl">0</span>
-          </div>
-        </li>
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Payment:</span>
-          </div>
-          <div class="mt-2 md:mt-0 flex items-center">
-            <input
-              class="ml-4 p-2 border rounded-md text-xl w-40"
-              type="number"
-              v-model.number="customerData.amountPaid"
-              min="0"
-              step="0.01"
-              :disabled="isLoading"
-            />
-          </div>
-        </li>
-
-        <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <span class="text-surface-900 dark:text-surface-0 font-semibold mr-2 mb-1 md:mb-0 text-xl">Gallons to Return:</span>
-          </div>
-          <div class="mt-2 md:mt-0 flex items-center">
-            <input
-              class="ml-4 p-2 border rounded-md text-xl w-40"
-              type="number"
-              v-model.number="customerData.gallonsReturned"
-              min="0"
-              :disabled="isLoading"
-            />
-          </div>
-        </li>
-      </ul>
+    <div class="space mb-6">
+      <h1 class="text-4xl font-semibold text-gray-700 flex items-center gap-3">
+        <i class="pi pi-user text-blue-500 !text-4xl"></i>
+        {{ customerData.customerFirstName || "N/A" }} {{ customerData.customerLastName || "N/A" }}'s Payment
+      </h1>
     </div>
 
-    <!-- Submit Button -->
-    <div class="flex justify-end mt-6">
-      <button 
-        @click="submitPayment" 
-        :disabled="isLoading" 
-        class="px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors">
-        <span v-if="isLoading" class="flex items-center">
-          Processing...
-        </span>
-        <span v-else>
-          Submit Payment
-        </span>
-      </button>
+    <!-- Main Card -->
+    <div class="card shadow-lg rounded-lg p-6 bg-white space-y-6">
+
+      <!-- Customer Info Section -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Customer Details</h2>
+        <ul class="space-y-3 text-base text-gray-600">
+          <li><strong>Name:</strong> {{ customerData.customerFirstName || "Not Available" }} {{
+            customerData.customerLastName || "Not Available" }}</li>
+          <li><strong>Area:</strong> {{ customerData.customerArea || "No Area Found" }}</li>
+          <li><strong>Date:</strong> {{ customerData.date || "00/00/000" }}</li>
+          <li>
+            <strong>Status:</strong>
+            <span :class="[
+              'inline-block px-2 py-1 rounded text-sm font-semibold',
+              {
+                'bg-yellow-100 text-yellow-800': customerData.status === 'Pending',
+                'bg-green-100 text-green-800': customerData.status === 'Completed',
+                'bg-gray-100 text-gray-800': !customerData.status || customerData.status === 'None'
+              }
+            ]">
+              {{ customerData.status || 'None' }}
+            </span>
+          </li>
+          <li><strong>Total Gallons:</strong> {{ customerData.gallons }}</li>
+          <li><strong>Total Price:</strong> {{ formatCurrency(customerData.totalPrice) }}</li>
+        </ul>
+      </div>
+
+      <!-- Payment Form Section -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Payment Details</h2>
+        <div class="space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <label class="text-gray-700 font-medium">Amount to Pay:</label>
+            <span class="text-lg font-medium text-gray-900">{{ formatCurrency(customerData.totalPrice) }}</span>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <label class="text-gray-700 font-medium">Amount Payables:</label>
+            <span class="text-lg font-medium text-gray-900">0</span>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <label class="text-gray-700 font-medium">Payment:</label>
+            <input type="number" v-model.number="customerData.amountPaid"
+              class="border border-gray-300 rounded-md p-2 w-40 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              min="0" step="0.01" :disabled="isLoading" />
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <label class="text-gray-700 font-medium">Gallons to Return:</label>
+            <input type="number" v-model.number="customerData.gallonsReturned"
+              class="border border-gray-300 rounded-md p-2 w-40 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              min="0" :disabled="isLoading" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end pt-4 border-t mt-6">
+        <button @click="submitPayment" :disabled="isLoading"
+          class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors">
+          <span v-if="isLoading">Processing...</span>
+          <span v-else>Submit Payment</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
