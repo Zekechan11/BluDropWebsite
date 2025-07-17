@@ -115,48 +115,55 @@ const saveImage = () => {
 </script>
 
 <template>
-  <div class="space">
-    <h1 class="text-4xl font-semibold mb-6" style="color: #899499">
+  <div class="space mb-6">
+    <h1 class="text-4xl font-semibold text-gray-700 flex items-center gap-3">
+      <i class="pi pi-qrcode text-blue-500 !text-4xl"></i>
       QR Code Scanner
     </h1>
   </div>
 
-  <div class="card shadow-md flex flex-col justify-center items-center" style="height: 550px;">
+  <div class="card shadow-lg p-6 bg-white rounded-xl flex flex-col items-center justify-between gap-6 h-[82vh]">
     <!-- Error Display -->
-    <p v-if="error" class="text-red-500 mb-4">{{ error }}</p>
+    <div v-if="error" class="w-full text-center">
+      <p class="text-red-500 font-semibold text-sm">{{ error }}</p>
+    </div>
 
-    <!-- Camera Mode -->
-    <qrcode-stream 
-      @init="onInit" 
-      @decode="onDecode" 
-      :torch="torch" 
-      class="w-full h-full"
-    />
+    <!-- Camera Stream -->
+    <div class="w-full flex-1 rounded-md overflow-hidden border border-gray-300">
+      <qrcode-stream
+        @init="onInit"
+        @decode="onDecode"
+        :torch="torch"
+        class="w-full h-full object-cover"
+      />
+    </div>
 
-    <!-- Device Image Selection Buttons -->
-    <div class="mt-4 flex space-x-2">
-      <button 
-        @click="selectDeviceImage" 
-        class="px-4 py-2 bg-blue-500 text white rounded"
+    <!-- Device Actions -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 mt-4">
+      <button
+        @click="selectDeviceImage"
+        class="px-4 py-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition duration-150"
       >
+        <i class="pi pi-camera" />
         Capture Screen
       </button>
 
-      <button 
-        @click="selectFromGallery" 
-        class="px-4 py-2 bg-green-500 text-white rounded"
+      <button
+        @click="selectFromGallery"
+        class="px-4 py-2 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm transition duration-150"
       >
+        <i class="pi pi-image" />
         Select from Gallery
       </button>
     </div>
 
-    <!-- Selected File Preview and Scan -->
-    <div v-if="selectedFile" class="mt-4 text-center">
-      <qrcode-capture 
-        :file="selectedFile" 
-        @decode="onDecode"
-      >
-        <button class="px-4 py-2 bg-purple-500 text-white rounded">
+    <!-- Image Preview and Scan -->
+    <div v-if="selectedFile" class="w-full mt-4 text-center">
+      <qrcode-capture :file="selectedFile" @decode="onDecode">
+        <button
+          class="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-sm transition duration-150"
+        >
+          <i class="pi pi-search mr-2"></i>
           Scan Selected Image
         </button>
       </qrcode-capture>

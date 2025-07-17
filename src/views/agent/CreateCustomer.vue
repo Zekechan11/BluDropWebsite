@@ -32,30 +32,30 @@ const togglePasswordVisibility2 = () => {
 const user_data = JSON.parse(localStorage.getItem("user_data"));
 
 const fetchAreas = async () => {
-    try {
-        const response = await axios.get(`${WATER_API}/area`);
-        const data = response.data;
+  try {
+    const response = await axios.get(`${WATER_API}/area`);
+    const data = response.data;
 
-        areas.value = data.map((area) => {
-            return {
-                ...area,
-            };
-        });
-    } catch (error) {
-        console.error("Error fetching areas:", error);
-    }
+    areas.value = data.map((area) => {
+      return {
+        ...area,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching areas:", error);
+  }
 };
 
 // Combined form submission
 const handleFormSubmit = async () => {
 
   if (!firstName.value || !lastName.value || !username.value || !email.value || !area.value || !password.value || !confirmPassword.value) {
-    alert('All fields are required!');
+    toast.add({ severity: 'error', summary: 'Error', detail: "All fields are required!", life: 3000 });
     return;
   }
 
   if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match!');
+    toast.add({ severity: 'error', summary: 'Error', detail: "Passwords do not match!", life: 3000 });
     return;
   }
 
@@ -119,92 +119,83 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="space">
-    <h1 class="text-2xl md:text-4xl font-bold mb-6 text-gray-500">Create Account</h1>
+  <div class="space mb-6">
+    <h1 class="text-4xl font-semibold text-gray-700 flex items-center gap-3">
+      <i class="pi pi-user text-blue-500 !text-4xl"></i>
+      Create Account
+    </h1>
   </div>
 
-  <div class="card p-8 shadow-lg">
-    <form @submit.prevent="handleFormSubmit">
+  <div class="card p-8 shadow-xl bg-white rounded-xl space-y-6">
+    <form @submit.prevent="handleFormSubmit" class="space-y-5">
+      <!-- Header -->
+      <div class="text-center">
+        <h2 class="text-2xl font-bold text-gray-700 mb-1">Create Account</h2>
+        <p class="text-sm text-gray-400">Generate QR after filling the form</p>
+      </div>
+
       <!-- First Name -->
-      <div class="mb-4">
-        <label for="firstName" class="block text-gray-600 font-bold mb-2">First Name</label>
-        <input type="text" id="firstName" v-model="firstName"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your first name" required />
+      <div>
+        <label for="firstName" class="block text-sm font-semibold text-gray-600 mb-1">First Name</label>
+        <InputText v-model="firstName" id="firstName" placeholder="Enter Firstname" class="w-full" required />
       </div>
 
       <!-- Last Name -->
-      <div class="mb-4">
-        <label for="lastName" class="block text-gray-600 font-bold mb-2">Last Name</label>
-        <input type="text" id="lastName" v-model="lastName"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your last name" required />
+      <div>
+        <label for="lastName" class="block text-sm font-semibold text-gray-600 mb-1">Last Name</label>
+        <InputText v-model="lastName" id="lastName" placeholder="Enter Lastname" class="w-full" required />
       </div>
 
       <!-- Email -->
-      <div class="mb-4">
-        <label for="email" class="block text-gray-600 font-bold mb-2">Email</label>
-        <input type="email" id="email" v-model="email"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your email" required />
+      <div>
+        <label for="email" class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
+        <InputText v-model="email" id="email" type="email" placeholder="Enter Valid Email" class="w-full" required />
       </div>
 
-      <!-- Area -->
-      <!-- <div class="mb-4">
-        <label for="area" class="block text-gray-600 font-bold mb-2">Area</label>
-        <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
-                  optionValue="id" placeholder="Select an Area" />
-        <small v-if="submitted && !area.area_name" class="text-red-500">Area is required.</small>
-      </div> -->
-
       <!-- Password -->
-      <div class="mb-4 relative">
-        <label for="password" class="block text-gray-600 font-bold mb-2">Password</label>
-        <input :type="passwordVisible ? 'text' : 'password'" id="password" v-model="password"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your password" required />
-        <span class="absolute inset-y-0 right-3 flex items-center cursor-pointer" @click="togglePasswordVisibility">
-          <i :class="passwordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-gray-500"></i>
-        </span>
+      <div class="relative">
+        <label for="password" class="block text-sm font-semibold text-gray-600 mb-1">Password</label>
+        <InputText :type="passwordVisible ? 'text' : 'password'" v-model="password" id="password"
+          placeholder="Enter Password" class="w-full pr-10" required />
+        <i :class="passwordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'"
+          class="absolute right-3 top-[42px] text-gray-500 cursor-pointer" @click="togglePasswordVisibility" />
       </div>
 
       <!-- Confirm Password -->
-      <div class="mb-4 relative">
-        <label for="confirmPassword" class="block text-gray-600 font-bold mb-2">Confirm Password</label>
-        <input :type="confirmPasswordVisible ? 'text' : 'password'" id="confirmPassword" v-model="confirmPassword"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Confirm your password" required />
-        <span class="absolute inset-y-0 right-3 flex items-center cursor-pointer" @click="togglePasswordVisibility2">
-          <i :class="confirmPasswordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-gray-500"></i>
-        </span>
+      <div class="relative">
+        <label for="confirmPassword" class="block text-sm font-semibold text-gray-600 mb-1">Confirm Password</label>
+        <InputText :type="confirmPasswordVisible ? 'text' : 'password'" v-model="confirmPassword" id="confirmPassword"
+          placeholder="Confirm Password" class="w-full pr-10" required />
+        <i :class="confirmPasswordVisible ? 'pi pi-eye-slash' : 'pi pi-eye'"
+          class="absolute right-3 top-[42px] text-gray-500 cursor-pointer" @click="togglePasswordVisibility2" />
       </div>
 
-      <!-- Type -->
-      <div class="mb-4">
-        <label for="area" class="block text-gray-600 font-bold mb-2">User Type</label>
-        <Select v-model="userType" id="type" :options="[
-              { label: 'Dealer', value: 'Dealer' },
-              { label: 'Regular', value: 'Regular' }
-            ]" optionLabel="label" placeholder="Select a Type" class="w-full border rounded" required />
-        <small v-if="submitted && !userType" class="text-red-500">Area is required.</small>
+      <!-- User Type -->
+      <div>
+        <label for="userType" class="block text-sm font-semibold text-gray-600 mb-1">User Type</label>
+        <Select v-model="userType" id="userType"
+          :options="[{ label: 'Dealer', value: 'Dealer' }, { label: 'Regular', value: 'Regular' }]" optionLabel="label"
+          placeholder="Select a Type" class="w-full" required />
+        <small v-if="submitted && !userType" class="text-red-500">User type is required.</small>
       </div>
 
       <!-- Username -->
-      <div class="mb-4">
-        <label for="username" class="block text-gray-600 font-bold mb-2">Username</label>
-        <input type="text" id="username" v-model="username"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Enter your username" required />
+      <div>
+        <label for="username" class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
+        <InputText v-model="username" id="username" placeholder="Username" class="w-full" required />
       </div>
 
-      <!-- QR Code Preview -->
-      <qrcode-vue v-if="username" :value="username" :size="200" level="H" class="mt-4 mx-auto" />
+      <!-- QR Code -->
+      <div v-if="username" class="flex justify-center mt-4">
+        <qrcode-vue :value="username" :size="180" level="H" />
+      </div>
 
-      <!-- Submit Button -->
+      <!-- Submit -->
       <div>
         <button type="submit"
-          class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none">
-          Create Account & Generate QR Code
+          class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition duration-200">
+          <i class="pi pi-qrcode mr-2"></i>
+          Create Account
         </button>
       </div>
     </form>
