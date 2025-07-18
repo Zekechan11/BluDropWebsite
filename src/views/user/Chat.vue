@@ -2,40 +2,23 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { WATER_API, WATER_CHAT_API } from '../../config';
 import axios from 'axios';
+import { attempt } from "../../service/attempt";
 
 const messages = ref([]);
 const newMessage = ref('');
-const selectedConversation = ref(null);
 const agentName = ref();
+const conversationId = ref('');
 
 const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const fullName = computed(() => {
-  return `${userData.firstname} ${userData.lastname}`;
+    return `${userData.firstname} ${userData.lastname}`;
 });
 
-// const conversations = ref([
-//     { name: 'Agent', lastMessage: '.', time: '16m', img: 'https://i.pravatar.cc/100?u=ricky' },
-// ]);
-
-// WebSocket reference
 let socket = null;
 
-const truncateMessage = (message, maxLength = 40) => {
-    return message.length > maxLength ? message.slice(0, maxLength) + '...' : message;
-};
-
-const getAgent = async () => {
-  try {
-    const response = await axios.get(`${WATER_API}/v2/api/agent/assigned/${userData.area_id}`);
-    agentName.value = response.data.data;
-  } catch (error) {
-    console.error("Error fetching schedule:", error);
-  }
-}
-
 function connectWebSocket() {
-    socket = new WebSocket(`${WATER_CHAT_API}/chat`);
+    socket = new WebSocket(`${WATER_CHAT_API}/chat?convo_id=${conversationId.value}`);
 
     socket.onopen = () => {
         console.log('WebSocket connected');
@@ -58,53 +41,51 @@ function connectWebSocket() {
         console.log('WebSocket closed, reconnecting...');
         setTimeout(connectWebSocket, 1000);
     };
-}
+};
 
 function sendMessage() {
     if (newMessage.value.trim() !== '' && socket) {
         const msg = {
-            sender_id: userData.uid.toString(),
-            area_id: userData.area_id,
-            customer: userData.username,
+            sender_id: userData.uid,
+            sender_name: fullName.value,
             content: newMessage.value,
         };
 
         socket.send(JSON.stringify(msg));
-
         newMessage.value = '';
     }
-}
+};
 
+const getAgent = async () => {
+    const [res, err] = await attempt(
+        axios.get(`${WATER_API}/v2/api/agent/assigned/${userData.area_id}`)
+    );
+    if (err) {
+        console.error("Error fetching schedule:", err);
+    }
+    agentName.value = res.data.data;
+};
 
-function startConversation() {
-    // selectedConversation.value = conversation;
-    // const conversationId = conversation.name;
-
-    fetch(`${WATER_API}/chat/customer/${userData.username}`)
-        .then((res) => {
-            if (!res.ok) {
-                throw new Error('Failed to fetch messages');
-            }
-            return res.json();
-        })
-        .then((data) => {
-            messages.value = data.messages.map((msg) => ({
-                content: msg.content,
-                sender_id: msg.sender_id,
-                timestamp: new Date(msg.timestamp).toLocaleTimeString(),
-            }));
-        })
-        .catch((err) => {
-            console.error('Error fetching messages:', err);
-        });
-}
+const getMessages = async () => {
+    const [res, err] = await attempt(
+        axios.get(`${WATER_API}/chat/client/${userData.uid}/messages`)
+    );
+    if (err) {
+        throw new Error('Failed to fetch messages');
+    } else {
+        conversationId.value = res.data.convo_id;
+        messages.value = res.data.messages.map((msg) => ({
+            content: msg.content,
+            sender_id: msg.sender_id,
+            sender_name: msg.sender_name,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+        }));
+    }
+};
 
 
 onMounted(() => {
-    // if (conversations.value.length > 0) {
-    //     selectedConversation.value = conversations.value[0];
-    // }
-    startConversation();
+    getMessages();
     connectWebSocket();
     getAgent();
 });
@@ -116,69 +97,40 @@ onUnmounted(() => {
 });
 </script>
 
-
 <template>
-    <div class="flex flex-col md:flex-row gap-8">
-        <!-- Conversation List (Scrollable) -->
-        <!-- <div class="md:w-1/2 flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">Chat</div>
-            <div class="p-4 bg-white">
-                <input
-                    type="text"
-                    placeholder="Search Messenger"
-                    class="w-full p-2 rounded-lg border border-gray-300"
-                />
-            </div>
-            <div class="overflow-y-auto flex-grow max-h-[520px]">
-                <div
-                    v-for="(conversation, index) in conversations"
-                    :key="index"
-                    :class="['p-4 border-b cursor-pointer', 
-                             selectedConversation === conversation ? 'bg-blue-200' : 'hover:bg-gray-200']"
-                >
-                    <div class="flex items-center gap-4">
-                        <img :src="conversation.img" alt="Profile image" class="w-10 h-10 rounded-full bg-gray-300" />
-                        <div>
-                            <p class="font-semibold">{{ conversation.name }}</p>
-                            <p class="text-sm text-gray-500">{{ truncateMessage(conversation.lastMessage) }}</p>
-                        </div>
-                        <div class="ml-auto text-sm text-gray-500">{{ conversation.time }}</div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Chat Window - Only displayed if a conversation is selected -->
-        <div class="md:w-full flex flex-col h-[620px] border border-gray-300 rounded-lg shadow-md">
-            <div class="bg-blue-500 text-white font-semibold text-xl p-4 rounded-t-lg">{{agentName || 'Agent'}}</div>
-            <div class="flex-grow p-4 overflow-y-auto space-y-4">
-                <!-- Messages Loop -->
-                <div v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-                    <div v-if="msg.sender_id === userData.uid.toString()" class="self-end bg-blue-500 text-white p-2 rounded-lg max-w-xs">
-                        <p class="font-bold">{{ fullName }}</p>
-                        <p>{{ msg.content }}</p>
-                        <span class="text-xs text-right block">{{ msg.timestamp }}</span>
-                    </div>
-                    <div v-else class="self-start bg-gray-300 p-2 rounded-lg max-w-xs">
-                        <p class="font-bold">Agent 47</p>
-                        <p>{{ msg.content }}</p>
-                        <span class="text-xs text-right block">{{ msg.timestamp }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Message Input -->
-            <div class="p-4 border-t border-gray-200 flex items-center gap-4">
-                <InputText v-model="newMessage" placeholder="Type a message" class="flex-grow" />
-                <Button label="Send" @click="sendMessage" :disabled="newMessage === ''" class="bg-blue-500 text-white" />
-            </div>
+  <div class="flex flex-col md:flex-row gap-8">
+    <div class="md:w-full flex flex-col h-[88vh] border border-gray-200 rounded-xl shadow-lg bg-white overflow-hidden">
+      <div class="bg-blue-600 text-white font-semibold text-xl p-4 rounded-t-xl shadow-sm">
+        <i class="pi pi-user pr-2 !font-semibold"/>{{ agentName || 'Agent' }}
+      </div>
+      <div class="flex-grow p-6 overflow-y-auto space-y-4 bg-gray-50">
+        <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-gray-500">
+          <i class="pi pi-comment h-16 w-16 !text-5xl"></i>
+          <p class="text-center text-lg">No messages yet</p>
+          <p class="text-sm text-center">Start the conversation below </p>
         </div>
-    </div>
-</template>
 
-<style scoped>
-h1 {
-    color: #4A5568;
-    margin-bottom: 1.5rem;
-}
-</style>
+        <div v-else v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
+          <div v-if="msg.sender_id === userData.uid"
+            class="self-end bg-blue-500 text-white p-3 rounded-2xl max-w-xs shadow-md">
+            <p class="text-sm font-semibold">{{ fullName }}</p>
+            <p class="text-sm">{{ msg.content }}</p>
+            <span class="text-xs text-white/70 text-right block mt-1">{{ msg.timestamp }}</span>
+          </div>
+
+          <div v-else class="self-start bg-white border border-gray-300 p-3 rounded-2xl max-w-xs shadow-sm">
+            <p class="text-sm font-semibold text-gray-800">{{ msg.sender_name }}</p>
+            <p class="text-sm text-gray-700">{{ msg.content }}</p>
+            <span class="text-xs text-gray-500 text-right block mt-1">{{ msg.timestamp }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-gray-200 flex items-center gap-4 bg-white">
+        <InputText v-model="newMessage" placeholder="Type a message…" class="flex-grow rounded-lg border-gray-300" />
+        <Button label="Send" @click="sendMessage" :disabled="newMessage === ''"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md transition duration-200" />
+      </div>
+    </div>
+  </div>
+</template>
