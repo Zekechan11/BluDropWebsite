@@ -162,7 +162,7 @@ const saveAgent = async () => {
     !agent.value.lastname ||
     !agent.value.email ||
     !agent.value.password ||
-    !agent.value.area_id
+    !agent.value.area
   ) {
     toast.add({
       severity: 'warn',

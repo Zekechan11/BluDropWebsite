@@ -7,5 +7,8 @@ export const LogoutService = (router) => {
     localStorage.removeItem("firstName");
     localStorage.removeItem("lastName");
     localStorage.removeItem("id");
+
+    window.location.reload();
+    
     router.push("/auth/login");
 }
