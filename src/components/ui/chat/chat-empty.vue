@@ -20,3 +20,12 @@ const emit = defineEmits(['buttonClick']);
         </button>
     </div>
 </template>
+
+<!-- <div v-if="!selectedConversation"
+            class="hidden md:flex w-full items-center justify-center border border-gray-300 rounded-lg shadow-md bg-gray-50">
+            <div class="text-center text-gray-500">
+                <i class="pi pi-comments w-16 h-16 mx-auto text-gray-400 !text-5xl" />
+                <p class="text-lg font-medium">Select a conversation to start chatting</p>
+                <p class="text-sm">Choose a conversation from the list to view messages</p>
+            </div>
+        </div> -->
