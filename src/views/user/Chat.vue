@@ -2,7 +2,9 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { WATER_API, WATER_CHAT_API } from '../../config';
 import axios from 'axios';
+import Badge from 'primevue/badge';
 import { attempt } from "../../service/attempt";
+import { getInitials } from '../../service/initials';
 
 const messages = ref([]);
 const newMessage = ref('');
@@ -29,6 +31,7 @@ function connectWebSocket() {
         messages.value.push({
             content: data.content,
             sender_id: data.sender_id,
+            sender_name: data.sender_name,
             timestamp: new Date(data.timestamp).toLocaleTimeString(),
         });
     };
@@ -48,6 +51,7 @@ function sendMessage() {
         const msg = {
             sender_id: userData.uid,
             sender_name: fullName.value,
+            role: userData.role,
             content: newMessage.value,
         };
 
@@ -98,39 +102,59 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col md:flex-row gap-8">
-    <div class="md:w-full flex flex-col h-[88vh] border border-gray-200 rounded-xl shadow-lg bg-white overflow-hidden">
-      <div class="bg-blue-600 text-white font-semibold text-xl p-4 rounded-t-xl shadow-sm">
-        <i class="pi pi-user pr-2 !font-semibold"/>{{ agentName || 'Agent' }}
-      </div>
-      <div class="flex-grow p-6 overflow-y-auto space-y-4 bg-gray-50">
-        <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-gray-500">
-          <i class="pi pi-comment h-16 w-16 !text-5xl"></i>
-          <p class="text-center text-lg">No messages yet</p>
-          <p class="text-sm text-center">Start the conversation below </p>
+    <div class="flex flex-col md:flex-row gap-8">
+        <div
+            class="md:w-full flex flex-col h-[88vh] border border-gray-200 rounded-xl shadow-lg bg-white overflow-hidden">
+            <div class="bg-blue-600 text-white  p-4 rounded-t-xl shadow-sm">
+                <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600">
+                    <span v-if="agentName">
+                        {{ getInitials(agentName) }}
+                    </span>
+                    <i v-else class="pi pi-user"></i>
+                </div>
+                <div class="ml-2 flex">
+                    <span class="truncate font-semibold text-xl">{{ agentName || 'Agent Name' }}</span>
+                    <Badge severity="secondary" class="ml-2">Agent</Badge>
+                </div>
+            </div>
+            </div>
+            <div class="flex-grow p-6 overflow-y-auto space-y-4 bg-gray-50">
+                <div v-if="messages.length === 0"
+                    class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <i class="pi pi-comment h-16 w-16 !text-5xl"></i>
+                    <p class="text-center text-lg">No messages yet</p>
+                    <p class="text-sm text-center">Start the conversation below </p>
+                </div>
+
+                <div v-else v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
+                    <div v-if="msg.sender_id === userData.uid"
+                        class="self-end bg-blue-500 text-white p-3 rounded-2xl max-w-xs shadow-md">
+                        <p class="text-sm font-semibold">{{ fullName }}</p>
+                        <p class="text-sm">{{ msg.content }}</p>
+                        <span class="text-xs text-white/70 text-right block mt-1">{{ msg.timestamp }}</span>
+                    </div>
+
+                    <div v-else class="flex items-center pb-4">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 text-gray-600">
+                            <span v-if="msg.sender_name">{{ getInitials(msg.sender_name) }}</span>
+                            <i v-else class="pi pi-user"></i>
+                        </div>
+                        <div class="self-start bg-white border  p-3 ml-3 rounded-2xl max-w-xs shadow-sm">
+                            <p class="text-sm font-semibold text-gray-800">{{ msg.sender_name }}</p>
+                            <p class="text-sm text-gray-700">{{ msg.content }}</p>
+                            <span class="text-xs text-gray-500 text-right block mt-1">{{ msg.timestamp }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-200 flex items-center gap-4 bg-white">
+                <InputText v-model="newMessage" placeholder="Type a message…"
+                    class="flex-grow rounded-lg border-gray-300" />
+                <Button label="Send" @click="sendMessage" :disabled="newMessage === ''"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md transition duration-200" />
+            </div>
         </div>
-
-        <div v-else v-for="(msg, index) in messages" :key="index" class="flex flex-col space-y-1">
-          <div v-if="msg.sender_id === userData.uid"
-            class="self-end bg-blue-500 text-white p-3 rounded-2xl max-w-xs shadow-md">
-            <p class="text-sm font-semibold">{{ fullName }}</p>
-            <p class="text-sm">{{ msg.content }}</p>
-            <span class="text-xs text-white/70 text-right block mt-1">{{ msg.timestamp }}</span>
-          </div>
-
-          <div v-else class="self-start bg-white border border-gray-300 p-3 rounded-2xl max-w-xs shadow-sm">
-            <p class="text-sm font-semibold text-gray-800">{{ msg.sender_name }}</p>
-            <p class="text-sm text-gray-700">{{ msg.content }}</p>
-            <span class="text-xs text-gray-500 text-right block mt-1">{{ msg.timestamp }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 border-t border-gray-200 flex items-center gap-4 bg-white">
-        <InputText v-model="newMessage" placeholder="Type a message…" class="flex-grow rounded-lg border-gray-300" />
-        <Button label="Send" @click="sendMessage" :disabled="newMessage === ''"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md transition duration-200" />
-      </div>
     </div>
-  </div>
 </template>
