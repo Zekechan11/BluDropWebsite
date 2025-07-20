@@ -51,9 +51,17 @@ const goBackToList = () => {
                     </span>
                     <i v-else class="pi pi-user"></i>
                 </div>
-                <span class="ml-2 truncate font-semibold">
-                    {{ props.selectedConversation.fullname || 'No Name' }}
-                </span>
+                <div class="ml-2">
+                    <span class="block font-semibold">
+                        {{ props.selectedConversation.fullname || 'No Name' }}
+                        <Badge v-if="props.selectedConversation.role" severity="secondary" class="ml-2">
+                            {{ props.selectedConversation.role }}
+                        </Badge>
+                    </span>
+                    <span v-if="props.selectedConversation.areaName" class="block text-sm">
+                        <i class="pi pi-map-marker pr-2"/>{{ props.selectedConversation.areaName }}
+                    </span>
+                </div>
             </div>
         </div>
         <slot />
