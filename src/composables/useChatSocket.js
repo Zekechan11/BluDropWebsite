@@ -33,6 +33,8 @@ export const useChatSocket = (userData, onMessageCallback) => {
       const message = {
         content: data.content,
         sender_id: data.sender_id,
+        sender_name: data.sender_name,
+        role: data.role,
         timestamp: new Date(data.timestamp).toLocaleTimeString(),
       };
 
@@ -73,6 +75,7 @@ export const useChatSocket = (userData, onMessageCallback) => {
     const msg = {
       sender_id: userData.uid,
       sender_name: fullName.value,
+      role: userData.role,
       content: trimmed,
     };
 
