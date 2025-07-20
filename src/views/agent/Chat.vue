@@ -26,7 +26,7 @@ const {
 
 const getConversations = async () => {
     const [res, err] = await attempt(
-        axios.get(`${WATER_API}/chat/conversation/${userData.area_id}`)
+        axios.get(`${WATER_API}/chat/conversation/${userData.area_id}?uid=${userData.uid}`)
     );
     if (err) {
         throw new Error('Failed to fetch convo');
@@ -43,6 +43,10 @@ const getConversations = async () => {
 const handleSend = () => {
     sendMessage(newMessage.value);
     newMessage.value = '';
+};
+
+const handleRefresh = () => {
+    getConversations();
 };
 
 const selectConversation = async (conversation) => {
@@ -63,6 +67,7 @@ const selectConversation = async (conversation) => {
                 content: msg.content,
                 sender_id: msg.sender_id,
                 sender_name: msg.sender_name,
+                role: msg.role,
                 timestamp: new Date(msg.timestamp).toLocaleTimeString(),
             }))
             : [];
@@ -97,7 +102,7 @@ onUnmounted(() => {
 <template>
     <div class="flex flex-col md:flex-row gap-4 md:gap-8 h-full">
         <ChatContainer :showMobileChat="showMobileChat">
-            <ChatSearch v-model="searchQuery" />
+            <ChatSearch v-model="searchQuery" @update:refresh="handleRefresh" />
             <ConversationList :conversations="conversations" :filteredConversations="filteredConversations"
                 :searchQuery="searchQuery" :selectedConversation="selectedConversation"
                 @selectConversation="selectConversation" @clearSearch="clearSearch" />
