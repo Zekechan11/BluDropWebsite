@@ -1,22 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, defineProps, defineEmits } from 'vue'
 
 const props = defineProps({
     chatNotification: {
         type: Array,
         default: () => []
+    },
+    viewAllMessages: {
+        type: Boolean,
+        default: false
     }
 });
+
+const emit = defineEmits(['update:viewAllMessages']);
 
 const notificationsVisible = ref(false)
 
 const toggleNotifications = () => {
     notificationsVisible.value = !notificationsVisible.value
 };
-
-// const handleNotificationClick = () => {
-//   router.push("/admin/message");
-// };
 
 const notificationsCount = computed(() => props.chatNotification.length);
 </script>
@@ -48,11 +50,16 @@ const notificationsCount = computed(() => props.chatNotification.length);
                 <li v-for="notification in chatNotification" :key="notification.message_id"
                     class="border-b border-gray-100 pb-2 text-sm text-gray-700">
                     <span><i class="pi pi-comments pr-2"/><strong>{{ notification.fullname }}</strong> messaged you</span>
-                    <!-- <span v-if="notification.content?.length" class="block text-xs text-gray-500 mt-1">
+                    <span v-if="notification.content?.length" class="block text-xs text-gray-500 mt-1 truncate">
                         {{ notification.content }}
-                    </span> -->
+                    </span>
                 </li>
             </ul>
+            <div class="mt-2 text-center">
+                <button 
+                    class="px-4 py-2 bg-blue-500 text-white rounded-full text-xs hover:bg-blue-600 transition-colors duration-200"
+                    @click="emit('update:viewAllMessages', true)">View all messages</button>
+            </div>
         </div>
     </div>
 </template>

@@ -3,6 +3,8 @@ import { ref } from "vue";
 import UpdateProfile from '../../components/UpdateProfile.vue';
 import ChangePassword from '../../components/ChangePassword.vue';
 
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
 const activeTab = ref("profileImage");
 
 const setActiveTab = (tab) => {
@@ -34,10 +36,10 @@ const setActiveTab = (tab) => {
         </button>
       </div>
       <div v-if="activeTab === 'profileImage'" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 10px;">
-        <UpdateProfile/>
+        <UpdateProfile :user="userData" type="management"/>
       </div>
       <div v-if="activeTab === 'userDetails'" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);border-radius: 10px;">
-        <ChangePassword/>
+        <ChangePassword :user="userData" type="management"/>
       </div>
 
     </div>

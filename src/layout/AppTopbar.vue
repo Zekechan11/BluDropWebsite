@@ -12,14 +12,16 @@ const topbarMenuActive = ref(false);
 const chatNotification = ref([]);
 const router = useRouter();
 
+const userData = JSON.parse(localStorage.getItem("user_data"));
+
 const getChatNotif = async () => {
   const [chatNotifResponse, chatNotifError] = await attempt(
-    axios.get(`${WATER_API}/chat/list/admin`)
+    axios.get(`${WATER_API}/chat/conversation`)
   );
   if (chatNotifError) {
     console.error("Error fecthing chat notif", chatNotifError);
   } else {
-    chatNotification.value = chatNotifResponse.data.messages;
+    chatNotification.value = chatNotifResponse.data.conversations;
   }
 };
 
@@ -28,7 +30,16 @@ const onSettingsClick = () => {
   router.push("/admin/settings"); a
 };
 
-const notificationsCount = computed(() => chatNotification.value.length);
+const onViewAllMessagesClick = () => {
+  topbarMenuActive.value = false;
+  router.push("/admin/message"); a
+};
+
+const filteredNotifications = computed(() => {
+    return chatNotification.value.filter(notification => {
+        return notification.sender_id !== null && notification.sender_id !== 0 && notification.sender_id !== userData.uid;
+    });
+})
 
 onMounted(() => {
   getChatNotif();
@@ -64,7 +75,7 @@ onMounted(() => {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <NotificationBell :chatNotification="chatNotification" />
+          <NotificationBell :chatNotification="filteredNotifications" @update:viewAllMessages="onViewAllMessagesClick" />
 
           <button type="button" class="layout-topbar-action" @click="onSettingsClick">
             <i class="pi pi-user" v-tooltip.bottom="'Profile'"></i>
