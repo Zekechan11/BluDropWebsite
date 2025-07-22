@@ -395,9 +395,6 @@ const totalPayment = computed(() => {
 
       </div>
     </div>
-
-
-
   </div>
 </template>
 

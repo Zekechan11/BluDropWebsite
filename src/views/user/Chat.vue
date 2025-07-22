@@ -107,7 +107,7 @@ onUnmounted(() => {
             class="md:w-full flex flex-col h-[88vh] border border-gray-200 rounded-xl shadow-lg bg-white overflow-hidden">
             <div class="bg-blue-600 text-white  p-4 rounded-t-xl shadow-sm">
                 <div class="flex items-center">
-                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-600">
                     <span v-if="agentName">
                         {{ getInitials(agentName) }}
                     </span>

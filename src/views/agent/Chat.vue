@@ -16,6 +16,7 @@ const conversations = ref([]);
 const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const {
+    socket,
     messages,
     connectWebSocket,
     closeWebSocket,
@@ -50,6 +51,9 @@ const handleRefresh = () => {
 };
 
 const selectConversation = async (conversation) => {
+    if (socket.value) {
+        closeWebSocket();
+    }
     connectWebSocket(conversation.convoId);
     selectedConversation.value = conversation;
     showMobileChat.value = true;
