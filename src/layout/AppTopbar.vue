@@ -39,7 +39,7 @@ const filteredNotifications = computed(() => {
     return chatNotification.value.filter(notification => {
         return notification.sender_id !== null && notification.sender_id !== 0 && notification.sender_id !== userData.uid;
     });
-})
+});
 
 onMounted(() => {
   getChatNotif();

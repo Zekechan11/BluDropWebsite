@@ -1,7 +1,7 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { attempt } from "../../service/attempt";
 import { WATER_API } from "../../config";
 import axios from "axios";
@@ -16,12 +16,12 @@ const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const getChatNotif = async () => {
   const [chatNotifResponse, chatNotifError] = await attempt(
-    axios.get(`${WATER_API}/chat/list/agent/${userData.area_id}`)
+    axios.get(`${WATER_API}/chat/conversation/${userData.area_id}?uid=${userData.uid}`)
   );
   if (chatNotifError) {
     console.error("Error fecthing chat notif", chatNotifError);
   } else {
-    chatNotification.value = chatNotifResponse.data.messages;
+    chatNotification.value = chatNotifResponse.data.conversations;
   }
 };
 
@@ -29,6 +29,19 @@ const onSettingsClick = () => {
   topbarMenuActive.value = false;
   router.push("/agent/settings");
 };
+
+const onViewAllMessagesClick = () => {
+  topbarMenuActive.value = false;
+  router.push("/agent/message"); a
+};
+
+const filteredNotifications = computed(() => {
+    return chatNotification.value.filter(notification => {
+        return notification.sender_id !== null && notification.sender_id !== 0 && notification.sender_id !== userData.uid;
+    });
+});
+
+console.log(filteredNotifications)
 
 onMounted(() => {
   getChatNotif();
@@ -62,7 +75,7 @@ onMounted(() => {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <NotificationBell :chatNotification="chatNotification" />
+          <NotificationBell :chatNotification="filteredNotifications" @update:viewAllMessages="onViewAllMessagesClick" />
 
           <button type="button" class="layout-topbar-action" @click="onSettingsClick">
             <i class="pi pi-user" v-tooltip.bottom="'Profile'"></i>
@@ -75,20 +88,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(1.2);
-    opacity: 0.6;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
+@media (max-width: 768px) {
+  .notification-dropdown {
+    min-width: 100%;
+    left: 0;
+    right: auto;
   }
 }
 </style>
