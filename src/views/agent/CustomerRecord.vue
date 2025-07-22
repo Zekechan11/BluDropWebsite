@@ -1,6 +1,7 @@
 <script setup>
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
+import Badge from 'primevue/badge';
 import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
 import { formatCurrency } from "../../service/formatcurrency";
@@ -15,6 +16,7 @@ const newOrder = ref({
   customerId: null,
   name: "",
   area: "",
+  type: "",
   date: new Date().toISOString().split("T")[0],
   gallonsToOrder: 0,
   totalPrice: 0,
@@ -76,6 +78,7 @@ const openOrderModal = async (customer) => {
     customerId: customer.client_id,
     name: `${customer.firstname} ${customer.lastname}`,
     area: customer.area,
+     type: customer.type,
     date: new Date().toISOString().split("T")[0],
     col: customer.total_containers_on_loan,
     gallonsToOrder: 0,
@@ -92,7 +95,7 @@ const calculateTotalPrice = () => {
 };
 
 const submitOrder = async () => {
-  const { customerId, gallonsToOrder, payment, gallonsToReturn } = newOrder.value;
+  const { customerId, gallonsToOrder, payment, gallonsToReturn, type } = newOrder.value;
 
   if (!gallonsToOrder || gallonsToOrder <= 0) {
     alert("Please enter a valid number of gallons to order.");
@@ -110,6 +113,7 @@ const submitOrder = async () => {
       gallonsToOrder,
       payment,
       gallonsToReturn,
+      type
     });
 
     alert(response.data.message || "Order successfully processed!");
@@ -148,7 +152,8 @@ const submitOrder = async () => {
       <Column header="Customer Name" style="min-width: 14rem">
         <template #body="{ data }">
           <i class="pi pi-user mr-2"></i>
-          <span>{{ data.firstname }} {{ data.lastname }}</span>
+          <span class="pr-4">{{ data.firstname }} {{ data.lastname }}</span>
+          <Badge :severity="data.type === 'Dealer' ? 'info' : null">{{ data.type }}</Badge>
         </template>
       </Column>
 
@@ -163,11 +168,9 @@ const submitOrder = async () => {
 
       <Column header="Action" style="min-width: 12rem">
         <template #body="{ data }">
-          <i v-tooltip.bottom="'View More'" class="pi pi-eye cursor-pointer !text-xl text-purple-500 mr-4"
+          <i v-tooltip.bottom="'View More'" class="pi pi-eye cursor-pointer !text-xl text-blue-500 mr-4"
             @click="openDetailsModal(data)"></i>
           <i v-tooltip.bottom="'Manual Order'" class="pi pi-shopping-cart cursor-pointer !text-xl text-green-500 mr-4"
-            @click="openOrderModal(data)"></i>
-          <i v-tooltip.bottom="'Messages'" class="pi pi-comment cursor-pointer !text-xl text-blue-500"
             @click="openOrderModal(data)"></i>
         </template>
       </Column>

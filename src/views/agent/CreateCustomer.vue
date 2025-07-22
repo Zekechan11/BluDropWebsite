@@ -67,7 +67,7 @@ const handleFormSubmit = async () => {
     email: email.value,
     area_id: parseInt(user_data.area_id),
     // area_id: area.value.area_name,
-    type: userType.value,
+    type: userType.value.label,
     password: password.value, // Password can be stored, but consider hashing for security
   };
 
