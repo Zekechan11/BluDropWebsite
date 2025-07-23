@@ -1,18 +1,8 @@
 <script setup>
-<<<<<<< HEAD
 import axios from 'axios';
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { WATER_API } from '../../config';
-=======
-import { useLayout } from "@/layout/composables/layout";
-import axios from 'axios';
-import { onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-
-const ORDER_URL = "http://localhost:9090";
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
->>>>>>> old-main
 
 // State to hold parsed customer data
 const customerData = ref({
