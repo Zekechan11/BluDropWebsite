@@ -176,6 +176,11 @@ const router = createRouter({
       path: '/auth/login',
       name: 'login',
       component: () => import('@/views/pages/auth/Login.vue')
+    },
+    {
+      path: '/auth/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/pages/auth/ForgotPassword.vue')
     }
   ]
 });
@@ -186,7 +191,7 @@ router.beforeEach((to, from, next) => {
   const user_data = JSON.parse(localStorage.getItem('user_data'));// Get the role from localStorage
 
   // Define public routes (routes that don't require authentication)
-  const publicRoutes = ['/auth/login', '/'];
+  const publicRoutes = ['/auth/login', '/auth/forgot-password', '/'];
 
   // If user is not logged in, allow access to public routes
   if (!token && !publicRoutes.includes(to.path)) {

@@ -16,6 +16,10 @@ const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;
 };
 
+const goToForgotPassword = () => {
+  router.push('/auth/forgot-password');
+};
+
 const handelLogin = async () => {
   errorMessage.value = "";
   isLoading.value = true;
@@ -118,7 +122,7 @@ const handelLogin = async () => {
                   <Checkbox v-model="checked" binary class="mr-2" />
                   Remember me
                 </label>
-                <span class="text-blue-600 hover:underline cursor-pointer">Forgot password?</span>
+                <span class="text-blue-600 hover:underline cursor-pointer" @click="goToForgotPassword">Forgot password?</span>
               </div>
 
               <Button severity="info" class="w-full flex items-center justify-center gap-2" :disabled="isLoading"
