@@ -89,8 +89,8 @@ const saveStaff = async () => {
             }
 
             if (staff.value.staff_id) {
-                await axios.put(`${WATER_API}/v2/api/update_staff/${staff.value.staff_id}`, payload)
-                staffs.value[findIndexById(staff.value.id)] = staff.value;
+                const response = await axios.put(`${WATER_API}/v2/api/update_staff/${staff.value.staff_id}`, payload)
+                staffs.value[findIndexById(response.data.data.value_id)] = staff.value;
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Staff Updated', life: 3000 });
             } else {
                 const response = await axios.post(`${WATER_API}/v2/api/create_staff/Staff`, payload);

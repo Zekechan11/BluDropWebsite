@@ -107,7 +107,6 @@ const savePrice = async (reg, dea) => {
     dealer: parseFloat(dea),
     regular: parseFloat(reg),
   }
-
   const [, error] = await attempt(
     axios.put(`${WATER_API}/api/price/update`, payload)
   );

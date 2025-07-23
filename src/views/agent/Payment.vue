@@ -1,8 +1,18 @@
 <script setup>
+<<<<<<< HEAD
 import axios from 'axios';
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { WATER_API } from '../../config';
+=======
+import { useLayout } from "@/layout/composables/layout";
+import axios from 'axios';
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+const ORDER_URL = "http://localhost:9090";
+const { getPrimary, getSurface, isDarkTheme } = useLayout();
+>>>>>>> old-main
 
 // State to hold parsed customer data
 const customerData = ref({
@@ -50,7 +60,6 @@ onMounted(() => {
 const submitPayment = async () => {
   error.value = "";
   successMessage.value = "";
-
   // Input validation
   if (!customerData.value.orderId || !customerData.value.customerId) {
     error.value = "Missing order or customer information";
@@ -86,7 +95,6 @@ const submitPayment = async () => {
     if (response.data) {
       successMessage.value = response.data.message || "Payment processed successfully!";
       customerData.value.status = response.data.status || "Completed";
-
       // Redirect after successful payment
       setTimeout(() => {
         router.push("/agent/dashboard");
@@ -94,7 +102,6 @@ const submitPayment = async () => {
     }
   } catch (error) {
     console.error("Payment submission failed:", error);
-
     // Handle different types of errors
     if (error.response) {
       // Server responded with an error

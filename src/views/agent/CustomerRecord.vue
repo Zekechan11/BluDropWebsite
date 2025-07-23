@@ -121,7 +121,6 @@ const submitOrder = async () => {
     fetchCustomerRecords();
   } catch (error) {
     console.error("Error processing order:", error);
-
     const errorMessage = error.response?.data?.error || "Failed to process order.";
     alert(errorMessage);
   }

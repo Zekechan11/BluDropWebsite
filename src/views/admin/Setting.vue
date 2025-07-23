@@ -12,7 +12,6 @@ const setActiveTab = (tab) => {
 };
 </script>
 
-
 <template>
   <Fluid>
     <div class="space">
