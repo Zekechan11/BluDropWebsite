@@ -1,29 +1,62 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
 import { useRouter } from "vue-router";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { WATER_API } from "../../config";
 
 const { onMenuToggle } = useLayout();
 const topbarMenuActive = ref(false);
 const notificationsVisible = ref(false);
 const router = useRouter();
 
+const notification = ref([]);
+const evtSource = ref(null);
+
+const user_data = JSON.parse(localStorage.getItem("user_data") || "{}");
+
 const onSettingsClick = () => {
   topbarMenuActive.value = false;
-  router.push("/user/settings"); a
+  router.push("/user/settings");
 };
-
-const notifications = ref([
-  { id: 1, message: "Payables #124: ₱200. Due Date: 2024-10-10. Status: Due", addLine: true },
-  { id: 2, message: "Payables #125: ₱200. Due Date: 2024-10-15. Status: Due", addLine: true },
-  { id: 3, message: "Payables #126: ₱300. Due Date: 2024-10-20. Status: Due", addLine: true },
-]);
-
-const notificationsCount = computed(() => notifications.value.length);
 
 const toggleNotifications = () => {
   notificationsVisible.value = !notificationsVisible.value;
 };
+
+const notificationsCount = computed(() => notification.value.length);
+
+onMounted(() => {
+  if (!user_data?.uid) return;
+
+  const source = new EventSource(`${WATER_API}/sse/notifications/${user_data.uid}`);
+  evtSource.value = source;
+
+  source.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (Array.isArray(data)) {
+        notification.value = data.map((item, index) => ({
+          id: index + 1,
+          message: `Total: ₱${item.total_price} | Paid: ₱${item.payment} | Status: ${item.status}`,
+          content: `Unpaid Balance: ₱${item.unpaid} | Date: ${new Date(item.date_created).toLocaleDateString()}`
+        }));
+      }
+    } catch (err) {
+      console.error("Error parsing notification data:", err);
+    }
+  };
+
+  source.onerror = (err) => {
+    console.error("SSE connection error:", err);
+    source.close();
+  };
+});
+
+onBeforeUnmount(() => {
+  if (evtSource.value) {
+    evtSource.value.close();
+  }
+});
 </script>
 
 <template>
@@ -67,18 +100,18 @@ const toggleNotifications = () => {
             </span>
 
             <div v-if="notificationsVisible"
-              class="absolute right-0 top-[120%] w-72 bg-white border border-gray-200 rounded-md shadow-xl p-4 z-50">
+              class="absolute right-0 top-[120%] w-96 bg-white border border-gray-200 rounded-md shadow-xl p-4 z-50">
               <div class="border-b border-gray-100 pb-2 mb-3">
                 <h4 class="text-base font-semibold text-gray-800 m-0">Notifications</h4>
               </div>
 
               <ul class="space-y-2">
-                <li v-if="notifications.length === 0"
+                <li v-if="notification.length === 0"
                   class="text-center text-gray-400 text-sm py-4 flex flex-col items-center">
                   <i class="pi pi-inbox text-xl mb-1"></i>
                   No due payables
                 </li>
-                <li v-for="notification in notifications" :key="notification.id"
+                <li v-for="notification in notification"
                   class="border-b border-gray-100 pb-2 text-sm text-gray-700">
                   <span>{{ notification.message }}</span>
                   <span v-if="notification.content?.length" class="block text-xs text-gray-500 mt-1">
