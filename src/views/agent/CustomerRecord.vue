@@ -5,6 +5,7 @@ import Badge from 'primevue/badge';
 import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
 import { formatCurrency } from "../../service/formatcurrency";
+import { useToast } from "primevue/usetoast";
 
 const searchQuery = ref("");
 const visible = ref(false);
@@ -31,6 +32,8 @@ const newOrder = ref({
 const userData = JSON.parse(localStorage.getItem("user_data"));
 
 const customerRecords = ref([]);
+
+const toast = useToast();
 
 const fetchCustomerRecords = async () => {
   const [customerCountResponse, customerCountError] = await attempt(
@@ -95,15 +98,20 @@ const calculateTotalPrice = () => {
 };
 
 const submitOrder = async () => {
-  const { customerId, gallonsToOrder, payment, gallonsToReturn, type } = newOrder.value;
+  const { customerId, gallonsToOrder, payment, gallonsToReturn, type, col } = newOrder.value;
 
   if (!gallonsToOrder || gallonsToOrder <= 0) {
-    alert("Please enter a valid number of gallons to order.");
+    toast.add({ severity: 'error', summary: 'Error', detail: "Please enter a valid number of gallons to order.", life: 3000 });
+    return;
+  }
+
+  if (gallonsToReturn > col) {
+    toast.add({ severity: 'error', summary: 'Error', detail: `You cannot return more than the current COL (${col}).`, life: 3000 });
     return;
   }
 
   if (payment < newOrder.value.totalPrice) {
-    alert("Payment must be equal to or greater than the total price.");
+    toast.add({ severity: 'error', summary: 'Error', detail: "Payment must be equal to or greater than the total price.", life: 3000 });
     return;
   }
 
@@ -123,13 +131,7 @@ const submitOrder = async () => {
     fetchCustomerRecords();
   } catch (error) {
     console.error("Error processing order:", error);
-    alert(error.response?.data?.error || "Failed to process order.");
-  }
-};
-
-const handlePrint = () => {
-  if (typeof window !== 'undefined' && window.print) {
-    window.print(); 
+    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.error || "Failed to process order.", life: 3000 });
   }
 };
 </script>

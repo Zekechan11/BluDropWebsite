@@ -18,6 +18,8 @@ const customerData = ref({
   customerArea: "",
   amountPaid: 0,
   gallonsReturned: 0,
+  type: "",
+  col: 0,
 });
 
 const error = ref("");
@@ -61,6 +63,11 @@ const submitPayment = async () => {
     return;
   }
 
+  if (customerData.value.gallonsReturned > customerData.value.col) {
+    error.value = `You cannot return more than the current COL (${customerData.value.col}).`;
+    return;
+  }
+
   // if (customerData.value.amountPaid < customerData.value.totalPrice) {
   //   error.value = "The amount paid is less than the total price";
   //   return;
@@ -78,7 +85,9 @@ const submitPayment = async () => {
       orderId: customerData.value.orderId,
       customerId: customerData.value.customerId,
       amountPaid: customerData.value.amountPaid,
-      gallonsReturned: customerData.value.gallonsReturned
+      gallonsReturned: customerData.value.gallonsReturned,
+      gallonsToOrder: customerData.value.gallons,
+      type: customerData.value.gallonsReturned,
     });
 
     // Handle successful response
