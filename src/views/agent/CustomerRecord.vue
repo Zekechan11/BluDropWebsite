@@ -6,12 +6,15 @@ import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
 import { formatCurrency } from "../../service/formatcurrency";
 
-// State
 const searchQuery = ref("");
 const visible = ref(false);
 const orderModalVisible = ref(false);
+const receiptModalVisible = ref(false);
 const selectedCustomer = ref(null);
 const pricePerGallon = ref(0);
+
+const receiptData = ref(null);
+
 const newOrder = ref({
   customerId: null,
   name: "",
@@ -27,6 +30,8 @@ const newOrder = ref({
 
 const userData = JSON.parse(localStorage.getItem("user_data"));
 
+const customerRecords = ref([]);
+
 const fetchCustomerRecords = async () => {
   const [customerCountResponse, customerCountError] = await attempt(
     axios.get(`${WATER_API}/v2/api/get_client/all?area_id=${userData.area_id}`)
@@ -38,15 +43,12 @@ const fetchCustomerRecords = async () => {
   }
 };
 
-const customerRecords = ref([]);
 onMounted(() => {
   fetchCustomerRecords();
 });
 
 const filteredCustomers = computed(() => {
-  if (!searchQuery.value) {
-    return customerRecords.value;
-  }
+  if (!searchQuery.value) return customerRecords.value;
   const query = searchQuery.value.toLowerCase();
   return customerRecords.value.filter((customer) => {
     return (
@@ -66,10 +68,8 @@ const openOrderModal = async (customer) => {
 
   const [priceResponse, priceError] = await attempt(
     axios.get(`${WATER_API}/api/price/${customer.type}`)
-  )
-  if (priceError) {
-    console.error("Field at ", priceError);
-  } else {
+  );
+  if (!priceError) {
     pricePerGallon.value = priceResponse.data;
   }
 
@@ -78,7 +78,7 @@ const openOrderModal = async (customer) => {
     customerId: customer.client_id,
     name: `${customer.firstname} ${customer.lastname}`,
     area: customer.area,
-     type: customer.type,
+    type: customer.type,
     date: new Date().toISOString().split("T")[0],
     col: customer.total_containers_on_loan,
     gallonsToOrder: 0,
@@ -113,16 +113,23 @@ const submitOrder = async () => {
       gallonsToOrder,
       payment,
       gallonsToReturn,
-      type
+      type,
     });
 
-    alert(response.data.message || "Order successfully processed!");
+    receiptData.value = response.data;
     orderModalVisible.value = false;
+    receiptModalVisible.value = true;
+
     fetchCustomerRecords();
   } catch (error) {
     console.error("Error processing order:", error);
-    const errorMessage = error.response?.data?.error || "Failed to process order.";
-    alert(errorMessage);
+    alert(error.response?.data?.error || "Failed to process order.");
+  }
+};
+
+const handlePrint = () => {
+  if (typeof window !== 'undefined' && window.print) {
+    window.print(); 
   }
 };
 </script>
@@ -191,58 +198,90 @@ const submitOrder = async () => {
     </Dialog>
 
     <!-- Order Modal -->
-    <Dialog v-model:visible="orderModalVisible" maximizable modal header="Create New Order" :style="{ width: '40rem' }">
-      <div class="card shadow-md flex flex-col justify-between" style="height: 565px">
-        <!-- Customer Details -->
-        <div class="flex-grow">
-          <ul class="list-none p-0 m-0 mt-12">
-            <!-- <li class="mb-4 text-base"><strong>Order ID:</strong> {{ newOrder.orderId }}</li> -->
-            <li class="mb-4 text-base"><strong>Customer ID:</strong> {{ newOrder.customerId }}</li>
-            <li class="mb-4 text-base"><strong>Name:</strong> {{ newOrder.name }}</li>
-            <li class="mb-4 text-base"><strong>Area:</strong> {{ newOrder.area }}</li>
-            <li class="mb-4 text-base"><strong>Date:</strong> {{ newOrder.date }}</li>
-            <li class="mb-4 text-base"><strong>COL:</strong> {{ newOrder.col }}</li>
-            <li class="mb-4 text-base"><strong>Payables: </strong>
-              <span class="text-green-700">{{ formatCurrency(newOrder.payables) }}</span>
-            </li>
-            <!-- <li class="mb-4 text-base"><strong>Date Created:</strong> {{ newOrder.dateCreated }}</li> -->
-            <!-- <li class="mb-4 text-base"><strong>Total Gallons:</strong> {{ newOrder.totalGallons }}</li> -->
-          </ul>
+    <Dialog v-model:visible="orderModalVisible" modal header="Create New Order" :style="{ width: '40rem' }"
+      class="rounded-lg shadow-xl">
+      <div class="p-6 space-y-6 bg-white">
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-700 mb-3">Customer Information</h3>
+          <div class="grid grid-cols-2 gap-y-2 text-gray-600">
+            <p><strong>ID:</strong> {{ newOrder.customerId }}</p>
+            <p><strong>Name:</strong> {{ newOrder.name }}</p>
+            <p><strong>Area:</strong> {{ newOrder.area }}</p>
+            <p><strong>Date:</strong> {{ newOrder.date }}</p>
+            <p><strong>COL:</strong> {{ newOrder.col }}</p>
+            <p>
+              <strong>Payables:</strong>
+              <span class="text-green-600 font-semibold">{{ formatCurrency(newOrder.payables) }}</span>
+            </p>
+          </div>
         </div>
-
-        <!-- Order Details -->
-        <div>
-          <ul class="list-none p-0 m-0 mt-12">
-            <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div><span class="text-xl font-semibold">Gallons to Order:</span></div>
-              <input class="ml-4 p-2 border rounded-md text-xl w-40" type="number"
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">Order Details</h3>
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Gallons to Order</label>
+              <input type="number" class="p-3 border rounded-lg text-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 v-model.number="newOrder.gallonsToOrder" min="0" @input="calculateTotalPrice" />
-            </li>
-            <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div><span class="text-xl font-semibold">Total Price:</span></div>
-              <span class="ml-4 font-medium text-xl">₱{{ newOrder.totalPrice }}</span>
-            </li>
-            <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div><span class="text-xl font-semibold">Payment:</span></div>
-              <input class="ml-4 p-2 border rounded-md text-xl w-40" type="number" v-model.number="newOrder.payment"
-                min="0" />
-            </li>
-            <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div><span class="text-xl font-semibold">Gallons to Return:</span></div>
-              <input class="ml-4 p-2 border rounded-md text-xl w-40" type="number"
-                v-model.number="newOrder.gallonsToReturn" min="0" />
-            </li>
-          </ul>
-        </div>
+            </div>
 
-        <!-- Submit Button -->
-        <div class="flex justify-end mt-6">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-600">Total Price</span>
+              <span class="text-xl font-bold text-blue-600">₱{{ newOrder.totalPrice }}</span>
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Payment</label>
+              <input type="number" class="p-3 border rounded-lg text-lg focus:ring-2 focus:ring-blue-400 outline-none"
+                v-model.number="newOrder.payment" min="0" />
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Gallons to Return</label>
+              <input type="number" class="p-3 border rounded-lg text-lg focus:ring-2 focus:ring-blue-400 outline-none"
+                v-model.number="newOrder.gallonsToReturn" min="0" />
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button class="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium"
+            @click="orderModalVisible = false">
+            Cancel
+          </button>
           <button @click="submitOrder"
-            class="px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors">
+            class="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium shadow">
             Submit Order
           </button>
         </div>
       </div>
+    </Dialog>
+
+    <!-- Receipt Modal -->
+    <Dialog v-model:visible="receiptModalVisible" modal header="Order Receipt" :style="{ width: '30rem' }"
+      class="rounded-lg shadow-xl">
+      <div class="p-6 space-y-4 bg-white">
+        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl"/>Order Successful!</h2>
+        <div class="text-gray-700 space-y-2">
+          <p><strong>Customer ID:</strong> {{ receiptData?.customerId }}</p>
+          <p><strong>Total Price:</strong> {{ formatCurrency(receiptData?.totalPrice) }}</p>
+          <p><strong>Payment:</strong> {{ formatCurrency(receiptData?.payment) }}</p>
+          <p v-if="receiptData?.overpay > 0" class="text-green-600 font-semibold">
+            <strong>Overpay:</strong> {{ formatCurrency(receiptData?.overpay) }}
+          </p>
+          <p><strong>Status:</strong> {{ receiptData?.status }}</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg"
+            @click="receiptModalVisible = false">
+            Close
+          </button>
+          <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg" @click="handlePrint()">
+            Print Receipt
+          </button>
+        </div>
+      </template>
     </Dialog>
   </div>
 </template>
