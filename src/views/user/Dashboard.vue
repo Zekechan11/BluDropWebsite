@@ -6,8 +6,6 @@ import { computed, onMounted, ref, watchEffect } from "vue";
 import { WATER_API } from "../../config";
 import { attempt } from "../../service/attempt";
 
-const { getPrimary, getSurface, isDarkTheme } = useLayout();
-
 const user_data = JSON.parse(localStorage.getItem("user_data"));
 
 const visible = ref(false);
@@ -21,6 +19,8 @@ const gallons = ref(0);
 const agentName = ref("");
 const dashboardData = ref("");
 const customers2 = ref([]);
+const selectedOrder = ref(null);
+const selectedOrderModal = ref(false);
 
 const customerArea = user_data.area;
 const fullName = computed(() => {
@@ -64,6 +64,8 @@ const updateUserData = (orderData) => {
     totalPrice: orderData.Total_price,
     status: orderData.Status,
     customerArea: customerArea,
+    type: orderData.Type,
+    col: orderData.COL,
   };
 };
 
@@ -142,6 +144,8 @@ const placeOrder = async () => {
         Date_created: new Date().toISOString(),
         Total_price: response.data.total_price,
         Status: "Pending",
+        Type: response.data.order.type,
+        COL: response.data.col,
       };
 
       updateUserData(newOrderData);
@@ -185,6 +189,24 @@ const validateGallons = () => {
   } else if (gallons.value < 0) {
     gallons.value = 0;
   }
+};
+
+const viewQR = (order) => {
+  selectedOrder.value = {
+    orderId: order.id,
+    customerId: user_data.uid,
+    customerFirstName: user_data.firstname,
+    customerLastName: user_data.lastname,
+    gallons: order.num_gallons_order,
+    date: order.date,
+    dateCreated: order.date_created,
+    totalPrice: order.total_price,
+    status: order.status,
+    customerArea: customerArea,
+    type: user_data.type,
+    col: order.total_containers_on_loan,
+  };
+  selectedOrderModal.value = true;
 };
 
 const totalPayment = computed(() => {
@@ -326,6 +348,17 @@ const totalPayment = computed(() => {
             </template>
           </Column>
 
+          <Column field="status" header="Status" style="min-width: 180px">
+            <template #body="{ data }">
+              <Button v-if="data.status === 'Completed'" label="Order Complete" severity="secondary"
+                icon="pi pi-check-circle" class="p-button-sm p-button-outlined !border-green-500 !text-green-500"
+                disabled />
+              <Button v-else label="View QR Code" severity="secondary"
+                icon="pi pi-qrcode" class="p-button-sm p-button-outlined border-black hover:!text-blue-500"
+                @click="viewQR(data) " />
+            </template>
+          </Column>
+
           <template #empty>
             <div class="flex flex-col items-center justify-center py-12 text-gray-500 space-y-4">
               <i class="pi pi-inbox text-4xl text-blue-400" />
@@ -340,6 +373,23 @@ const totalPayment = computed(() => {
 
         </DataTable>
       </div>
+
+    <Dialog v-model:visible="selectedOrderModal" modal header="Your Order QR Code"
+        :style="{ width: '100%', maxWidth: '26rem' }" class="p-dialog-modern">
+        <div v-if="selectedOrder" class="flex flex-col items-center justify-center space-y-4 p-4">
+          <qrcode-vue :value="JSON.stringify(selectedOrder)" :size="qrCodeSize" level="H" />
+          <p class="text-sm text-gray-600 text-center">
+            Show this QR code during delivery for faster verification.
+          </p>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center text-center text-red-500 py-6 space-y-2">
+          <i class="pi pi-exclamation-triangle text-3xl"></i>
+          <p class="font-semibold text-lg">No QR Code Available</p>
+          <p class="text-sm text-gray-500">We couldn't retrieve your data. Try again later.</p>
+        </div>
+      </Dialog>
+
     </div>
 
     <div class="w-full space-y-8 md:w-1/3">
