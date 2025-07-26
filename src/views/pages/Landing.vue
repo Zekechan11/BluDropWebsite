@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import axios from "axios";
-
 import { attempt } from "../../service/attempt"
 import { WATER_API } from "../../config";
+import EmptyTableState from "../../components/EmptyTableState.vue"
 
-const days = ref({})
+const days = ref({});
+const screenWidth = ref(window.innerWidth);
+const currentIndex = ref(0);
 
 const products = ref([
   {
@@ -45,57 +47,34 @@ const products = ref([
   },
   {
     id: 6,
-    name: "Chris Green",
-    title: "Long-time User",
-    testimonial: "Incredible value and support!",
-    image: "/demo/images/user.jpg", // Update the image path as needed
+    name: "Edions",
+    title: "CEO",
+    testimonial: "You should never trust a calendar that smells like betrayal.",
+    image: "/demo/images/edions.png", // Update the image path as needed
   },
   // Add more testimonials as needed
 ]);
-const responsiveOptions = ref([
-  {
-    breakpoint: "1400px",
-    numVisible: 2,
-    numScroll: 1,
-  },
-  {
-    breakpoint: "1199px",
-    numVisible: 3,
-    numScroll: 1,
-  },
-  {
-    breakpoint: "767px",
-    numVisible: 2,
-    numScroll: 1,
-  },
-  {
-    breakpoint: "575px",
-    numVisible: 1,
-    numScroll: 1,
-  },
-]);
 
-const currentIndex = ref(0);
+let intervalId;
+
+const updateScreenWidth = () => {
+  screenWidth.value = window.innerWidth;
+};
 
 const visibleProducts = computed(() => {
-  return products.value.slice(currentIndex.value, currentIndex.value + 3);
+  const itemsToShow = screenWidth.value <= 640 ? 1 : 3;
+  return products.value.slice(currentIndex.value, currentIndex.value + itemsToShow);
 });
+
 const next = () => {
-  currentIndex.value = (currentIndex.value + 3) % products.value.length;
+  const itemsToShow = screenWidth.value <= 640 ? 1 : 3;
+  currentIndex.value = (currentIndex.value + itemsToShow) % products.value.length;
 };
-
-const prev = () => {
-  currentIndex.value =
-    (currentIndex.value - 3 + products.value.length) % products.value.length;
-};
-
-// Automatic sliding
-let intervalId;
 
 const startAutoSlide = () => {
   intervalId = setInterval(() => {
     next();
-  }, 3000); // Change slide every 5 seconds
+  }, 3000);
 };
 
 const stopAutoSlide = () => {
@@ -115,11 +94,13 @@ const getSchedule = async () => {
 
 onMounted(() => {
   getSchedule();
-  startAutoSlide(); // Start the automatic slide when component is mounted
+  window.addEventListener('resize', updateScreenWidth);
+  startAutoSlide();
 });
 
 onBeforeUnmount(() => {
-  stopAutoSlide(); // Stop the automatic slide when component is unmounted
+  window.removeEventListener('resize', updateScreenWidth);
+  stopAutoSlide();
 });
 
 function smoothScroll(id) {
@@ -127,12 +108,6 @@ function smoothScroll(id) {
   document.querySelector(id).scrollIntoView({
     behavior: "smooth",
   });
-}
-
-function formatDate(date) {
-  const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-  const formattedDate = new Date(date).toLocaleDateString(undefined, options);
-  return formattedDate;
 }
 </script>
 
@@ -331,22 +306,22 @@ function formatDate(date) {
         </div>
       </div>
 
-      <div id="testi" class="py-6 px-6 lg:px-20 mt-8 mx-0 lg:mx-20"
-        style="background-color: #85c1e9; border-radius: 10px">
+      <div id="testi" class="py-6 px-0 sm:px-6 mt-8 mx-0 lg:mx-20 bg-[#85c1e9] rounded-xl">
         <div class="text-center mb-6">
-          <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">
+          <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-3xl md:text-4xl">
             Testimonials
           </div>
-          <span class="text-muted-color text-2xl">What Our Customers Say</span>
+          <span class="text-muted-color text-xl md:text-2xl">
+            What Our Customers Say
+          </span>
         </div>
 
-        <div class="testimonial-carousel">
-          <div class="testimonial-container" v-for="(product, index) in visibleProducts" :key="product.id">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md testimonial-box">
-              <div class="flex items-center mb-4">
-                <img :src="product.image" alt="" class="rounded-full mr-4"
-                  style="height: 90px; width: 90px; object-fit: cover" />
-                <div>
+        <div class="testimonial-carousel grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
+          <div class="testimonial-container w-full" v-for="product in visibleProducts" :key="product.id">
+            <div class="bg-white dark:bg-gray-800 p-6 !mb-12 rounded-lg shadow-md testimonial-box w-full h-auto">
+              <div class="flex flex-col items-center sm:flex-row mb-4">
+                <img :src="product.image" alt="" class="rounded-full mb-4 sm:mb-0 w-20 h-20 object-cover" />
+                <div class="text-center sm:text-left sm:ml-4">
                   <h5 class="font-semibold text-surface-900 dark:text-surface-0">
                     {{ product.name }}
                   </h5>
@@ -355,7 +330,7 @@ function formatDate(date) {
                   </p>
                 </div>
               </div>
-              <p class="text-surface-900 dark:text-surface-0 italic">
+              <p class="text-surface-900 dark:text-surface-0 italic text-center sm:text-left break-words">
                 "{{ product.testimonial }}"
               </p>
             </div>
@@ -380,6 +355,10 @@ function formatDate(date) {
                   class="font-medium text-lg p-4 text-surface-900 dark:text-surface-0" />
                 <Column field="date" header="Date" sortable :body="dateTemplate"
                   class="font-medium text-lg p-4 text-surface-900 dark:text-surface-0" />
+                <template #empty>
+                <EmptyTableState title="No schedule today."
+                  description="Try refreshing your browser or check back later." />
+              </template>
               </DataTable>
             </div>
           </div>
@@ -533,14 +512,18 @@ function formatDate(date) {
 }
 
 .testimonial-container {
-  flex: 0 0 33.33%;
-  /* Each testimonial takes up 1/3 of the container */
   padding: 0 10px;
-  /* Adds spacing between testimonials */
+  width: 100%;
+  flex: none;
+}
+
+@media (min-width: 1024px) {
+  .testimonial-container {
+    flex: 0 0 33.33%;
+  }
 }
 
 .testimonial-box {
-  height: 200px;
   /* Set a fixed height for all testimonial boxes */
   display: flex;
   flex-direction: column;
