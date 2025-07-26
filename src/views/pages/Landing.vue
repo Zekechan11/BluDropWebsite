@@ -1,6 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import ScrollTop from "primevue/scrolltop";
+import axios from "axios";
+
+import { attempt } from "../../service/attempt"
+import { WATER_API } from "../../config";
+
+const days = ref({})
 
 const products = ref([
   {
@@ -97,7 +102,19 @@ const stopAutoSlide = () => {
   clearInterval(intervalId);
 };
 
+const getSchedule = async () => {
+  const [dayResponse, dayError] = await attempt(
+    axios.get(`${WATER_API}/api/get_schedule`)
+  );
+  if (dayError) {
+    console.error("Field at ", dayError);
+  } else {
+    days.value = dayResponse.data.days;
+  }
+}
+
 onMounted(() => {
+  getSchedule();
   startAutoSlide(); // Start the automatic slide when component is mounted
 });
 
@@ -110,6 +127,12 @@ function smoothScroll(id) {
   document.querySelector(id).scrollIntoView({
     behavior: "smooth",
   });
+}
+
+function formatDate(date) {
+  const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+  const formattedDate = new Date(date).toLocaleDateString(undefined, options);
+  return formattedDate;
 }
 </script>
 
@@ -279,10 +302,9 @@ function smoothScroll(id) {
               Cellphone
             </div>
             <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2"
-              style="max-width: 650px">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ducimus
-              hic impedit optio sint nihil. Sit minima harum quis, quo assumenda
-              blanditiis ut distinctio eveniet vitae asperiores maxime voluptate
-              est dicta!</span>
+              style="max-width: 650px">Perfect for on-the-go access. Use your phone to monitor orders, check delivery
+              schedules, update status, and stay connected with your operations anytime, anywhere.
+            </span>
           </div>
         </div>
 
@@ -296,10 +318,8 @@ function smoothScroll(id) {
               PC
             </div>
             <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal mr-0 md:mr-2"
-              style="max-width: 650px">Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-              Pariatur, aliquid. Facere officia id neque, placeat magni tempore.
-              Repellat, odio ut? Nihil a quis excepturi nesciunt architecto
-              ipsum nostrum commodi culpa.
+              style="max-width: 650px">Ideal for full administrative tasks. Use the PC to access the complete dashboard,
+              manage customer records, input data, generate reports, and oversee daily operations with ease.
             </span>
           </div>
 
@@ -351,75 +371,16 @@ function smoothScroll(id) {
           <span class="text-muted-color text-2xl">Upcoming deliveries</span>
         </div>
 
-        <div class="grid grid-cols-12 gap-4 justify-between mt-10 shadow-md">
-          <!-- Delivery Schedule Section -->
+        <div class="grid grid-cols-12 gap-4 justify-between mt-10">
           <div class="col-span-12">
             <div class="overflow-x-auto">
-              <table class="min-w-full bg-white dark:bg-surface-800 rounded-lg shadow-md">
-                <thead>
-                  <tr class="text-left border-b-2 border-surface-200 dark:border-surface-600">
-                    <th class="p-4 text-surface-900 dark:text-surface-0">
-                      Area
-                    </th>
-                    <th class="p-4 text-surface-900 dark:text-surface-0">
-                      Date
-                    </th>
-                    <th class="p-4 text-surface-900 dark:text-surface-0">
-                      Agent
-                    </th>
-                    <th class="p-4 text-surface-900 dark:text-surface-0">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Sample Data Row 1 -->
-                  <tr class="border-b border-surface-200 dark:border-surface-600">
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Guadalupe Bogo City Cebu
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      10/20/2024
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Ezekiel Angelo Pelayo
-                    </td>
-                    <td class="p-4">
-                      <span class="text-blue-500">Ongiong</span>
-                    </td>
-                  </tr>
-                  <!-- Sample Data Row 2 -->
-                  <tr class="border-b border-surface-200 dark:border-surface-600">
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Nailon Bogo City Cebu
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      10/25/2024
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Jemar Diamante
-                    </td>
-                    <td class="p-4">
-                      <span class="text-green-500">Completed</span>
-                    </td>
-                  </tr>
-                  <!-- Sample Data Row 3 -->
-                  <tr class="border-b border-surface-200 dark:border-surface-600">
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Lapaz Bogo City Cebu
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      11/10/2024
-                    </td>
-                    <td class="p-4 text-surface-900 dark:text-surface-0">
-                      Anton Retuya
-                    </td>
-                    <td class="p-4">
-                      <span class="text-red-500">Delayed</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <DataTable :value="days" class="p-datatable p-datatable-gridlines rounded-xl shadow-xl overflow-hidden"
+                responsiveLayout="scroll" dataKey="date">
+                <Column field="day" header="Day" sortable
+                  class="font-medium text-lg p-4 text-surface-900 dark:text-surface-0" />
+                <Column field="date" header="Date" sortable :body="dateTemplate"
+                  class="font-medium text-lg p-4 text-surface-900 dark:text-surface-0" />
+              </DataTable>
             </div>
           </div>
         </div>
@@ -456,45 +417,39 @@ function smoothScroll(id) {
           <div class="col-span-12 md:col-span-10 mt-6">
             <div class="grid grid-cols-12 gap-8 text-center md:text-left">
               <div class="col-span-12 md:col-span-3">
-                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white text-surface-900 dark:text-surface-0">
+                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white dark:text-surface-0">
                   Resources
                 </h4>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white mb-2 text-surface-700 dark:text-surface-100">
+                <a class="leading-normal text-xl block cursor-pointer text-white mb-2 dark:text-surface-100">
                   Home</a>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white mb-2 text-surface-700 dark:text-surface-100">About
+                <a class="leading-normal text-xl block cursor-pointer text-white mb-2 dark:text-surface-100">About
                   us</a>
               </div>
 
               <div class="col-span-12 md:col-span-3">
-                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white text-surface-900 dark:text-surface-0">
+                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white dark:text-surface-0">
                   Community
                 </h4>
                 <a
-                  class="leading-normal text-xl block cursor-pointer text-white mb-2 text-surface-700 dark:text-surface-100">Testimonials</a>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white mb-2 text-surface-700 dark:text-surface-100">Delivery
+                  class="leading-normal text-xl block cursor-pointer text-white mb-2 dark:text-surface-100">Testimonials</a>
+                <a class="leading-normal text-xl block cursor-pointer text-white mb-2 dark:text-surface-100">Delivery
                   Schedules</a>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white text-surface-700 dark:text-surface-100">Delivery
+                <a class="leading-normal text-xl block cursor-pointer text-white dark:text-surface-100">Delivery
                   Location Map</a>
               </div>
 
               <div class="col-span-12 md:col-span-3">
-                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white text-surface-900 dark:text-surface-0">
+                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white dark:text-surface-0">
                   Legal
                 </h4>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white mb-2 text-surface-700 dark:text-surface-100">Privacy
+                <a class="leading-normal text-xl block cursor-pointer text-white mb-2 dark:text-surface-100">Privacy
                   Policy</a>
-                <a
-                  class="leading-normal text-xl block cursor-pointer text-white text-surface-700 dark:text-surface-100">Terms
+                <a class="leading-normal text-xl block cursor-pointer text-white dark:text-surface-100">Terms
                   of Service</a>
               </div>
 
               <div class="col-span-12 md:col-span-3">
-                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white text-surface-900 dark:text-surface-0">
+                <h4 class="font-semibold text-2xl leading-normal mb-4 text-white dark:text-surface-0">
                   Social
                 </h4>
                 <div class="flex flex-row space-x-4">

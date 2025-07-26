@@ -1,5 +1,4 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
 import axios from "axios";
 import QrcodeVue from "qrcode.vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
