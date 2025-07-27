@@ -134,6 +134,14 @@ const submitOrder = async () => {
     toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.error || "Failed to process order.", life: 3000 });
   }
 };
+
+const handlePrint = () => {
+  if (typeof window !== "undefined" && typeof window.print === "function") {
+    window.print();
+  } else {
+    toast.add({ severity: 'error', summary: 'Error', detail: "Can't print right now", life: 3000 });
+  }
+};
 </script>
 
 <template>
@@ -267,9 +275,20 @@ const submitOrder = async () => {
           <p><strong>Total Price:</strong> {{ formatCurrency(receiptData?.totalPrice) }}</p>
           <p><strong>Payment:</strong> {{ formatCurrency(receiptData?.payment) }}</p>
           <p v-if="receiptData?.overpay > 0" class="text-green-600 font-semibold">
-            <strong>Overpay:</strong> {{ formatCurrency(receiptData?.overpay) }}
+            <strong>Change:</strong> {{ formatCurrency(receiptData?.overpay) }}
           </p>
-          <p><strong>Status:</strong> {{ receiptData?.status }}</p>
+          <p><strong class="pr-2">Status:</strong>
+            <span :class="[
+              'inline-block px-2 py-1 rounded text-sm font-semibold',
+              {
+                'bg-yellow-100 text-yellow-800': receiptData.status === 'Pending',
+                'bg-green-100 text-green-800': receiptData.status === 'Completed',
+                'bg-gray-100 text-gray-800': !receiptData.status || receiptData.status === 'None'
+              }
+            ]">
+            {{ receiptData?.status }}
+            </span>
+          </p>
         </div>
       </div>
 

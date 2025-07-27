@@ -3,6 +3,7 @@ import axios from 'axios';
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { WATER_API } from '../../config';
+import { useToast } from "primevue/usetoast";
 
 // State to hold parsed customer data
 const customerData = ref({
@@ -25,9 +26,12 @@ const customerData = ref({
 const error = ref("");
 const isLoading = ref(false);
 const successMessage = ref("");
+const receiptData = ref(null);
+const receiptModalVisible = ref(false);
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 const slug = route.params.slug;
 
 // Parse the route parameter dynamically
@@ -87,17 +91,15 @@ const submitPayment = async () => {
       amountPaid: customerData.value.amountPaid,
       gallonsReturned: customerData.value.gallonsReturned,
       gallonsToOrder: customerData.value.gallons,
-      type: customerData.value.gallonsReturned,
+      type: customerData.value.type,
     });
 
     // Handle successful response
     if (response.data) {
+      receiptData.value = response.data;
       successMessage.value = response.data.message || "Payment processed successfully!";
       customerData.value.status = response.data.status || "Completed";
-      // Redirect after successful payment
-      setTimeout(() => {
-        router.push("/agent/dashboard");
-      }, 2000);
+      receiptModalVisible.value = true;
     }
   } catch (error) {
     console.error("Payment submission failed:", error);
@@ -114,6 +116,19 @@ const submitPayment = async () => {
     }
   } finally {
     isLoading.value = false;
+  }
+};
+
+const closeReceipt = () => {
+  receiptModalVisible.value = false;
+  router.push("/agent/dashboard");
+};
+
+const handlePrint = () => {
+  if (typeof window !== "undefined" && typeof window.print === "function") {
+    window.print();
+  } else {
+    toast.add({ severity: 'error', summary: 'Error', detail: "Can't print right now", life: 3000 });
   }
 };
 
@@ -165,6 +180,7 @@ const formatCurrency = (value) => {
               {{ customerData.status || 'None' }}
             </span>
           </li>
+          <li><strong>COL:</strong> {{ customerData.col }}</li>
           <li><strong>Total Gallons:</strong> {{ customerData.gallons }}</li>
           <li><strong>Total Price:</strong> {{ formatCurrency(customerData.totalPrice) }}</li>
         </ul>
@@ -209,5 +225,44 @@ const formatCurrency = (value) => {
         </button>
       </div>
     </div>
+
+    <Dialog v-model:visible="receiptModalVisible" modal :closable="false" header="Order Receipt" :style="{ width: '30rem' }"
+      class="rounded-lg shadow-xl">
+      <div class="p-6 space-y-4 bg-white">
+        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl"/>Order Successful!</h2>
+        <div class="text-gray-700 space-y-2">
+          <p><strong>Customer ID:</strong> {{ receiptData?.orderId }}</p>
+          <p><strong>Total Price:</strong> {{ formatCurrency(receiptData?.totalPrice) }}</p>
+          <p><strong>Payment:</strong> {{ formatCurrency(receiptData?.amountPaid) }}</p>
+          <p v-if="receiptData?.overpay > 0" class="text-green-600 font-semibold">
+            <strong>Change:</strong> {{ formatCurrency(receiptData?.overpay) }}
+          </p>
+          <p><strong class="pr-2">Status:</strong>
+            <span :class="[
+              'inline-block px-2 py-1 rounded text-sm font-semibold',
+              {
+                'bg-yellow-100 text-yellow-800': receiptData.status === 'Pending',
+                'bg-green-100 text-green-800': receiptData.status === 'Completed',
+                'bg-gray-100 text-gray-800': !receiptData.status || receiptData.status === 'None'
+              }
+            ]">
+            {{ receiptData?.status }}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg"
+            @click="closeReceipt()">
+            Close
+          </button>
+          <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg" @click="handlePrint()">
+            Print Receipt
+          </button>
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>

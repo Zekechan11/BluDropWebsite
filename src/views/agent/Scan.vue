@@ -3,12 +3,9 @@ import { ref } from 'vue';
 import { QrcodeCapture, QrcodeStream } from 'vue3-qrcode-reader';
 
 // State references
-const error = ref('');
-const decodedString = ref('');
+const error = ref('');;
 const torch = ref(false);
 const selectedFile = ref(null);
-const uploadMode = ref(false);
-const savedImages = ref([]);
 
 // Camera initialization handler
 const onInit = async (promise) => {
@@ -78,40 +75,6 @@ const selectDeviceImage = () => {
     error.value = 'Screen capture not supported in this browser';
   }
 };
-
-// Native Device Gallery Selection
-const selectFromGallery = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.onchange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      selectedFile.value = file;
-    }
-  };
-  input.click();
-};
-
-// Save image and additional methods remain the same as in previous implementation
-const handleFileSelect = (event) => {
-  const file = event.target.files[0] || event;
-  selectedFile.value = file;
-};
-
-const saveImage = () => {
-  if (!selectedFile.value) return;
-
-  const imageURL = URL.createObjectURL(selectedFile.value);
-
-  savedImages.value.push({
-    name: selectedFile.value.name,
-    url: imageURL,
-    scannedAt: new Date().toLocaleString()
-  });
-
-  localStorage.setItem('savedQRImages', JSON.stringify(savedImages.value));
-};
 </script>
 
 <template>
@@ -130,43 +93,22 @@ const saveImage = () => {
 
     <!-- Camera Stream -->
     <div class="w-full flex-1 rounded-md overflow-hidden border border-gray-300">
-      <qrcode-stream
-        @init="onInit"
-        @decode="onDecode"
-        :torch="torch"
-        class="w-full h-full object-cover"
-      />
+      <qrcode-stream @init="onInit" @decode="onDecode" :torch="torch" class="w-full h-full object-cover" />
     </div>
 
     <!-- Device Actions -->
     <div class="flex flex-col sm:flex-row items-center gap-3 mt-4">
-      <button
-        @click="selectDeviceImage"
-        class="px-4 py-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition duration-150"
-      >
+      <button @click="selectDeviceImage"
+        class="px-4 py-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition duration-150">
         <i class="pi pi-camera" />
         Capture Screen
       </button>
-
-      <button
-        @click="selectFromGallery"
-        class="px-4 py-2 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm transition duration-150"
-      >
+      <label for="selectFromGallery"
+        class="px-4 py-2 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm transition duration-150">
         <i class="pi pi-image" />
         Select from Gallery
-      </button>
-    </div>
-
-    <!-- Image Preview and Scan -->
-    <div v-if="selectedFile" class="w-full mt-4 text-center">
-      <qrcode-capture :file="selectedFile" @decode="onDecode">
-        <button
-          class="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-sm transition duration-150"
-        >
-          <i class="pi pi-search mr-2"></i>
-          Scan Selected Image
-        </button>
-      </qrcode-capture>
+      </label>
+      <qrcode-capture id="selectFromGallery" :file="selectedFile" @decode="onDecode" class="hidden" />
     </div>
   </div>
 </template>
