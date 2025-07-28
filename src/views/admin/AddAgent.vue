@@ -15,7 +15,6 @@ const agentDialog = ref(false);
 const deleteAgentDialog = ref(false);
 const deleteAgentsDialog = ref(false);
 const selectedAgents = ref();
-const selectedArea = ref();
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
@@ -246,50 +245,49 @@ const deleteSelectedAgents = async () => {
   }
 };
 
-const updateRoute = async (id) => {
-  if (!id || !id.staff_id) {
-    console.error("Invalid id object passed:", id);
+const updateRoute = async (slotProps, areaId) => {
+  if (!slotProps || !slotProps.staff_id) {
+    console.error("Invalid id object passed:", slotProps);
     return;
   }
-
-  // console.log(id.staff_id);
+  op.value.hide();
 
   const payload = {
-    area_id: selectedArea.value,
+    area_id: areaId,
   };
 
-  const [response, error] = await attempt(
-    axios.put(`${WATER_API}/v2/api/update_staff/area/${id.staff_id}`, payload)
+  const [_, error] = await attempt(
+    axios.put(`${WATER_API}/v2/api/update_staff/area/${slotProps.staff_id}`, payload)
   );
+
+  toast.add({
+    severity: "success",
+    summary: "Successful",
+    detail: "Agent area has been changed",
+    life: 3000,
+  });
 
   if (error) {
     console.error("API error:", error);
     return;
   }
+  const index = agents.value.findIndex((a) => a.staff_id === slotProps.staff_id);
+  console.log(index)
 
-  await fetchAreas();
-  await fetchAgents();
-
-  // const index = agents.value.findIndex((a) => a.staff_id === id.staff_id);
-
-  // if (index !== -1) {
-  //   agents.value[index] = {
-  //     ...agents.value[index],
-  //     area_name: areas.value.find((a) => a.id === selectedArea.value)?.area,
-  //     area_id: selectedArea.value,
-  //   };
-  // } else {
-  //   console.warn("Agent not found for staff_id:", id.staff_id);
-  // }
+  if (index !== -1) {
+    agents.value[index] = {
+      ...agents.value[index],
+      area: areas.value.find((a) => a.id === areaId)?.area,
+      area_id: areaId,
+    };
+  } else {
+    console.warn("Agent not found for staff_id:", id.staff_id);
+  }
 };
 
 const toggle = (event) => {
-    op.value.toggle(event);
+  op.value.toggle(event);
 }
-
-const findIndexById = (id) => {
-  return agents.value.findIndex((agent) => agent.staff_id === id);
-};
 </script>
 
 <template>
@@ -337,26 +335,17 @@ const findIndexById = (id) => {
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
               @click="confirmDeleteAgent(slotProps.data)" />
 
-            <Button icon="pi pi-map-marker" v-tooltip.bottom="'Area'" outlined rounded class="mr-2" severity="info"
-              @click="toggle" />
+            <Button icon="pi pi-map-marker" v-tooltip.bottom="'Change Area'" outlined rounded class="mr-2"
+              severity="info" @click="toggle" />
 
             <OverlayPanel ref="op">
-              <div class="flex flex-column gap-3 w-25rem">
-                <div>
-                  <span class="font-medium text-900 block mb-2">Share this document</span>
-                  <InputGroup>
-                    <InputText value="https://primevue.org/12323ff26t2g243g423g234gg52hy25XADXAG3" readonly
-                      class="w-25rem"></InputText>
-                    <InputGroupAddon>
-                      <i class="pi pi-copy"></i>
-                    </InputGroupAddon>
-                  </InputGroup>
+              <div class="flex flex-col gap-6 p-4">
+                <div v-for="(area) in areas" :key="area.id"
+                  class="flex items-center justify-between rounded-lg hover:bg-gray-100">
+                  <button class="text-gray-700" @click="updateRoute(slotProps.data, area.id)">{{ area.area }}</button>
                 </div>
               </div>
             </OverlayPanel>
-            <Select v-model="selectedCity" :options="areas" v-model.trim="selectedArea" optionLabel="area"
-              optionValue="id" @change="updateRoute(slotProps.data)" dropdownIcon="pi pi-map-marker"
-              class="w-full md:w-56" />
           </template>
         </Column>
         <template #empty>
