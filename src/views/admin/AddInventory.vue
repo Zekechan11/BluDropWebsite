@@ -53,7 +53,9 @@ const createInventory = async () => {
 
 const updateInventory = async () => {
     try {
-        await axios.put(`${WATER_API}/api/update_inventory/${inventory.value.inventory_id}`, inventory.value);
+        // hotfix: remove when backend updated
+        const payload = {inventory_id: inventory.value.inventory_id, item: inventory.value.item, no_of_items: Number(inventory.value.no_of_items)}
+        await axios.put(`${WATER_API}/api/update_inventory/${inventory.value.inventory_id}`, payload);
         inventorys.value[findIndexById(inventory.value.inventory_id)] = inventory.value;
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Inventory Updated', life: 3000 });
     } catch (error) {
