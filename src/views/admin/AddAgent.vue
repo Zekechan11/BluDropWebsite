@@ -20,6 +20,7 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
+const op = ref();
 
 const openNew = () => {
   agent.value = {};
@@ -77,7 +78,7 @@ const createAgent = async () => {
       lastname: agent.value.lastname,
       email: agent.value.email,
       password: agent.value.password,
-      area_id: area.value.area_name,
+      area_id: Number(agent.value.area_id),
     };
 
     const response = await axios.post(
@@ -90,8 +91,8 @@ const createAgent = async () => {
       lastname: agent.value.lastname,
       email: agent.value.email,
       password: agent.value.password,
-      area: areas.value.find((a) => a.id === area.value.area_name)?.area,
-      area_id: area.value.area_name,
+      area: areas.value.find((a) => a.value === agent.value.area)?.area,
+      area_id: agent.value.area_name,
     });
     toast.add({
       severity: "success",
@@ -117,7 +118,7 @@ const updateAgent = async () => {
       lastname: agent.value.lastname,
       email: agent.value.email,
       password: agent.value.password,
-      area_id: area.value.area_name,
+      area_id: Number(agent.value.area_id),
     };
 
     await axios.put(
@@ -125,7 +126,7 @@ const updateAgent = async () => {
       payload
     );
     const index =
-      agents.value[findIndexById((a) => a.staff_id === agent.value.staff_id)];
+      agents.value.findIndex((a) => a.staff_id === agent.value.staff_id);
     if (index !== -1) {
       agents.value[index] = {
         ...agents.value[index],
@@ -133,8 +134,8 @@ const updateAgent = async () => {
         lastname: agent.value.lastname,
         email: agent.value.email,
         password: agent.value.password,
-        area_name: areas.value.find((a) => a.id === area.value.area_name)?.area,
-        area_id: area.value.area_name,
+        area: areas.value.find((a) => a.id === agent.value.area_id)?.area,
+        area_id: agent.value.area_name,
       };
     }
     toast.add({
@@ -162,7 +163,7 @@ const saveAgent = async () => {
     !agent.value.lastname ||
     !agent.value.email ||
     !agent.value.password ||
-    !agent.value.area
+    !agent.value.area_id
   ) {
     toast.add({
       severity: 'warn',
@@ -282,6 +283,10 @@ const updateRoute = async (id) => {
   // }
 };
 
+const toggle = (event) => {
+    op.value.toggle(event);
+}
+
 const findIndexById = (id) => {
   return agents.value.findIndex((agent) => agent.staff_id === id);
 };
@@ -332,8 +337,25 @@ const findIndexById = (id) => {
             <Button icon="pi pi-trash" v-tooltip.bottom="'Delete'" outlined rounded class="mr-2" severity="danger"
               @click="confirmDeleteAgent(slotProps.data)" />
 
+            <Button icon="pi pi-map-marker" v-tooltip.bottom="'Area'" outlined rounded class="mr-2" severity="info"
+              @click="toggle" />
+
+            <OverlayPanel ref="op">
+              <div class="flex flex-column gap-3 w-25rem">
+                <div>
+                  <span class="font-medium text-900 block mb-2">Share this document</span>
+                  <InputGroup>
+                    <InputText value="https://primevue.org/12323ff26t2g243g423g234gg52hy25XADXAG3" readonly
+                      class="w-25rem"></InputText>
+                    <InputGroupAddon>
+                      <i class="pi pi-copy"></i>
+                    </InputGroupAddon>
+                  </InputGroup>
+                </div>
+              </div>
+            </OverlayPanel>
             <Select v-model="selectedCity" :options="areas" v-model.trim="selectedArea" optionLabel="area"
-              optionValue="id" @change="updateRoute(slotProps.data)" placeholder="Select a City"
+              optionValue="id" @change="updateRoute(slotProps.data)" dropdownIcon="pi pi-map-marker"
               class="w-full md:w-56" />
           </template>
         </Column>
@@ -368,7 +390,7 @@ const findIndexById = (id) => {
         </div>
         <div>
           <label for="area" class="block mb-2 font-semibold text-gray-700">Area</label>
-          <Dropdown id="area" v-model="agent.area" :options="areas" optionLabel="area" optionValue="id"
+          <Dropdown id="area" v-model="agent.area_id" :options="areas" optionLabel="area" optionValue="id"
             placeholder="Select an Area" class="w-full" />
           <small v-if="submitted && !agent.area" class="text-red-600 text-xs mt-1 block">
             Area is required.
