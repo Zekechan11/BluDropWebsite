@@ -20,6 +20,7 @@ const filters = ref({
 });
 const submitted = ref(false);
 const op = ref();
+const selectedStaffId = ref(null);
 
 const openNew = () => {
   agent.value = {};
@@ -245,11 +246,7 @@ const deleteSelectedAgents = async () => {
   }
 };
 
-const updateRoute = async (slotProps, areaId) => {
-  if (!slotProps || !slotProps.staff_id) {
-    console.error("Invalid id object passed:", slotProps);
-    return;
-  }
+const updateRoute = async (areaId) => {
   op.value.hide();
 
   const payload = {
@@ -257,7 +254,7 @@ const updateRoute = async (slotProps, areaId) => {
   };
 
   const [_, error] = await attempt(
-    axios.put(`${WATER_API}/v2/api/update_staff/area/${slotProps.staff_id}`, payload)
+    axios.put(`${WATER_API}/v2/api/update_staff/area/${selectedStaffId.value}`, payload)
   );
 
   toast.add({
@@ -271,7 +268,7 @@ const updateRoute = async (slotProps, areaId) => {
     console.error("API error:", error);
     return;
   }
-  const index = agents.value.findIndex((a) => a.staff_id === slotProps.staff_id);
+  const index = agents.value.findIndex((a) => a.staff_id === selectedStaffId.value);
   console.log(index)
 
   if (index !== -1) {
@@ -285,7 +282,8 @@ const updateRoute = async (slotProps, areaId) => {
   }
 };
 
-const toggle = (event) => {
+const toggle = (event, agentData) => {
+  selectedStaffId.value = agentData.staff_id;
   op.value.toggle(event);
 }
 </script>
@@ -336,13 +334,13 @@ const toggle = (event) => {
               @click="confirmDeleteAgent(slotProps.data)" />
 
             <Button icon="pi pi-map-marker" v-tooltip.bottom="'Change Area'" outlined rounded class="mr-2"
-              severity="info" @click="toggle" />
+              severity="info" @click="toggle($event, slotProps.data)" />
 
             <OverlayPanel ref="op">
               <div class="flex flex-col gap-6 p-4">
                 <div v-for="(area) in areas" :key="area.id"
                   class="flex items-center justify-between rounded-lg hover:bg-gray-100">
-                  <button class="text-gray-700" @click="updateRoute(slotProps.data, area.id)">{{ area.area }}</button>
+                  <button class="text-gray-700" @click="updateRoute(area.id)">{{ area.area }}</button>
                 </div>
               </div>
             </OverlayPanel>
