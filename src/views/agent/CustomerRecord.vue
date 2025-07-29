@@ -23,9 +23,11 @@ const newOrder = ref({
   type: "",
   date: new Date().toISOString().split("T")[0],
   gallonsToOrder: 0,
+  col: 0,
   totalPrice: 0,
   payment: 0,
   payables: 0,
+  payPayable: true,
   gallonsToReturn: 0,
 });
 
@@ -88,6 +90,7 @@ const openOrderModal = async (customer) => {
     totalPrice: 0,
     payment: 0,
     payables: customer.total_payable,
+    payPayable: true,
     gallonsToReturn: 0,
   };
   orderModalVisible.value = true;
@@ -98,7 +101,7 @@ const calculateTotalPrice = () => {
 };
 
 const submitOrder = async () => {
-  const { customerId, gallonsToOrder, payment, gallonsToReturn, type, col } = newOrder.value;
+  const { customerId, gallonsToOrder, payment, gallonsToReturn, type, col, payPayable } = newOrder.value;
 
   if (!gallonsToOrder || gallonsToOrder <= 0) {
     toast.add({ severity: 'error', summary: 'Error', detail: "Please enter a valid number of gallons to order.", life: 3000 });
@@ -110,11 +113,6 @@ const submitOrder = async () => {
     return;
   }
 
-  if (payment < newOrder.value.totalPrice) {
-    toast.add({ severity: 'error', summary: 'Error', detail: "Payment must be equal to or greater than the total price.", life: 3000 });
-    return;
-  }
-
   try {
     const response = await axios.post(`${WATER_API}/api/process-manual-order`, {
       customerId,
@@ -122,6 +120,7 @@ const submitOrder = async () => {
       payment,
       gallonsToReturn,
       type,
+      payPayable
     });
 
     receiptData.value = response.data;
@@ -250,6 +249,11 @@ const handlePrint = () => {
               <input type="number" class="p-3 border rounded-lg text-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 v-model.number="newOrder.gallonsToReturn" min="0" />
             </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Enable Payment Payable</label>
+              <ToggleButton v-model="newOrder.payPayable" onLabel="Yes" offLabel="No" class="p-button-sm" />
+            </div>
           </div>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -269,11 +273,13 @@ const handlePrint = () => {
     <Dialog v-model:visible="receiptModalVisible" modal header="Order Receipt" :style="{ width: '30rem' }"
       class="rounded-lg shadow-xl">
       <div class="p-6 space-y-4 bg-white">
-        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl"/>Order Successful!</h2>
+        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl" />Order Successful!
+        </h2>
         <div class="text-gray-700 space-y-2">
           <p><strong>Customer ID:</strong> {{ receiptData?.customerId }}</p>
           <p><strong>Total Price:</strong> {{ formatCurrency(receiptData?.totalPrice) }}</p>
           <p><strong>Payment:</strong> {{ formatCurrency(receiptData?.payment) }}</p>
+          <p v-if="receiptData.payPayable"><strong>Payables Paid:</strong> {{ formatCurrency(receiptData?.overpaidAmount) }}</p>
           <p v-if="receiptData?.overpay > 0" class="text-green-600 font-semibold">
             <strong>Change:</strong> {{ formatCurrency(receiptData?.overpay) }}
           </p>
@@ -286,7 +292,7 @@ const handlePrint = () => {
                 'bg-gray-100 text-gray-800': !receiptData.status || receiptData.status === 'None'
               }
             ]">
-            {{ receiptData?.status }}
+              {{ receiptData?.status }}
             </span>
           </p>
         </div>

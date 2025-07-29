@@ -19,6 +19,7 @@ const customerData = ref({
   customerArea: "",
   amountPaid: 0,
   gallonsReturned: 0,
+  payPayable: true,
   type: "",
   col: 0,
 });
@@ -37,9 +38,10 @@ const slug = route.params.slug;
 // Parse the route parameter dynamically
 onMounted(() => {
   try {
-    const decodedData = decodeURIComponent(slug);
+    const slugToDecode = Array.isArray(slug) ? slug.join('/') : slug;
+    const decodedData = decodeURIComponent(slugToDecode);
     const parsedData = JSON.parse(decodedData);
-    
+
     // Ensure all required fields are present
     Object.assign(customerData.value, {
       ...parsedData,
@@ -89,9 +91,10 @@ const submitPayment = async () => {
       orderId: customerData.value.orderId,
       customerId: customerData.value.customerId,
       amountPaid: customerData.value.amountPaid,
-      gallonsReturned: customerData.value.gallonsReturned,
-      gallonsToOrder: customerData.value.gallons,
+      gallonsReturned: Number(customerData.value.gallonsReturned),
+      gallonsToOrder: Number(customerData.value.gallons),
       type: customerData.value.type,
+      payPayable: customerData.value.payPayable,
     });
 
     // Handle successful response
@@ -201,6 +204,11 @@ const formatCurrency = (value) => {
           </div>
 
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <label class="text-gray-700 font-medium">Pay Payables:</label>
+            <ToggleButton v-model="customerData.payPayable" onLabel="Yes" offLabel="No" />
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <label class="text-gray-700 font-medium">Payment:</label>
             <input type="number" v-model.number="customerData.amountPaid"
               class="border border-gray-300 rounded-md p-2 w-40 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -226,14 +234,16 @@ const formatCurrency = (value) => {
       </div>
     </div>
 
-    <Dialog v-model:visible="receiptModalVisible" modal :closable="false" header="Order Receipt" :style="{ width: '30rem' }"
-      class="rounded-lg shadow-xl">
+    <Dialog v-model:visible="receiptModalVisible" modal :closable="false" header="Order Receipt"
+      :style="{ width: '30rem' }" class="rounded-lg shadow-xl">
       <div class="p-6 space-y-4 bg-white">
-        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl"/>Order Successful!</h2>
+        <h2 class="text-2xl font-bold text-green-600"><i class="pi pi-check-circle pr-2 !text-2xl" />Order Successful!
+        </h2>
         <div class="text-gray-700 space-y-2">
-          <p><strong>Customer ID:</strong> {{ receiptData?.orderId }}</p>
+          <p><strong>Transaction ID:</strong> {{ receiptData?.orderId }}</p>
           <p><strong>Total Price:</strong> {{ formatCurrency(receiptData?.totalPrice) }}</p>
           <p><strong>Payment:</strong> {{ formatCurrency(receiptData?.amountPaid) }}</p>
+          <p v-if="receiptData.payPayable"><strong>Payables Paid:</strong> {{ formatCurrency(receiptData?.overpaidAmount) }}</p>
           <p v-if="receiptData?.overpay > 0" class="text-green-600 font-semibold">
             <strong>Change:</strong> {{ formatCurrency(receiptData?.overpay) }}
           </p>
@@ -246,7 +256,7 @@ const formatCurrency = (value) => {
                 'bg-gray-100 text-gray-800': !receiptData.status || receiptData.status === 'None'
               }
             ]">
-            {{ receiptData?.status }}
+              {{ receiptData?.status }}
             </span>
           </p>
         </div>
@@ -254,8 +264,7 @@ const formatCurrency = (value) => {
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg"
-            @click="closeReceipt()">
+          <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg" @click="closeReceipt()">
             Close
           </button>
           <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg" @click="handlePrint()">
