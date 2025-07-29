@@ -241,7 +241,7 @@ onMounted(() => {
                     <label for="area" class="block mb-2 font-semibold text-gray-700">Address</label>
                     <Dropdown id="area" v-model.trim="area.area_name" :options="areas" optionLabel="area"
                         optionValue="id" placeholder="Select an Area" class="w-full" />
-                    <small v-if="submitted && !agent.area_name" class="text-red-600 text-xs mt-1 block">
+                    <small v-if="submitted && !staff.area_name" class="text-red-600 text-xs mt-1 block">
                         Area is required.
                     </small>
                 </div>

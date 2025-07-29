@@ -158,7 +158,7 @@ const cards = computed(() => [
       <DataTable :value="orders" showGridlines tableStyle="min-width: 40rem">
         <Column field="customer_fullname" header="Fullname"></Column>
         <Column field="num_gallons_order" header="Quantity"></Column>
-        <Column field="total_containers_on_loan" header="COL"></Column>
+        <Column field="col" header="COL"></Column>
         <Column field="payable_amount" header="Payables">
           <template #body="slotProps">
             <span class="text-red-600">{{ formatCurrency(slotProps.data.payable_amount) }}</span>

@@ -272,7 +272,7 @@ const totalPayment = computed(() => {
         <div class="mb-6 p-3 rounded-md bg-gray-100">
           <div class="text-sm text-gray-600">Price per gallon:</div>
           <div class="text-lg font-bold text-green-600 mb-1">₱{{ pricePerGallon.toFixed(2) }}</div>
-          <div class="text-sm text-gray-600">Total Payment:</div>
+          <div class="text-sm text-gray-600">Amount to pay:</div>
           <div class="text-xl font-bold text-blue-700">₱{{ totalPayment.toFixed(2) }}</div>
         </div>
 

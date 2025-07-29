@@ -384,12 +384,12 @@ const filteredOrders = computed(() => orders.value.slice(0, 5))
         <Dialog v-model:visible="visible2" modal header="Gallons Price" :style="{ width: '25rem' }">
           <div v-if="totalSales.pricing">
             <div class="flex items-center gap-4 mb-4">
-              <label for="price" class="font-semibold w-24">Dealer {{ totalSales.pricing.dealer || "dd" }}</label>
+              <label for="price" class="font-semibold w-24">Dealer</label>
               <InputText id="price" v-model="totalSales.pricing.dealer" class="w-full md:w-56"
                 placeholder="Input pricing" />
             </div>
             <div class="flex items-center gap-4 mb-4">
-              <label for="price" class="font-semibold w-24">Regular {{ totalSales.pricing.regular || "dd" }}</label>
+              <label for="price" class="font-semibold w-24">Regular</label>
               <InputText id="price" v-model="totalSales.pricing.regular" class="w-full md:w-56"
                 placeholder="Input pricing" />
             </div>
